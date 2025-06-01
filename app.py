@@ -13,7 +13,6 @@ products = [
     {
         "name": "Senator Wear",
         "price": 15000,
-        https://github.com/BalogunEzekiel/tommies-assets/blob/main/images/senator.jpg
         "image": "https://raw.githubusercontent.com/BalogunEzekiel/tommies-assets/main/images/senator.jpg"
     },
     {
