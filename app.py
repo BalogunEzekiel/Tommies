@@ -8,9 +8,31 @@ import hashlib
 from datetime import datetime
 
 # --- Supabase Config ---
-SUPABASE_URL = "https://aws-0-eu-central-1.pooler.supabase.com"
-SUPABASE_KEY = "YOUR_SUPABASE_SERVICE_ROLE_KEY_HERE"  # Replace with secure method in deployment
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# --- Database Connection ---
+@st.cache_resource
+def get_engine():
+    try:
+        host = st.secrets["supabase"]["host"]
+        port = st.secrets["supabase"]["port"]
+        database = st.secrets["supabase"]["database"]
+        user = st.secrets["supabase"]["user"]
+        password = st.secrets["supabase"]["password"]
+
+        encoded_password = quote_plus(password)
+        DATABASE_URL = (
+            f"postgresql+psycopg2://{user}:{encoded_password}@{host}:{port}/{database}?sslmode=require"
+        )
+
+        return create_engine(DATABASE_URL)
+
+    except KeyError as e:
+        st.error(f"Missing secret key: {e}")
+        st.stop()
+    except Exception as e:
+        st.error(f"Database connection error: {e}")
+        st.stop()
+
+engine = get_engine()
 
 # --- Helpers ---
 def hash_password(password):
