@@ -2,8 +2,3 @@ streamlit
 Pillow
 pandas
 supabase
-hashlib
-datetime
-urllib.parse 
-smtplib
-email.message
