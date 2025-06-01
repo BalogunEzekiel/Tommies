@@ -2,3 +2,5 @@ streamlit
 Pillow
 pandas
 supabase
+hashlib
+datetime
