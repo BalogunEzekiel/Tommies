@@ -1,3 +1,3 @@
-# Tommies Clothing Line
+# Tommies Fashion Store
 
 A full Streamlit-based e-commerce app with product display, shopping cart, and simulated login.
