@@ -47,7 +47,7 @@ def display_products():
     cols = st.columns(3)
     for idx, product in enumerate(PRODUCTS):
         with cols[idx]:
-            st.image(product["image"], use_column_width=True)
+            st.image(product["image"], use_container_width=True)
             st.markdown(f"**{product['name']}**")
             st.markdown(f"₦{product['price']:,}")
             if st.button(f"Add to Cart", key=f"add_{idx}"):
