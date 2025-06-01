@@ -1,6 +1,7 @@
 # Tommies Fashion Store
 
-A fully functional online fashion store (e-commerce) web application built with Streamlit for product display, shopping cart, order management, checkout, and payment — powered by Supabase for authentication, product management, and order processing
+A fully functional online fashion store (e-commerce) web application built with Streamlit for product display, shopping cart, order management, checkout, and payment — powered by Supabase for authentication, product management, and order processing.
+
 ---
 
 ## 📦 Features
@@ -163,7 +164,7 @@ streamlit run app.py
 ### 🔐 Register/Login
 
 * Use the sidebar to register or log in.
-* Admin credentials: `admin@tommies.com` with custom password (stored manually or via seed).
+* Admin credentials: `@` with custom password (stored manually or via seed).
 
 ### 🛍️ Shopping
 
@@ -200,7 +201,13 @@ streamlit run app.py
 
 **Author:** [Ezekiel Balogun](https://www.linkedin.com/in/ezekiel-balogun-39a14438/)
 
-Feel free to fork, improve, or contribute by submitting a pull request.
+**Emil:** ezekiel4true@yahoo.com
+
+**Mobile Phone:** +234 806 2529 172 
+
+Feel free to fork, improve or contribute by submitting a pull request.
+
+I am open to opportunities in organizations that value hard work, uphold strong principles, encourage growth and advancement, and prioritize recognition and motivation. I look forward to collaborating with fellow Data Scientists and Analysts, Artificial Intelligence and Machine Learning Engineers, Workflow Automation specialists, and Business Intelligence experts on impactful projects.
 
 ---
 
