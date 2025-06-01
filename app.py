@@ -10,19 +10,31 @@ from urllib.parse import quote_plus
 import smtplib
 from email.message import EmailMessage
 
-# --- Supabase Config ---
-st.secrets["supabase"] = {
-    "url": "https://aws-0-eu-central-1.pooler.supabase.com",
-    "key": "<your-supabase-api-key>",
-    "host": "aws-0-eu-central-1.pooler.supabase.com",
-    "port": "6543",
-    "database": "postgres",
-    "user": "postgres.avpeuyyabhptmpewfruu",
-    "password": "Hephzibah@1414"
-}
+# --- Database Connection ---
+@st.cache_resource
+def get_engine():
+    try:
+        host = st.secrets["supabase"]["host"]
+        port = st.secrets["supabase"]["port"]
+        database = st.secrets["supabase"]["database"]
+        user = st.secrets["supabase"]["user"]
+        password = st.secrets["supabase"]["password"]
 
-supabase: Client = create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
+        encoded_password = quote_plus(password)
+        DATABASE_URL = (
+            f"postgresql+psycopg2://{user}:{encoded_password}@{host}:{port}/{database}?sslmode=require"
+        )
 
+        return create_engine(DATABASE_URL)
+
+    except KeyError as e:
+        st.error(f"Missing secret key: {e}")
+        st.stop()
+    except Exception as e:
+        st.error(f"Database connection error: {e}")
+        st.stop()
+
+engine = get_engine()
 # --- Email Confirmation Function ---
 def send_confirmation_email(email, order_id):
     try:
