@@ -8,12 +8,49 @@ from supabase import create_client, Client
 # from supabase import create_client, Client
 # supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Sample products
-PRODUCTS = [
-    {"name": "Senator Wear", "price": 15000, "image": "images/senator.jpg"},
-    {"name": "Ankara Gown", "price": 12000, "image": "images/ankara.jpg"},
-    {"name": "Casual Shirt", "price": 8000, "image": "images/shirt.jpg"},
+
+products = [
+    {
+        "name": "Senator Wear",
+        "price": 15000,
+        https://github.com/BalogunEzekiel/tommies-assets/blob/main/images/senator.jpg
+        "image": "https://raw.githubusercontent.com/BalogunEzekiel/tommies-assets/main/images/senator.jpg"
+    },
+    {
+        "name": "Ankara Gown",
+        "price": 12000,
+        "image": "https://raw.githubusercontent.com/BalogunEzekiel/tommies-assets/main/images/ankara.jpg"
+    },
+    {
+        "name": "Casual Shirt",
+        "price": 8000,
+        "image": "https://raw.githubusercontent.com/BalogunEzekiel/tommies-assets/main/images/shirt.jpg"
+    },
+    {
+        "name": "Ruff & Tumble",
+        "price": 10000,
+        "image": "https://raw.githubusercontent.com/BalogunEzekiel/tommies-assets/main/images/ruff_%26_tumble.jpg"
+    },
+    {
+        "name": "Bug Gown",
+        "price": 25000,
+        "image": "https://raw.githubusercontent.com/BalogunEzekiel/tommies-assets/main/images/bug_gown.jpg"
+    },
+    {
+        "name": "Steps Bug Gown",
+        "price": 30000,
+        "image": "https://raw.githubusercontent.com/BalogunEzekiel/tommies-assets/main/images/steps_bug_gown.jpg"
+    }
 ]
+
+
+
+# Sample products
+# ]PRODUCTS = [
+#    {"name": "Senator Wear", "price": 15000, "image": "images/senator.jpg"},
+#    {"name": "Ankara Gown", "price": 12000, "image": "images/ankara.jpg"},
+#    {"name": "Casual Shirt", "price": 8000, "image": "images/shirt.jpg"},
+# ]
 
 # --- Session initialization ---
 if "cart" not in st.session_state:
