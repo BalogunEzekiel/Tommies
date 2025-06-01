@@ -2,7 +2,7 @@
 import streamlit as st
 from PIL import Image
 import pandas as pd
-import supabase_py
+from supabase import create_client, Client
 
 # Placeholder for Supabase connection
 # from supabase import create_client, Client
