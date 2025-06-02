@@ -551,7 +551,7 @@ if st.session_state.logged_in and st.session_state.user.get("email") == "admin@t
 st.sidebar.title("About Tommies 👗🧵")
 st.sidebar.info("Tommies is your one-stop fashion destination offering premium styles at unbeatable prices.")
 
- if st.session_state.logged_in:
+if st.session_state.logged_in:
     st.sidebar.success(f"👋 Welcome, {st.session_state.user.get('full_name', 'Customer')}!")
 # else:
 #    if st.session_state.get("show_login"):
