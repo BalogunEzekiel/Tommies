@@ -13,20 +13,14 @@ supabase_key = st.secrets["supabase"]["key"]
 supabase = create_client(supabase_url, supabase_key)
 
 # --- Helper Functions ---
-
 def hash_password(password: str) -> str:
-    """Return SHA256 hash of the password."""
     return hashlib.sha256(password.encode()).hexdigest()
 
 def get_user(email: str):
-    """Fetch user by email from Supabase."""
     result = supabase.table("users").select("*").eq("email", email).execute()
-    if result.data and len(result.data) > 0:
-        return result.data[0]
-    return None
+    return result.data[0] if result.data else None
 
 def register_user(name, email, password, phone, address):
-    """Register new user."""
     hashed = hash_password(password)
     result = supabase.table("users").insert({
         "full_name": name,
@@ -38,36 +32,29 @@ def register_user(name, email, password, phone, address):
     return result
 
 def authenticate(email, password):
-    """Authenticate user with email and password."""
-    hashed = hash_password(password)
     user = get_user(email)
-    if user and user["password_hash"] == hashed:
-        return user
-    return None
+    return user if user and user["password_hash"] == hash_password(password) else None
 
 def fetch_products():
-    """Fetch all products from Supabase."""
     result = supabase.table("products").select("*").execute()
     return result.data if result.data else []
 
 def send_confirmation_email(email, order_id):
-    """Send order confirmation email (setup with your SMTP details)."""
     try:
         msg = EmailMessage()
         msg.set_content(f"Thank you for your order #{order_id} from Tommies Fashion Store!")
         msg["Subject"] = "Order Confirmation"
-        msg["From"] = "your-email@gmail.com"  # Replace with your sending email
+        msg["From"] = "your-email@gmail.com"
         msg["To"] = email
 
         with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
             smtp.starttls()
-            smtp.login("your-email@gmail.com", "your-email-password")  # Use environment variables ideally
+            smtp.login("your-email@gmail.com", "your-email-password")  # Use environment variables in production
             smtp.send_message(msg)
     except Exception as e:
         st.warning(f"Email failed to send: {e}")
 
 def create_order(user_id, cart):
-    """Create an order and update product stock."""
     total = sum(item['price'] * item['qty'] for item in cart)
     order_result = supabase.table("orders").insert({
         "user_id": user_id,
@@ -84,7 +71,6 @@ def create_order(user_id, cart):
             "price_at_purchase": item['price']
         }).execute()
 
-        # Update stock quantity
         new_stock = item['stock_quantity'] - item['qty']
         supabase.table("products").update({
             "stock_quantity": new_stock
@@ -94,20 +80,21 @@ def create_order(user_id, cart):
     return order_id
 
 # --- Session State Initialization ---
-
 def init_session_state():
-    """Initialize all necessary session state keys."""
-    if "cart" not in st.session_state:
-        st.session_state.cart = []
-    if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
-    if "user" not in st.session_state:
-        st.session_state.user = {}
-    if "viewing_cart" not in st.session_state:
-        st.session_state.viewing_cart = False
+    defaults = {
+        "cart": [],
+        "logged_in": False,
+        "user": {},
+        "viewing_cart": False,
+        "clear_login_fields": False,
+        "login_email": "",
+        "login_password": ""
+    }
+    for key, val in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = val
 
 # --- UI Components ---
-
 def registration_form():
     st.sidebar.subheader("📝 Register")
     name = st.sidebar.text_input("Full Name", key="reg_name")
@@ -126,27 +113,12 @@ def registration_form():
         result = register_user(name, email, password, phone, address)
         if result.status_code == 201:
             st.sidebar.success("✅ Registration successful! Please log in.")
-            # Clear form fields
             for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
                 st.session_state[key] = ""
         else:
             st.sidebar.error("❌ Registration failed. Try again.")
 
 def login_form():
-    # Initialize session variables if not already present
-    if "logged_in" not in st.session_state:
-        st.session_state["logged_in"] = False
-    if "user" not in st.session_state:
-        st.session_state["user"] = None
-    if "clear_login_fields" not in st.session_state:
-        st.session_state["clear_login_fields"] = False
-
-    # Clear input fields after successful login
-    if st.session_state.clear_login_fields:
-        st.session_state["login_email"] = ""
-        st.session_state["login_password"] = ""
-        st.session_state.clear_login_fields = False
-
     st.sidebar.subheader("🔐 Login")
     email = st.sidebar.text_input("Email", key="login_email")
     password = st.sidebar.text_input("Password", type="password", key="login_password")
@@ -155,14 +127,11 @@ def login_form():
         if not email or not password:
             st.sidebar.warning("Enter both email and password")
             return
-
         user = authenticate(email, password)
         if user:
             st.session_state.logged_in = True
             st.session_state.user = user
             st.sidebar.success(f"Welcome, {user['full_name']}!")
-
-            # Mark login fields for clearing on next rerun
             st.session_state.clear_login_fields = True
         else:
             st.sidebar.error("Invalid credentials")
@@ -171,12 +140,11 @@ def product_list():
     st.subheader("🛍️ Available Products")
     products = fetch_products()
     if not products:
-        st.info("No products available at the moment.")
+        st.info("No products available.")
         return
 
     categories = sorted({p['category'] for p in products if p['category']})
     sizes = sorted({p['size'] for p in products if p['size']})
-
     category_filter = st.selectbox("Category", ["All"] + categories)
     size_filter = st.selectbox("Size", ["All"] + sizes)
     price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
@@ -215,11 +183,9 @@ def view_cart():
 
     total = 0
     remove_indices = []
-
     for i, item in enumerate(st.session_state.cart):
         st.write(f"{item['qty']} x {item['product_name']} - ₦{item['price']:,.2f} each")
         total += item['qty'] * item['price']
-
         if st.button(f"Remove {item['product_name']}", key=f"remove_{item['product_id']}"):
             remove_indices.append(i)
 
@@ -252,18 +218,15 @@ def admin_panel():
         st.divider()
 
 # --- Main App ---
-
 def main():
     init_session_state()
     st.title("👗 Tommies Fashion Store")
 
     if st.session_state.logged_in:
-        # Admin check
         if st.session_state.user.get('email') == 'admin@tommies.com':
             admin_panel()
             return
 
-        # User navigation buttons
         if st.sidebar.button("🛒 View Cart"):
             st.session_state.viewing_cart = True
 
@@ -272,22 +235,15 @@ def main():
             st.session_state.user = {}
             st.session_state.cart = []
             st.session_state.viewing_cart = False
-            st.experimental_rerun()
+            st.success("Logged out successfully.")
 
-        # View cart or product list
         if st.session_state.viewing_cart:
             view_cart()
-            if st.button("🔙 Back to Products"):
-                st.session_state.viewing_cart = False
-                st.experimental_rerun()
         else:
             product_list()
 
     else:
-        product_list()
-        st.sidebar.markdown("---")
         login_form()
-        st.sidebar.markdown("New user? Register below:")
         registration_form()
 
 if __name__ == "__main__":
