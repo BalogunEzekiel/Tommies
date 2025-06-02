@@ -273,54 +273,64 @@ def login_form():
 
 def product_list():
     st.subheader("🛍️ Available Products")
+
+    # Fetch product data from backend or API
     products = fetch_products()
+
+    # Show message if there are no products
     if not products:
         st.info("No products available at the moment.")
         return
 
-    categories = sorted(list(set(p['category'] for p in products if p['category'])))
-    sizes = sorted(list(set(p['size'] for p in products if p['size'])))
+    # Extract unique categories and sizes
+    categories = sorted({p.get('category') for p in products if p.get('category')})
+    sizes = sorted({p.get('size') for p in products if p.get('size')})
+
+    # Filters
     category_filter = st.selectbox("Category", ["All"] + categories)
     size_filter = st.selectbox("Size", ["All"] + sizes)
     price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
 
+    # Filter products based on user input
     filtered = [
         p for p in products
         if (category_filter == "All" or p.get('category') == category_filter) and
            (size_filter == "All" or p.get('size') == size_filter) and
-           (price_range[0] <= float(p.get('price', 0)) <= price_range[1]) # Safely handle missing price
+           (price_range[0] <= float(p.get('price', 0)) <= price_range[1])
     ]
 
     if not filtered:
         st.info("No products match your filters.")
         return
 
-    # Use columns for a better product display
-    cols_per_row = 3 # You can adjust this
+    # Display products in a grid
+    cols_per_row = 3
     cols = st.columns(cols_per_row)
+
     for i, p in enumerate(filtered):
         with cols[i % cols_per_row]:
-            # Add a unique key for each expander if you use them, or just display directly
-            st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_column_width=True) # Default image
-            st.markdown(f"**{p.get('product_name', 'N/A')}** \n₦{float(p.get('price', 0)):,.2f}")
+            # Display product image and details
+            st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_column_width=True)
+            st.markdown(f"**{p.get('product_name', 'N/A')}**")
+            st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
             st.markdown(f"Stock: {p.get('stock_quantity', 0)} | Size: {p.get('size', 'N/A')} | Category: {p.get('category', 'N/A')}")
 
-            # Only show quantity input and add to cart button if stock > 0
+            # Add to cart if in stock
             if p.get('stock_quantity', 0) > 0:
                 qty = st.number_input(
                     "Qty", min_value=1, max_value=p['stock_quantity'], key=f"qty_{p['product_id']}", value=1
                 )
                 if st.button("Add to Cart", key=f"cart_{p['product_id']}"):
-                    if not st.session_state.logged_in:
+                    if not st.session_state.get('logged_in', False):
                         st.warning("Please log in or sign up to add items to your cart.")
                     else:
+                        # Check if product already in cart
                         existing = next((item for item in st.session_state.cart if item['product_id'] == p['product_id']), None)
                         if existing:
-                            # If item exists, update quantity instead of adding new entry
                             existing['qty'] += qty
                             st.success(f"Updated quantity of {p['product_name']} in cart to {existing['qty']}.")
                         else:
-                            st.session_state.cart.append({**p, 'qty': qty}) # Use 'qty' here
+                            st.session_state.cart.append({**p, 'qty': qty})
                             st.success(f"Added {qty} x {p['product_name']} to cart.")
             else:
                 st.info("Out of Stock")
