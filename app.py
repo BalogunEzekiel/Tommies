@@ -284,8 +284,8 @@ else:
 def login_form():
     st.subheader("🔐 Login")
 
-    email = st.text_input("Email", value=st.session_state.get("login_email", ""), key="login_email_input")
-    password = st.text_input("Password", type="password", value=st.session_state.get("login_password", ""), key="login_password_input")
+#    email = st.text_input("Email", value=st.session_state.get("login_email", ""), key="login_email_input")
+#    password = st.text_input("Password", type="password", value=st.session_state.get("login_password", ""), key="login_password_input")
 
     if st.button("Login", key="main_login_btn"):
         if not email or not password:
