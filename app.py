@@ -178,11 +178,14 @@ def registration_form():
         if result:
             st.success("✅ Registration successful! Please log in.")
             st.session_state.show_register = False
-            st.session_state.show_login = True  # Automatically show login form
-            for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
-                st.session_state[key + "_input"] = ""
-
-            st.rerun()  # 👈 rerun app to apply changes safely
+            st.session_state.show_login = True
+        
+            # Clear form inputs safely
+            for key in ["reg_name_input", "reg_email_input", "reg_phone_input", "reg_address_input", "reg_password_input"]:
+                if key in st.session_state:
+                    del st.session_state[key]  # ✅ Safely deletes widget key without error
+        
+            st.rerun()  # ✅ Forces rerun so Streamlit doesn't choke on updated state
 
         else:
             st.error("❌ Registration failed. Please try again.")
