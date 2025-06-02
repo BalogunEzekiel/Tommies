@@ -100,21 +100,16 @@ def register_user(name, email, password, phone, address):
             "address": address,
         }).execute()
 
-         # 👇 Add this line for debugging
-        st.write(result)
-
-        if result.error:
-            st.error(f"Supabase error: {result.error.message}")
-            return None
+        st.write(result)  # Optional: Inspect the raw APIResponse
 
         if result.data:
-            return result  # Registration successful
-
-        st.error("Unexpected error: No data returned.")
-        return None
+            return result  # ✅ Registration succeeded
+        else:
+            st.error("❌ Registration failed: No data returned from Supabase.")
+            return None
 
     except Exception as e:
-        st.error(f"Database registration exception: {e}")
+        st.error(f"❌ Database registration exception: {e}")
         return None
 
 def authenticate(email, password):
