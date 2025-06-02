@@ -56,7 +56,7 @@ if "show_register" not in st.session_state:
 with st.container():
     col1, col2, col3 = st.columns([5, 1, 1])
     with col1:
-        st.title("Welcome to Tommies App")
+        st.title("")
     with col2:
         if st.button("Login"):
             st.session_state.show_login = True
