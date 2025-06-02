@@ -133,6 +133,16 @@ def registration_form():
             st.sidebar.error("❌ Registration failed. Try again.")
 
 def login_form():
+    # ✅ Safely initialize session_state keys
+    if "login_email" not in st.session_state:
+        st.session_state["login_email"] = ""
+    if "login_password" not in st.session_state:
+        st.session_state["login_password"] = ""
+    if "logged_in" not in st.session_state:
+        st.session_state["logged_in"] = False
+    if "user" not in st.session_state:
+        st.session_state["user"] = None
+
     st.sidebar.subheader("🔐 Login")
     email = st.sidebar.text_input("Email", key="login_email")
     password = st.sidebar.text_input("Password", type="password", key="login_password")
@@ -141,12 +151,14 @@ def login_form():
         if not email or not password:
             st.sidebar.warning("Enter both email and password")
             return
+
         user = authenticate(email, password)
         if user:
             st.session_state.logged_in = True
             st.session_state.user = user
             st.sidebar.success(f"Welcome, {user['full_name']}!")
-            # Clear login fields
+
+            # ✅ Clear input fields (do it indirectly if needed)
             st.session_state["login_email"] = ""
             st.session_state["login_password"] = ""
         else:
