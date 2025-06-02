@@ -282,13 +282,13 @@ def main():
             st.session_state.user = {}
             st.session_state.cart = []
             st.session_state.viewing_cart = False
-            st.experimental_rerun()
+            # REMOVE THIS LINE: st.experimental_rerun()
 
         if st.session_state.viewing_cart:
             view_cart()
             if st.button("🔙 Back to Products"):
                 st.session_state.viewing_cart = False
-                st.experimental_rerun()
+                st.experimental_rerun() # This one might still be needed here, depending on UI flow
         else:
             product_list()
     else:
