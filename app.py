@@ -43,17 +43,34 @@ def get_supabase_client():
 supabase = get_supabase_client()
 
 # --- HEADER: Login and Signup buttons ---
-col1, col2, col3 = st.columns([6, 1, 1])
-with col2:
-    if not st.session_state.logged_in:
+# Initialize session state key
+import streamlit as st
+
+# Initialize session state variables
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+if 'show_login' not in st.session_state:
+    st.session_state.show_login = False
+if 'show_register' not in st.session_state:
+    st.session_state.show_register = False
+
+# Check login status
+if not st.session_state.logged_in:
+    st.write("Please log in to continue.")
+
+    col1, col2, col3 = st.columns([6, 1, 1])
+    with col2:
         if st.button("Login"):
-            st.session_state["show_login"] = True
-            st.session_state["show_register"] = False
-with col3:
-    if not st.session_state.logged_in:
+            st.session_state.show_login = True
+            st.session_state.show_register = False
+    with col3:
         if st.button("Signup"):
-            st.session_state["show_register"] = True
-            st.session_state["show_login"] = False
+            st.session_state.show_register = True
+            st.session_state.show_login = False
+
+else:
+    st.write("Welcome back!")
+
 
 # --- Helper Functions ---
 
