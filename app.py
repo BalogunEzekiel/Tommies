@@ -8,6 +8,13 @@ from supabase import create_client, Client
 
 st.set_page_config(page_title="Tommies Fashion", layout="wide")
 
+# Initialize session state keys for login inputs to avoid StreamlitAPIException
+if "login_email" not in st.session_state:
+    st.session_state.login_email = ""
+
+if "login_password" not in st.session_state:
+    st.session_state.login_password = ""
+
 # --- Database Connection ---
 @st.cache_resource
 def get_engine():
