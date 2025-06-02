@@ -167,9 +167,9 @@ def login_form():
             st.session_state.user = user
             st.sidebar.success(f"Welcome, {user['full_name']}!")
 
-            # Clear email and password **after** widgets are rendered and login is successful
-            st.session_state["login_email"] = ""
-            st.session_state["login_password"] = ""
+            # You might want to trigger a rerun here to immediately update the UI
+            # For example, if you want to hide the login form and show other content.
+            st.experimental_rerun()
         else:
             st.sidebar.error("Invalid credentials")
 
