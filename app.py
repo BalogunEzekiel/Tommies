@@ -306,14 +306,14 @@ def login_form():
             st.error("Invalid credentials")
 
 # Display the registration form in main page
-def registration_form():
-    st.subheader("📝 Register")
+# def registration_form():
+#    st.subheader("📝 Register")
 
-    name = st.text_input("Full Name", value=st.session_state.get("reg_name", ""), key="reg_name_input")
-    email = st.text_input("Email", value=st.session_state.get("reg_email", ""), key="reg_email_input")
-    phone = st.text_input("Phone", value=st.session_state.get("reg_phone", ""), key="reg_phone_input")
-    address = st.text_area("Address", value=st.session_state.get("reg_address", ""), key="reg_address_input")
-    password = st.text_input("Password", type="password", value=st.session_state.get("reg_password", ""), key="reg_password_input")
+#    name = st.text_input("Full Name", value=st.session_state.get("reg_name", ""), key="reg_name_input")
+#    email = st.text_input("Email", value=st.session_state.get("reg_email", ""), key="reg_email_input")
+#    phone = st.text_input("Phone", value=st.session_state.get("reg_phone", ""), key="reg_phone_input")
+#    address = st.text_area("Address", value=st.session_state.get("reg_address", ""), key="reg_address_input")
+#    password = st.text_input("Password", type="password", value=st.session_state.get("reg_password", ""), key="reg_password_input")
 
     if st.button("Register", key="main_register_btn"):
         if not all([name, email, phone, address, password]):
@@ -524,18 +524,18 @@ def main():
       #      st.session_state.viewing_cart = False
             # No explicit rerun needed, Streamlit will rerun naturally
 
-        if st.session_state.viewing_cart:
-            view_cart()
-            # "Back to Products" button is now inside view_cart for consistency
-        else:
-            product_list()
-    else:
+#        if st.session_state.viewing_cart:
+#            view_cart()
+#            # "Back to Products" button is now inside view_cart for consistency
+#        else:
+#            product_list()
+#    else:
         # Not logged in
-        product_list() # Show products even when not logged in
-        st.sidebar.markdown("---")
-        login_form()
-        st.sidebar.markdown("---")
-        registration_form()
+#        product_list() # Show products even when not logged in
+#        st.sidebar.markdown("---")
+#        login_form()
+#        st.sidebar.markdown("---")
+#        registration_form()
 
 if __name__ == "__main__":
     main()
