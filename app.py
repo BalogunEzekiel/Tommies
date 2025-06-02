@@ -33,9 +33,9 @@ def get_engine():
 engine = get_engine()
 
 # --- Supabase client setup ---
-supabase_url = st.secrets["supabase"]["url"]
-supabase_key = st.secrets["supabase"]["anon_key"]
-supabase = create_client(supabase_url, supabase_key)
+# supabase_url = st.secrets["supabase"]["url"]
+# supabase_key = st.secrets["supabase"]["anon_key"]
+# supabase = create_client(supabase_url, supabase_key)
 
 # --- Helper Functions ---
 
