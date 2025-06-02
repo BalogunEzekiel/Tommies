@@ -23,6 +23,15 @@ def main():
     login_form()
     # ... rest of main()
 
+def init_session_state():
+    for key in ["login_email", "login_password", "logged_in"]:
+        if key not in st.session_state:
+            st.session_state[key] = ""
+
+def main():
+    init_session_state()
+    login_form()
+
 # --- Database Connection ---
 @st.cache_resource
 def get_engine():
