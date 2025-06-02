@@ -60,21 +60,30 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def get_user(email):
-    result = supabase.table("users").select("*").eq("email", email).execute()
-    if result.data and len(result.data) > 0:
-        return result.data[0]
+    response = supabase.table("users").select("*").eq("email", email).execute()
+    if response.data and len(response.data) > 0:
+        return response.data[0]
     return None
 
 def register_user(name, email, password, phone, address):
     hashed = hash_password(password)
-    result = supabase.table("users").insert({
-        "full_name": name,
-        "email": email,
-        "password_hash": hashed,
-        "phone": phone,
-        "address": address
-    }).execute()
-    return result
+    try:
+        result = supabase.table("users").insert({
+            "full_name": name,
+            "email": email,
+            "password_hash": hashed,
+            "phone": phone,
+            "address": address,
+            # "registered_on" will default to CURRENT_DATE automatically
+        }).execute()
+
+        if result.data:
+            return result
+        else:
+            return None
+    except Exception as e:
+        print(f"Database registration error: {e}")
+        return None
 
 def authenticate(email, password):
     hashed = hash_password(password)
@@ -127,26 +136,34 @@ if "viewing_cart" not in st.session_state:
 
 def registration_form():
     st.sidebar.subheader("📝 Register")
+
     name = st.sidebar.text_input("Full Name", key="reg_name")
     email = st.sidebar.text_input("Email", key="reg_email")
     phone = st.sidebar.text_input("Phone", key="reg_phone")
     address = st.sidebar.text_area("Address", key="reg_address")
     password = st.sidebar.text_input("Password", type="password", key="reg_password")
+
     if st.sidebar.button("Register"):
+        # Basic validation
         if not all([name, email, phone, address, password]):
             st.sidebar.warning("Please fill in all fields")
             return
+        
+        # Check if user already exists (implement get_user(email) to query users table)
         if get_user(email):
             st.sidebar.error("Email already registered. Please login.")
             return
+        
+        # Register new user
         result = register_user(name, email, password, phone, address)
-        if result.status_code == 201:
+
+        if result and result.status_code == 201:
             st.sidebar.success("✅ Registration successful! Please log in.")
-            # Clear registration form fields
+            # Clear the form fields after success
             for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
                 st.session_state[key] = ""
         else:
-            st.sidebar.error("❌ Registration failed. Try again.")
+            st.sidebar.error("❌ Registration failed. Please try again.")
 
 def login_form():
     st.sidebar.subheader("🔐 Login")
