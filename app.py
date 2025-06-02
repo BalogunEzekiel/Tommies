@@ -98,22 +98,20 @@ def register_user(name, email, password, phone, address):
             "password_hash": hashed,
             "phone": phone,
             "address": address,
-            # "created_at" will default to CURRENT_TIMESTAMP if set in your Supabase table
         }).execute()
 
-        # Supabase client returns a response object. Check 'data' for success.
-        # status_code should be 201 for a successful insert
-        if result.data and result.status_code == 201:
-            return result
-        else:
-            # If insert was attempted but no data returned, or status not 201
-            st.error(f"Supabase registration failed or returned unexpected data: {result.data}")
+        if result.error:
+            st.error(f"Supabase error: {result.error.message}")
             return None
+
+        if result.data:
+            return result  # Registration successful
+
+        st.error("Unexpected error: No data returned.")
+        return None
+
     except Exception as e:
-        # Catch network errors, constraint violations, etc.
-        # For a duplicate email, Supabase will typically return a status_code 409
-        # but if an exception is raised before that, this catches it.
-        st.error(f"Database registration error: {e}")
+        st.error(f"Database registration exception: {e}")
         return None
 
 def authenticate(email, password):
