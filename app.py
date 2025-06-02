@@ -43,33 +43,31 @@ def get_supabase_client():
 supabase = get_supabase_client()
 
 # --- HEADER: Login and Signup buttons ---
-# Initialize session state key
-import streamlit as st
 
 # Initialize session state variables
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-if 'show_login' not in st.session_state:
-    st.session_state.show_login = False
-if 'show_register' not in st.session_state:
-    st.session_state.show_register = False
+#if 'logged_in' not in st.session_state:
+#    st.session_state.logged_in = False
+# if 'show_login' not in st.session_state:
+#    st.session_state.show_login = False
+# if 'show_register' not in st.session_state:
+#    st.session_state.show_register = False
 
 # Check login status
-if not st.session_state.logged_in:
-    st.write("Please log in to continue.")
+# if not st.session_state.logged_in:
+#    st.write("Please log in to continue.")
+#
+#    col1, col2, col3 = st.columns([6, 1, 1])
+#    with col2:
+#        if st.button("Login"):
+#            st.session_state.show_login = True
+#            st.session_state.show_register = False
+#    with col3:
+#        if st.button("Signup"):
+#            st.session_state.show_register = True
+#            st.session_state.show_login = False
 
-    col1, col2, col3 = st.columns([6, 1, 1])
-    with col2:
-        if st.button("Login"):
-            st.session_state.show_login = True
-            st.session_state.show_register = False
-    with col3:
-        if st.button("Signup"):
-            st.session_state.show_register = True
-            st.session_state.show_login = False
-
-else:
-    st.write("Welcome back!")
+# else:
+#    st.write("Welcome back!")
 
 
 # --- Helper Functions ---
@@ -244,45 +242,54 @@ if "viewing_cart" not in st.session_state:
 
 # --- UI Functions ---
 
-def registration_form():
-    st.sidebar.subheader("📝 Register")
+import streamlit as st
 
-    name = st.sidebar.text_input("Full Name", value=st.session_state.get("reg_name", ""), key="reg_name")
-    email = st.sidebar.text_input("Email", value=st.session_state.get("reg_email", ""), key="reg_email")
-    phone = st.sidebar.text_input("Phone", value=st.session_state.get("reg_phone", ""), key="reg_phone")
-    address = st.sidebar.text_area("Address", value=st.session_state.get("reg_address", ""), key="reg_address")
-    password = st.sidebar.text_input("Password", type="password", value=st.session_state.get("reg_password", ""), key="reg_password")
+# Initialize session state variables
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+if 'show_login' not in st.session_state:
+    st.session_state.show_login = False
+if 'show_register' not in st.session_state:
+    st.session_state.show_register = False
 
-    if st.sidebar.button("Register"):
-        if not all([name, email, phone, address, password]):
-            st.sidebar.warning("Please fill in all fields")
-            return
+# Dummy auth functions (replace with real logic)
+def get_user(email):
+    return None
 
-        # Check if user already exists
-        if get_user(email):
-            st.sidebar.error("Email already registered. Please login.")
-            return
+def register_user(name, email, password, phone, address):
+    return True
 
-        result = register_user(name, email, password, phone, address)
+def authenticate(email, password):
+    if email == "admin@example.com" and password == "admin":
+        return {"full_name": "Admin User"}
+    return None
 
-        if result: # register_user returns None on failure, or a result object on success
-            st.sidebar.success("✅ Registration successful! Please log in.")
-            # Clear the form fields after success
-            for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
-                st.session_state[key] = "" # Clear directly in session state
-        else:
-            st.sidebar.error("❌ Registration failed. Please try again.")
+# Header area logic
+if not st.session_state.logged_in:
+    st.write("Please log in to continue.")
 
+    col1, col2, col3 = st.columns([6, 1, 1])
+    with col2:
+        if st.button("Login", key="header_login_btn"):
+            st.session_state.show_login = True
+            st.session_state.show_register = False
+    with col3:
+        if st.button("Signup", key="header_signup_btn"):
+            st.session_state.show_register = True
+            st.session_state.show_login = False
+else:
+    st.success("✅ Welcome back!")
+
+# Display the login form in main page
 def login_form():
-    st.sidebar.subheader("🔐 Login")
+    st.subheader("🔐 Login")
 
-    # Use keys to bind inputs to session state, initialized to empty strings
-    email = st.sidebar.text_input("Email", value=st.session_state.get("login_email", ""), key="login_email")
-    password = st.sidebar.text_input("Password", type="password", value=st.session_state.get("login_password", ""), key="login_password")
+    email = st.text_input("Email", value=st.session_state.get("login_email", ""), key="login_email_input")
+    password = st.text_input("Password", type="password", value=st.session_state.get("login_password", ""), key="login_password_input")
 
-    if st.sidebar.button("Login"):
+    if st.button("Login", key="main_login_btn"):
         if not email or not password:
-            st.sidebar.warning("Enter both email and password")
+            st.warning("Enter both email and password")
             return
 
         user = authenticate(email, password)
@@ -290,16 +297,47 @@ def login_form():
         if user:
             st.session_state.logged_in = True
             st.session_state.user = user
-            st.sidebar.success(f"Welcome, {user['full_name']}!")
+            st.success(f"Welcome, {user['full_name']}!")
 
-            # Clear the input values in session state.
-            # Streamlit will then render them empty in the next rerun.
+            # Clear input values
             st.session_state["login_email"] = ""
             st.session_state["login_password"] = ""
-
-            # No explicit rerun needed, Streamlit will rerun naturally due to state change
         else:
-            st.sidebar.error("Invalid credentials")
+            st.error("Invalid credentials")
+
+# Display the registration form in main page
+def registration_form():
+    st.subheader("📝 Register")
+
+    name = st.text_input("Full Name", value=st.session_state.get("reg_name", ""), key="reg_name_input")
+    email = st.text_input("Email", value=st.session_state.get("reg_email", ""), key="reg_email_input")
+    phone = st.text_input("Phone", value=st.session_state.get("reg_phone", ""), key="reg_phone_input")
+    address = st.text_area("Address", value=st.session_state.get("reg_address", ""), key="reg_address_input")
+    password = st.text_input("Password", type="password", value=st.session_state.get("reg_password", ""), key="reg_password_input")
+
+    if st.button("Register", key="main_register_btn"):
+        if not all([name, email, phone, address, password]):
+            st.warning("Please fill in all fields")
+            return
+
+        if get_user(email):
+            st.error("Email already registered. Please login.")
+            return
+
+        result = register_user(name, email, password, phone, address)
+
+        if result:
+            st.success("✅ Registration successful! Please log in.")
+            for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
+                st.session_state[key + "_input"] = ""
+        else:
+            st.error("❌ Registration failed. Please try again.")
+
+# Conditionally show login or register forms
+if st.session_state.show_login:
+    login_form()
+elif st.session_state.show_register:
+    registration_form()
 
 def product_list():
     st.subheader("🛍️ Available Products")
