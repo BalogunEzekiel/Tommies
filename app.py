@@ -30,12 +30,12 @@ def get_engine():
         st.error(f"Database connection error: {e}")
         st.stop()
 
-engine = get_engine()
+# engine = get_engine()
 
 # --- Supabase client setup ---
-# supabase_url = st.secrets["supabase"]["url"]
-# supabase_key = st.secrets["supabase"]["anon_key"]
-# supabase = create_client(supabase_url, supabase_key)
+supabase_url = st.secrets["supabase"]["url"]
+supabase_key = st.secrets["supabase"]["anon_key"]
+supabase = create_client(supabase_url, supabase_key)
 
 # --- Helper Functions ---
 
@@ -44,7 +44,8 @@ def send_confirmation_email(email, order_id):
         msg = EmailMessage()
         msg.set_content(f"Thank you for your order #{order_id} from Tommies Fashion Store!")
         msg["Subject"] = "Order Confirmation"
-        msg["From"] = "no-reply@tommiesfashion.com"
+        msg["From"] = "ezekiel4true@yahoo.com"
+#        msg["From"] = "no-reply@tommiesfashion.com"
         msg["To"] = email
 
         with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
