@@ -93,7 +93,6 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def get_user(email):
-    # Using `execute()` and checking `data` is the correct way
     response = supabase.table("users").select("*").eq("email", email).execute()
     if response.data and len(response.data) > 0:
         return response.data[0]
@@ -111,11 +110,10 @@ def register_user(name, email, password, phone, address):
         }).execute()
 
         if result.data:
-            return result  # ✅ Registration succeeded
+            return result
         else:
             st.error("❌ Registration failed: No data returned from Supabase.")
             return None
-
     except Exception as e:
         st.error(f"❌ Database registration exception: {e}")
         return None
@@ -123,9 +121,6 @@ def register_user(name, email, password, phone, address):
 def authenticate(email, password):
     hashed = hash_password(password)
     user = get_user(email)
-
-    st.write("🔐 Hashed Input:", hashed)
-    st.write("🗃️ Stored Hash:", user["password_hash"] if user else "No user")
 
     if user and user["password_hash"] == hashed:
         return user
@@ -136,12 +131,12 @@ def fetch_products():
     return result.data if result.data else []
 
 def create_order(user_id, cart):
-    total = sum(item['price'] * item['qty'] for item in cart) # Use 'qty' for consistency
+    total = sum(item['price'] * item['qty'] for item in cart)
     try:
         order_result = supabase.table("orders").insert({
             "user_id": user_id,
             "total_amount": total,
-            "status": "pending" # Initial status
+            "status": "pending"
         }).execute()
 
         if not order_result.data:
@@ -153,11 +148,10 @@ def create_order(user_id, cart):
             supabase.table("order_items").insert({
                 "order_id": order_id,
                 "product_id": item['product_id'],
-                "quantity": item['qty'], # Use 'qty'
+                "quantity": item['qty'],
                 "price_at_purchase": item['price']
             }).execute()
 
-            # Update product stock (careful with race conditions in real apps)
             supabase.table("products").update({
                 "stock_quantity": item['stock_quantity'] - item['qty']
             }).eq("product_id", item['product_id']).execute()
@@ -168,70 +162,57 @@ def create_order(user_id, cart):
         st.error(f"Error creating order: {e}")
         return None
 
-# --- Registration Form Function ---
+# --- UI Functions ---
 def registration_form():
     st.subheader("📝 Register")
 
-    name = st.text_input("Full Name", value=st.session_state.get("reg_name", ""), key="reg_name_input")
-    email = st.text_input("Email", value=st.session_state.get("reg_email", ""), key="reg_email_input")
-    phone = st.text_input("Phone", value=st.session_state.get("reg_phone", ""), key="reg_phone_input")
-    address = st.text_area("Address", value=st.session_state.get("reg_address", ""), key="reg_address_input")
-    password = st.text_input("Password", type="password", value=st.session_state.get("reg_password", ""), key="reg_password_input")
+    name = st.text_input("Full Name", key="reg_name_input")
+    email = st.text_input("Email", key="reg_email_input")
+    phone = st.text_input("Phone", key="reg_phone_input")
+    address = st.text_area("Address", key="reg_address_input")
+    password = st.text_input("Password", type="password", key="reg_password_input")
 
     if st.button("Register", key="main_register_btn"):
         if not all([name, email, phone, address, password]):
             st.warning("Please fill in all fields")
             return
 
-        if get_user(email):  # Replace with your real DB lookup
+        if get_user(email):
             st.error("Email already registered. Please login.")
             return
 
-        result = register_user(name, email, password, phone, address)  # Replace with your DB insert logic
+        result = register_user(name, email, password, phone, address)
 
         if result:
             st.success("✅ Registration successful! Please log in.")
             st.session_state.show_register = False
             st.session_state.show_login = True
-        
-            # Clear form inputs safely
+
+            # Clear widget values safely
             for key in ["reg_name_input", "reg_email_input", "reg_phone_input", "reg_address_input", "reg_password_input"]:
                 if key in st.session_state:
-                    del st.session_state[key]  # ✅ Safely deletes widget key without error
-        
-            st.rerun()  # ✅ Forces rerun so Streamlit doesn't choke on updated state
+                    del st.session_state[key]
 
+            st.rerun()
         else:
             st.error("❌ Registration failed. Please try again.")
 
-# --- Show the appropriate form ---
-if st.session_state.show_login:
-    login_form()
-elif st.session_state.show_register:
-    registration_form()
-
-
-# --- Helper Functions ---
-
+# --- Email Confirmation ---
 def send_confirmation_email(email, order_id):
     try:
         msg = EmailMessage()
         msg.set_content(f"Thank you for your order #{order_id} from Tommies Fashion Store!")
         msg["Subject"] = "Order Confirmation"
-        # Use a more appropriate 'From' address for automated emails
-        # Ensure this email is correctly configured in your SMTP server for sending
         msg["From"] = "no-reply@tommiesfashion.com"
         msg["To"] = email
 
         with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
             smtp.starttls()
-            # Use Streamlit secrets for email credentials
             smtp.login(st.secrets["email"]["username"], st.secrets["email"]["password"])
             smtp.send_message(msg)
     except Exception as e:
         st.warning(f"Email failed to send: {e}")
-        # Consider logging the full exception for debugging in production
-
+        
 # --- Flutterwave Integration ---
 def initiate_payment(amount, email):
     # Retrieve Flutterwave public key from Streamlit secrets
@@ -286,31 +267,43 @@ def initiate_payment(amount, email):
     except Exception as e:
         st.error(f"An unexpected error occurred during payment initiation: {e}")
 
-
-# --- Session State Initialization ---
-if "cart" not in st.session_state:
-    st.session_state.cart = []
-
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-if "user" not in st.session_state:
-    st.session_state.user = {}
-
-if "viewing_cart" not in st.session_state:
-    st.session_state.viewing_cart = False
-
-# --- UI Functions ---
-
 import streamlit as st
 
-# Initialize session state variables
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-if 'show_login' not in st.session_state:
-    st.session_state.show_login = False
-if 'show_register' not in st.session_state:
-    st.session_state.show_register = False
+# --- Initialize session state variables ---
+default_state = {
+    "cart": [],
+    "logged_in": False,
+    "user": {},
+    "viewing_cart": False,
+    "show_login": False,
+    "show_register": False
+}
+
+for key, value in default_state.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
+
+# --- Example UI Logic ---
+
+if st.session_state.show_login:
+    st.subheader("🔐 Login")
+    # login_form()  # Call your login form function here
+
+elif st.session_state.show_register:
+    st.subheader("📝 Register")
+    # registration_form()  # Call your registration form function here
+
+else:
+    st.title("🛒 Welcome to the Store!")
+    if not st.session_state.logged_in:
+        if st.button("Login"):
+            st.session_state.show_login = True
+        if st.button("Register"):
+            st.session_state.show_register = True
+    else:
+        st.success(f"Welcome, {st.session_state.user.get('name', 'User')}!")
+        if st.button("View Cart"):
+            st.session_state.viewing_cart = True
 
 # Dummy auth functions (replace with real logic)
 def get_user(email):
@@ -323,41 +316,6 @@ def authenticate(email, password):
     if email == "admin@example.com" and password == "admin":
         return {"full_name": "Admin User"}
     return None
-
-
-# Display the registration form in main page
-# def registration_form():
-#    st.subheader("📝 Register")
-
-#    name = st.text_input("Full Name", value=st.session_state.get("reg_name", ""), key="reg_name_input")
-#    email = st.text_input("Email", value=st.session_state.get("reg_email", ""), key="reg_email_input")
-#    phone = st.text_input("Phone", value=st.session_state.get("reg_phone", ""), key="reg_phone_input")
-#    address = st.text_area("Address", value=st.session_state.get("reg_address", ""), key="reg_address_input")
-#    password = st.text_input("Password", type="password", value=st.session_state.get("reg_password", ""), key="reg_password_input")
-
-#    if st.button("Register", key="main_register_btn"):
-#        if not all([name, email, phone, address, password]):
-#            st.warning("Please fill in all fields")
-#            return
-
-#        if get_user(email):
-#            st.error("Email already registered. Please login.")
-#            return
-
-#        result = register_user(name, email, password, phone, address)
-
-#        if result:
-#            st.success("✅ Registration successful! Please log in.")
-#            for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
-#                st.session_state[key + "_input"] = ""
-#        else:
-#            st.error("❌ Registration failed. Please try again.")
-
-# Conditionally show login or register forms
-# if st.session_state.show_login:
-#    login_form()
-# elif st.session_state.show_register:
-#    registration_form()
 
 def product_list():
     st.subheader("🛍️ Available Products")
@@ -466,7 +424,7 @@ def view_cart():
                 return
             initiate_payment(total, st.session_state.user['email'])
         
-    else:
+]    else:
         st.warning("Please log in or sign up to proceed with payment.")
 
     st.markdown("---") # Separator
@@ -477,6 +435,13 @@ def view_cart():
 def admin_panel():
     st.title("🛠️ Admin Dashboard")
     st.subheader("Recent Orders")
+
+# --- MAIN PAGE: Admin Menu ---
+if st.session_state.logged_in and st.session_state.user.get("email") == "admin@tommiesfashion.com":
+    st.markdown("### 🔧 Admin Menu")
+    st.write("- Manage Products")
+    st.write("- View Orders")
+    st.write("- Add New Product (feature coming soon...)")
 
     try:
         # Ensure 'users' table is joined correctly for full_name
@@ -555,13 +520,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# --- MAIN PAGE: Admin Menu ---
-if st.session_state.logged_in and st.session_state.user.get("email") == "admin@tommiesfashion.com":
-    st.markdown("### 🔧 Admin Menu")
-    st.write("- Manage Products")
-    st.write("- View Orders")
-    st.write("- Add New Product (feature coming soon...)")
 
 # --- SIDEBAR CONTENT ---
 st.sidebar.title("About Tommies 👗🧵")
