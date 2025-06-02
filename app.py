@@ -341,7 +341,7 @@ def view_cart():
         st.info("Your cart is empty.")
         if st.button("🔙 Back to Products"):
             st.session_state.viewing_cart = False
-            st.experimental_rerun() # Rerun to show product list
+            st.rerun() # Rerun to show product list
         return
 
     total = 0
@@ -358,7 +358,7 @@ def view_cart():
             new_qty = st.number_input("Change Qty", min_value=1, max_value=item.get('stock_quantity', item['qty']), value=item['qty'], key=f"cart_qty_{item['product_id']}")
             if new_qty != item['qty']:
                 item['qty'] = new_qty
-                st.experimental_rerun() # Rerun to update total and display immediately
+                st.rerun() # Rerun to update total and display immediately
         with col3:
             if st.button("Remove", key=f"remove_{item['product_id']}"):
                 remove_indices.append(i)
@@ -368,7 +368,7 @@ def view_cart():
     # Process removals
     for i in sorted(remove_indices, reverse=True):
         st.session_state.cart.pop(i)
-        st.experimental_rerun() # Rerun to reflect immediate removal
+        st.rerun() # Rerun to reflect immediate removal
 
     st.markdown("---") # Separator
     st.markdown(f"**Total: ₦{total:,.2f}**")
@@ -394,7 +394,7 @@ def view_cart():
         #         if order_id:
         #             st.success(f"✅ Order #{order_id} placed! Confirmation sent to your email.")
         #             st.session_state.cart = []
-        #             st.experimental_rerun()
+        #             st.rerun()
         #         else:
         #             st.error("Failed to place order. Please try again.")
 
@@ -404,7 +404,7 @@ def view_cart():
     st.markdown("---") # Separator
     if st.button("🔙 Back to Products"):
         st.session_state.viewing_cart = False
-        st.experimental_rerun() # Rerun to switch view
+        st.rerun() # Rerun to switch view
 
 def admin_panel():
     st.title("🛠️ Admin Dashboard")
