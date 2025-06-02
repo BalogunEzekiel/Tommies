@@ -79,67 +79,6 @@ def login_form():
         else:
             st.error("❌ Invalid credentials.")
 
-# --- Registration Form Function ---
-def registration_form():
-    st.subheader("📝 Register")
-
-    name = st.text_input("Full Name", value=st.session_state.get("reg_name", ""), key="reg_name_input")
-    email = st.text_input("Email", value=st.session_state.get("reg_email", ""), key="reg_email_input")
-    phone = st.text_input("Phone", value=st.session_state.get("reg_phone", ""), key="reg_phone_input")
-    address = st.text_area("Address", value=st.session_state.get("reg_address", ""), key="reg_address_input")
-    password = st.text_input("Password", type="password", value=st.session_state.get("reg_password", ""), key="reg_password_input")
-
-    if st.button("Register", key="main_register_btn"):
-        if not all([name, email, phone, address, password]):
-            st.warning("Please fill in all fields")
-            return
-
-        if get_user(email):  # Replace with your real DB lookup
-            st.error("Email already registered. Please login.")
-            return
-
-        result = register_user(name, email, password, phone, address)  # Replace with your DB insert logic
-
-        if result:
-            st.success("✅ Registration successful! Please log in.")
-            st.session_state.show_register = False
-            st.session_state.show_login = True  # Automatically show login form
-            for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
-                st.session_state[key + "_input"] = ""
-        else:
-            st.error("❌ Registration failed. Please try again.")
-
-# --- Show the appropriate form ---
-if st.session_state.show_login:
-    login_form()
-elif st.session_state.show_register:
-    registration_form()
-
-
-# --- Helper Functions ---
-
-def send_confirmation_email(email, order_id):
-    try:
-        msg = EmailMessage()
-        msg.set_content(f"Thank you for your order #{order_id} from Tommies Fashion Store!")
-        msg["Subject"] = "Order Confirmation"
-        # Use a more appropriate 'From' address for automated emails
-        # Ensure this email is correctly configured in your SMTP server for sending
-        msg["From"] = "no-reply@tommiesfashion.com"
-        msg["To"] = email
-
-        with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
-            smtp.starttls()
-            # Use Streamlit secrets for email credentials
-            smtp.login(st.secrets["email"]["username"], st.secrets["email"]["password"])
-            smtp.send_message(msg)
-    except Exception as e:
-        st.warning(f"Email failed to send: {e}")
-        # Consider logging the full exception for debugging in production
-
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
 def get_user(email):
     # Using `execute()` and checking `data` is the correct way
     response = supabase.table("users").select("*").eq("email", email).execute()
@@ -217,6 +156,67 @@ def create_order(user_id, cart):
     except Exception as e:
         st.error(f"Error creating order: {e}")
         return None
+
+# --- Registration Form Function ---
+def registration_form():
+    st.subheader("📝 Register")
+
+    name = st.text_input("Full Name", value=st.session_state.get("reg_name", ""), key="reg_name_input")
+    email = st.text_input("Email", value=st.session_state.get("reg_email", ""), key="reg_email_input")
+    phone = st.text_input("Phone", value=st.session_state.get("reg_phone", ""), key="reg_phone_input")
+    address = st.text_area("Address", value=st.session_state.get("reg_address", ""), key="reg_address_input")
+    password = st.text_input("Password", type="password", value=st.session_state.get("reg_password", ""), key="reg_password_input")
+
+    if st.button("Register", key="main_register_btn"):
+        if not all([name, email, phone, address, password]):
+            st.warning("Please fill in all fields")
+            return
+
+        if get_user(email):  # Replace with your real DB lookup
+            st.error("Email already registered. Please login.")
+            return
+
+        result = register_user(name, email, password, phone, address)  # Replace with your DB insert logic
+
+        if result:
+            st.success("✅ Registration successful! Please log in.")
+            st.session_state.show_register = False
+            st.session_state.show_login = True  # Automatically show login form
+            for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
+                st.session_state[key + "_input"] = ""
+        else:
+            st.error("❌ Registration failed. Please try again.")
+
+# --- Show the appropriate form ---
+if st.session_state.show_login:
+    login_form()
+elif st.session_state.show_register:
+    registration_form()
+
+
+# --- Helper Functions ---
+
+def send_confirmation_email(email, order_id):
+    try:
+        msg = EmailMessage()
+        msg.set_content(f"Thank you for your order #{order_id} from Tommies Fashion Store!")
+        msg["Subject"] = "Order Confirmation"
+        # Use a more appropriate 'From' address for automated emails
+        # Ensure this email is correctly configured in your SMTP server for sending
+        msg["From"] = "no-reply@tommiesfashion.com"
+        msg["To"] = email
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+            smtp.starttls()
+            # Use Streamlit secrets for email credentials
+            smtp.login(st.secrets["email"]["username"], st.secrets["email"]["password"])
+            smtp.send_message(msg)
+    except Exception as e:
+        st.warning(f"Email failed to send: {e}")
+        # Consider logging the full exception for debugging in production
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
 # --- Flutterwave Integration ---
 def initiate_payment(amount, email):
