@@ -310,7 +310,7 @@ def product_list():
     for i, p in enumerate(filtered):
         with cols[i % cols_per_row]:
             # Display product image and details
-            st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_column_width=True)
+            st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
             st.markdown(f"**{p.get('product_name', 'N/A')}**")
             st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
             st.markdown(f"Stock: {p.get('stock_quantity', 0)} | Size: {p.get('size', 'N/A')} | Category: {p.get('category', 'N/A')}")
