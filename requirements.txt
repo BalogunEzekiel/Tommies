@@ -3,3 +3,4 @@ Pillow
 pandas
 supabase
 sqlalchemy
+psycopg2-binary
