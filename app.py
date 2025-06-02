@@ -79,6 +79,9 @@ def login_form():
         else:
             st.error("❌ Invalid credentials.")
 
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
 def get_user(email):
     # Using `execute()` and checking `data` is the correct way
     response = supabase.table("users").select("*").eq("email", email).execute()
@@ -214,9 +217,6 @@ def send_confirmation_email(email, order_id):
     except Exception as e:
         st.warning(f"Email failed to send: {e}")
         # Consider logging the full exception for debugging in production
-
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
 
 # --- Flutterwave Integration ---
 def initiate_payment(amount, email):
