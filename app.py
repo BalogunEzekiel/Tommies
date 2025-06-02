@@ -12,7 +12,7 @@ st.set_page_config(page_title="Tommies Fashion", layout="wide")
 def main():
     # Initialize session state keys before using them
     if "login_email" not in st.session_state:
-        st.session_state["login_email"] = ""
+        st.session_state.setdefault("login_email", "")
     if "login_password" not in st.session_state:
         st.session_state["login_password"] = ""
     if "logged_in" not in st.session_state:
