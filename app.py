@@ -126,7 +126,8 @@ def login_form():
     st.sidebar.subheader("🔐 Login")
     email = st.sidebar.text_input("Email", key="login_email")
     password = st.sidebar.text_input("Password", type="password", key="login_password")
-        if st.sidebar.button("Login"):
+    
+    if st.sidebar.button("Login"):
         user = authenticate(email, password)
         if user:
             st.session_state.logged_in = True
