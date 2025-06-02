@@ -4,7 +4,7 @@ import hashlib
 import smtplib
 from email.message import EmailMessage
 from sqlalchemy import create_engine
-from supabase import create_client
+from supabase import create_client, Client
 
 st.set_page_config(page_title="Tommies Fashion", layout="wide")
 
