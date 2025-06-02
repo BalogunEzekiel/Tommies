@@ -424,7 +424,7 @@ def view_cart():
                 return
             initiate_payment(total, st.session_state.user['email'])
         
-]    else:
+    else:
         st.warning("Please log in or sign up to proceed with payment.")
 
     st.markdown("---") # Separator
