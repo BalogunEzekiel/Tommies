@@ -239,6 +239,35 @@ def product_list():
                     st.session_state.cart.append({**p, 'qty': qty})
                     st.success(f"Added {qty} x {p['product_name']} to cart.")
 
+def view_cart():
+    st.subheader("🛒 Your Cart")
+    if not st.session_state.cart:
+        st.info("Your cart is empty.")
+        return
+
+    total = 0
+    remove_indices = []
+    for i, item in enumerate(st.session_state.cart):
+        st.write(f"{item['qty']} x {item['product_name']} - ₦{item['price']:,.2f} each")
+        total += item['qty'] * item['price']
+
+        if st.button(f"Remove {item['product_name']}", key=f"remove_{item['product_id']}"):
+            remove_indices.append(i)
+
+    for i in sorted(remove_indices, reverse=True):
+        st.session_state.cart.pop(i)
+        st.experimental_rerun()
+
+    st.markdown(f"**Total: ₦{total:,.2f}**")
+
+    if st.button("🧾 Place Order"):
+        if not st.session_state.cart:
+            st.warning("Your cart is empty!")
+            return
+        order_id = create_order(st.session_state.user['user_id'], st.session_state.cart)
+        st.success(f"✅ Order #{order_id} placed! Confirmation sent to your email.")
+        st.session_state.cart = []
+
 import requests
 
 # Function to initiate payment with Flutterwave
@@ -283,36 +312,6 @@ def view_cart():
             initiate_payment(total_amount, st.session_state.user['email'])
         else:
             st.warning("Please log in or sign up to proceed with payment.")
-
-
-def view_cart():
-    st.subheader("🛒 Your Cart")
-    if not st.session_state.cart:
-        st.info("Your cart is empty.")
-        return
-
-    total = 0
-    remove_indices = []
-    for i, item in enumerate(st.session_state.cart):
-        st.write(f"{item['qty']} x {item['product_name']} - ₦{item['price']:,.2f} each")
-        total += item['qty'] * item['price']
-
-        if st.button(f"Remove {item['product_name']}", key=f"remove_{item['product_id']}"):
-            remove_indices.append(i)
-
-    for i in sorted(remove_indices, reverse=True):
-        st.session_state.cart.pop(i)
-        st.experimental_rerun()
-
-    st.markdown(f"**Total: ₦{total:,.2f}**")
-
-    if st.button("🧾 Place Order"):
-        if not st.session_state.cart:
-            st.warning("Your cart is empty!")
-            return
-        order_id = create_order(st.session_state.user['user_id'], st.session_state.cart)
-        st.success(f"✅ Order #{order_id} placed! Confirmation sent to your email.")
-        st.session_state.cart = []
 
 def admin_panel():
     st.title("🛠️ Admin Dashboard")
