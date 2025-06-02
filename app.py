@@ -100,6 +100,9 @@ def register_user(name, email, password, phone, address):
             "address": address,
         }).execute()
 
+         # 👇 Add this line for debugging
+        st.write(result)
+
         if result.error:
             st.error(f"Supabase error: {result.error.message}")
             return None
