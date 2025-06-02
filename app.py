@@ -44,30 +44,76 @@ supabase = get_supabase_client()
 
 # --- HEADER: Login and Signup buttons ---
 
-# Initialize session state variables
-#if 'logged_in' not in st.session_state:
-#    st.session_state.logged_in = False
-# if 'show_login' not in st.session_state:
-#    st.session_state.show_login = False
-# if 'show_register' not in st.session_state:
-#    st.session_state.show_register = False
+import streamlit as st
 
-# Check login status
-# if not st.session_state.logged_in:
-#    st.write("Please log in to continue.")
-#
-#    col1, col2, col3 = st.columns([6, 1, 1])
-#    with col2:
-#        if st.button("Login"):
-#            st.session_state.show_login = True
-#            st.session_state.show_register = False
-#    with col3:
-#        if st.button("Signup"):
-#            st.session_state.show_register = True
-#            st.session_state.show_login = False
+# --- Initialize session state variables ---
+if "show_login" not in st.session_state:
+    st.session_state.show_login = False
+if "show_register" not in st.session_state:
+    st.session_state.show_register = False
 
-# else:
-#    st.write("Welcome back!")
+# --- Header with Login and Register buttons ---
+with st.container():
+    col1, col2, col3 = st.columns([5, 1, 1])
+    with col1:
+        st.title("Welcome to Tommies App")
+    with col2:
+        if st.button("Login"):
+            st.session_state.show_login = True
+            st.session_state.show_register = False  # Hide register form
+    with col3:
+        if st.button("Register"):
+            st.session_state.show_register = True
+            st.session_state.show_login = False  # Hide login form
+
+# --- Login Form Function ---
+def login_form():
+    st.subheader("🔐 Login")
+    email = st.text_input("Email", key="login_email")
+    password = st.text_input("Password", type="password", key="login_password")
+
+    if st.button("Login Now"):
+        # Replace with your real authentication logic
+        if email == "test@example.com" and password == "1234":
+            st.success("✅ Login successful!")
+        else:
+            st.error("❌ Invalid credentials.")
+
+# --- Registration Form Function ---
+def registration_form():
+    st.subheader("📝 Register")
+
+    name = st.text_input("Full Name", value=st.session_state.get("reg_name", ""), key="reg_name_input")
+    email = st.text_input("Email", value=st.session_state.get("reg_email", ""), key="reg_email_input")
+    phone = st.text_input("Phone", value=st.session_state.get("reg_phone", ""), key="reg_phone_input")
+    address = st.text_area("Address", value=st.session_state.get("reg_address", ""), key="reg_address_input")
+    password = st.text_input("Password", type="password", value=st.session_state.get("reg_password", ""), key="reg_password_input")
+
+    if st.button("Register", key="main_register_btn"):
+        if not all([name, email, phone, address, password]):
+            st.warning("Please fill in all fields")
+            return
+
+        if get_user(email):  # Replace with your real DB lookup
+            st.error("Email already registered. Please login.")
+            return
+
+        result = register_user(name, email, password, phone, address)  # Replace with your DB insert logic
+
+        if result:
+            st.success("✅ Registration successful! Please log in.")
+            st.session_state.show_register = False
+            st.session_state.show_login = True  # Automatically show login form
+            for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
+                st.session_state[key + "_input"] = ""
+        else:
+            st.error("❌ Registration failed. Please try again.")
+
+# --- Show the appropriate form ---
+if st.session_state.show_login:
+    login_form()
+elif st.session_state.show_register:
+    registration_form()
 
 
 # --- Helper Functions ---
@@ -264,46 +310,6 @@ def authenticate(email, password):
         return {"full_name": "Admin User"}
     return None
 
-# Header area logic
-if not st.session_state.logged_in:
-    st.write("Please log in to continue.")
-
-    col1, col2, col3 = st.columns([6, 1, 1])
-    with col2:
-        if st.button("Login", key="header_login_btn"):
-            st.session_state.show_login = True
-            st.session_state.show_register = False
-    with col3:
-        if st.button("Signup", key="header_signup_btn"):
-            st.session_state.show_register = True
-            st.session_state.show_login = False
-else:
-    st.success("✅ Welcome back!")
-
-# Display the login form in main page
-def login_form():
-    st.subheader("🔐 Login")
-
-#    email = st.text_input("Email", value=st.session_state.get("login_email", ""), key="login_email_input")
-#    password = st.text_input("Password", type="password", value=st.session_state.get("login_password", ""), key="login_password_input")
-
-    if st.button("Login", key="main_login_btn"):
-        if not email or not password:
-            st.warning("Enter both email and password")
-            return
-
-        user = authenticate(email, password)
-
-        if user:
-            st.session_state.logged_in = True
-            st.session_state.user = user
-            st.success(f"Welcome, {user['full_name']}!")
-
-            # Clear input values
-            st.session_state["login_email"] = ""
-            st.session_state["login_password"] = ""
-        else:
-            st.error("Invalid credentials")
 
 # Display the registration form in main page
 # def registration_form():
@@ -315,29 +321,29 @@ def login_form():
 #    address = st.text_area("Address", value=st.session_state.get("reg_address", ""), key="reg_address_input")
 #    password = st.text_input("Password", type="password", value=st.session_state.get("reg_password", ""), key="reg_password_input")
 
-    if st.button("Register", key="main_register_btn"):
-        if not all([name, email, phone, address, password]):
-            st.warning("Please fill in all fields")
-            return
+#    if st.button("Register", key="main_register_btn"):
+#        if not all([name, email, phone, address, password]):
+#            st.warning("Please fill in all fields")
+#            return
 
-        if get_user(email):
-            st.error("Email already registered. Please login.")
-            return
+#        if get_user(email):
+#            st.error("Email already registered. Please login.")
+#            return
 
-        result = register_user(name, email, password, phone, address)
+#        result = register_user(name, email, password, phone, address)
 
-        if result:
-            st.success("✅ Registration successful! Please log in.")
-            for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
-                st.session_state[key + "_input"] = ""
-        else:
-            st.error("❌ Registration failed. Please try again.")
+#        if result:
+#            st.success("✅ Registration successful! Please log in.")
+#            for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
+#                st.session_state[key + "_input"] = ""
+#        else:
+#            st.error("❌ Registration failed. Please try again.")
 
 # Conditionally show login or register forms
-if st.session_state.show_login:
-    login_form()
-elif st.session_state.show_register:
-    registration_form()
+# if st.session_state.show_login:
+#    login_form()
+# elif st.session_state.show_register:
+#    registration_form()
 
 def product_list():
     st.subheader("🛍️ Available Products")
