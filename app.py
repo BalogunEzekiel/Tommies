@@ -498,14 +498,7 @@ def main():
             st.session_state.logged_in = False
             st.session_state.user = {}
             st.success("Logged out.")
-
-      #  if st.sidebar.button("Logout"):
-      #      st.session_state.logged_in = False
-      #      st.session_state.user = {}
-      #      st.session_state.cart = []
-      #      st.session_state.viewing_cart = False
-            # No explicit rerun needed, Streamlit will rerun naturally
-
+     
         if st.session_state.viewing_cart:
             view_cart()
             # "Back to Products" button is now inside view_cart for consistency
