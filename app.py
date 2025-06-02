@@ -3,30 +3,69 @@ from urllib.parse import quote_plus
 import hashlib
 import smtplib
 from email.message import EmailMessage
-from supabase import create_client
+from sqlalchemy import create_engine
+from supabase import create_client, Client
 
 st.set_page_config(page_title="Tommies Fashion", layout="wide")
 
-# --- Initialize Supabase client ---
+# --- Database Connection ---
+@st.cache_resource
+def get_engine():
+    try:
+        host = st.secrets["supabase"]["host"]
+        port = st.secrets["supabase"]["port"]
+        database = st.secrets["supabase"]["database"]
+        user = st.secrets["supabase"]["user"]
+        password = st.secrets["supabase"]["password"]
+
+        encoded_password = quote_plus(password)
+        DATABASE_URL = (
+            f"postgresql+psycopg2://{user}:{encoded_password}@{host}:{port}/{database}?sslmode=require"
+        )
+        return create_engine(DATABASE_URL)
+    except KeyError as e:
+        st.error(f"Missing secret key: {e}")
+        st.stop()
+    except Exception as e:
+        st.error(f"Database connection error: {e}")
+        st.stop()
+
+# engine = get_engine()
+
+# --- Supabase client setup ---
 supabase_url = st.secrets["supabase"]["url"]
 supabase_key = st.secrets["supabase"]["key"]
 supabase = create_client(supabase_url, supabase_key)
 
 # --- Helper Functions ---
 
-def hash_password(password: str) -> str:
-    """Return SHA256 hash of the password."""
+def send_confirmation_email(email, order_id):
+    try:
+        msg = EmailMessage()
+        msg.set_content(f"Thank you for your order #{order_id} from Tommies Fashion Store!")
+        msg["Subject"] = "Order Confirmation"
+        msg["From"] = "ezekiel4true@yahoo.com"
+#        msg["From"] = "no-reply@tommiesfashion.com"
+        msg["To"] = email
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+            smtp.starttls()
+            # NOTE: Replace with your actual email & app password or use environment variables
+            smtp.login("your-email@gmail.com", "your-email-password")
+            smtp.send_message(msg)
+    except Exception as e:
+        st.warning(f"Email failed to send: {e}")
+
+def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-def get_user(email: str):
-    """Fetch user by email from Supabase."""
+def get_user(email):
     result = supabase.table("users").select("*").eq("email", email).execute()
     if result.data and len(result.data) > 0:
         return result.data[0]
     return None
 
 def register_user(name, email, password, phone, address):
-    """Register new user."""
     hashed = hash_password(password)
     result = supabase.table("users").insert({
         "full_name": name,
@@ -38,7 +77,6 @@ def register_user(name, email, password, phone, address):
     return result
 
 def authenticate(email, password):
-    """Authenticate user with email and password."""
     hashed = hash_password(password)
     user = get_user(email)
     if user and user["password_hash"] == hashed:
@@ -46,28 +84,10 @@ def authenticate(email, password):
     return None
 
 def fetch_products():
-    """Fetch all products from Supabase."""
     result = supabase.table("products").select("*").execute()
     return result.data if result.data else []
 
-def send_confirmation_email(email, order_id):
-    """Send order confirmation email (setup with your SMTP details)."""
-    try:
-        msg = EmailMessage()
-        msg.set_content(f"Thank you for your order #{order_id} from Tommies Fashion Store!")
-        msg["Subject"] = "Order Confirmation"
-        msg["From"] = "your-email@gmail.com"  # Replace with your sending email
-        msg["To"] = email
-
-        with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
-            smtp.starttls()
-            smtp.login("your-email@gmail.com", "your-email-password")  # Use environment variables ideally
-            smtp.send_message(msg)
-    except Exception as e:
-        st.warning(f"Email failed to send: {e}")
-
 def create_order(user_id, cart):
-    """Create an order and update product stock."""
     total = sum(item['price'] * item['qty'] for item in cart)
     order_result = supabase.table("orders").insert({
         "user_id": user_id,
@@ -75,7 +95,6 @@ def create_order(user_id, cart):
     }).execute()
 
     order_id = order_result.data[0]['order_id']
-
     for item in cart:
         supabase.table("order_items").insert({
             "order_id": order_id,
@@ -84,29 +103,27 @@ def create_order(user_id, cart):
             "price_at_purchase": item['price']
         }).execute()
 
-        # Update stock quantity
-        new_stock = item['stock_quantity'] - item['qty']
         supabase.table("products").update({
-            "stock_quantity": new_stock
+            "stock_quantity": item['stock_quantity'] - item['qty']
         }).eq("product_id", item['product_id']).execute()
 
     send_confirmation_email(st.session_state.user['email'], order_id)
     return order_id
 
 # --- Session State Initialization ---
+if "cart" not in st.session_state:
+    st.session_state.cart = []
 
-def init_session_state():
-    """Initialize all necessary session state keys."""
-    if "cart" not in st.session_state:
-        st.session_state.cart = []
-    if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
-    if "user" not in st.session_state:
-        st.session_state.user = {}
-    if "viewing_cart" not in st.session_state:
-        st.session_state.viewing_cart = False
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
-# --- UI Components ---
+if "user" not in st.session_state:
+    st.session_state.user = {}
+
+if "viewing_cart" not in st.session_state:
+    st.session_state.viewing_cart = False
+
+# --- UI Functions ---
 
 def registration_form():
     st.sidebar.subheader("📝 Register")
@@ -115,7 +132,6 @@ def registration_form():
     phone = st.sidebar.text_input("Phone", key="reg_phone")
     address = st.sidebar.text_area("Address", key="reg_address")
     password = st.sidebar.text_input("Password", type="password", key="reg_password")
-
     if st.sidebar.button("Register"):
         if not all([name, email, phone, address, password]):
             st.sidebar.warning("Please fill in all fields")
@@ -126,38 +142,27 @@ def registration_form():
         result = register_user(name, email, password, phone, address)
         if result.status_code == 201:
             st.sidebar.success("✅ Registration successful! Please log in.")
-            # Clear form fields
+            # Clear registration form fields
             for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
                 st.session_state[key] = ""
         else:
             st.sidebar.error("❌ Registration failed. Try again.")
 
 def login_form():
-    # Initialize other session keys
-    if "logged_in" not in st.session_state:
-        st.session_state["logged_in"] = False
-    if "user" not in st.session_state:
-        st.session_state["user"] = None
-
     st.sidebar.subheader("🔐 Login")
     email = st.sidebar.text_input("Email", key="login_email")
     password = st.sidebar.text_input("Password", type="password", key="login_password")
-
     if st.sidebar.button("Login"):
         if not email or not password:
             st.sidebar.warning("Enter both email and password")
             return
-
         user = authenticate(email, password)
         if user:
             st.session_state.logged_in = True
             st.session_state.user = user
             st.sidebar.success(f"Welcome, {user['full_name']}!")
-
-            # ✅ Safely clear inputs by removing keys and rerunning app
-            del st.session_state["login_email"]
-            del st.session_state["login_password"]
-            st.experimental_rerun()
+            st.session_state.login_email = ""
+            st.session_state.login_password = ""
         else:
             st.sidebar.error("Invalid credentials")
 
@@ -168,9 +173,8 @@ def product_list():
         st.info("No products available at the moment.")
         return
 
-    categories = sorted({p['category'] for p in products if p['category']})
-    sizes = sorted({p['size'] for p in products if p['size']})
-
+    categories = sorted(list(set(p['category'] for p in products if p['category'])))
+    sizes = sorted(list(set(p['size'] for p in products if p['size'])))
     category_filter = st.selectbox("Category", ["All"] + categories)
     size_filter = st.selectbox("Size", ["All"] + sizes)
     price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
@@ -209,7 +213,6 @@ def view_cart():
 
     total = 0
     remove_indices = []
-
     for i, item in enumerate(st.session_state.cart):
         st.write(f"{item['qty']} x {item['product_name']} - ₦{item['price']:,.2f} each")
         total += item['qty'] * item['price']
@@ -248,16 +251,13 @@ def admin_panel():
 # --- Main App ---
 
 def main():
-    init_session_state()
     st.title("👗 Tommies Fashion Store")
 
     if st.session_state.logged_in:
-        # Admin check
-        if st.session_state.user.get('email') == 'admin@tommies.com':
+        if st.session_state.user['email'] == 'admin@tommies.com':
             admin_panel()
             return
 
-        # User navigation buttons
         if st.sidebar.button("🛒 View Cart"):
             st.session_state.viewing_cart = True
 
@@ -268,7 +268,6 @@ def main():
             st.session_state.viewing_cart = False
             st.experimental_rerun()
 
-        # View cart or product list
         if st.session_state.viewing_cart:
             view_cart()
             if st.button("🔙 Back to Products"):
@@ -276,12 +275,11 @@ def main():
                 st.experimental_rerun()
         else:
             product_list()
-
     else:
         product_list()
         st.sidebar.markdown("---")
         login_form()
-        st.sidebar.markdown("New user? Register below:")
+        st.sidebar.markdown("---")
         registration_form()
 
 if __name__ == "__main__":
