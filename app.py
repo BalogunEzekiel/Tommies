@@ -100,8 +100,6 @@ def register_user(name, email, password, phone, address):
             "address": address,
         }).execute()
 
-        st.write(result)  # Optional: Inspect the raw APIResponse
-
         if result.data:
             return result  # ✅ Registration succeeded
         else:
