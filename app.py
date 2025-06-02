@@ -44,8 +44,6 @@ supabase = get_supabase_client()
 
 # --- HEADER: Login and Signup buttons ---
 
-import streamlit as st
-
 # --- Initialize session state variables ---
 if "show_login" not in st.session_state:
     st.session_state.show_login = False
@@ -72,10 +70,22 @@ def login_form():
     email = st.text_input("Email", key="login_email")
     password = st.text_input("Password", type="password", key="login_password")
 
-    if st.button("Login Now"):
-        # Replace with your real authentication logic
-        if email == "test@example.com" and password == "1234":
-            st.success("✅ Login successful!")
+    if st.button("Login Now", key="main_login_btn"):
+        if not email or not password:
+            st.warning("Please enter both email and password.")
+            return
+
+        # Normalize inputs
+        email = email.strip().lower()
+        password = password.strip()
+
+        user = authenticate(email, password)
+
+        if user:
+            st.session_state.user = user  # Save user in session for use elsewhere
+            st.success("✅ Logged in successfully!")
+            st.session_state.show_login = False
+            st.rerun()
         else:
             st.error("❌ Invalid credentials.")
 
