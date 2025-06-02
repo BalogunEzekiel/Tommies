@@ -167,12 +167,21 @@ def login_form():
             st.session_state.user = user
             st.sidebar.success(f"Welcome, {user['full_name']}!")
 
-            # You might want to trigger a rerun here to immediately update the UI
-            # For example, if you want to hide the login form and show other content.
-            st.experimental_rerun()
+            # No need for st.experimental_rerun() here.
+            # The app will naturally rerun and pick up the new session state.
+
+            # Optionally, you might want to clear the input values directly IF the form
+            # is *not* immediately hidden by the login status.
+            # However, in your current main() structure, the login form is hidden.
+            # So, these lines are generally not needed for clearing the form itself.
+            # If you *do* need to clear them for some other reason within the same run,
+            # you'd need a different approach (e.g., reset the widget's key to force re-render,
+            # but this is more complex and usually avoided).
+            # For now, simply removing the experimental_rerun is the key fix.
+
         else:
             st.sidebar.error("Invalid credentials")
-
+            
 def product_list():
     st.subheader("🛍️ Available Products")
     products = fetch_products()
