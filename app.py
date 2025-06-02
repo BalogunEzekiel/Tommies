@@ -111,10 +111,10 @@ for key in ["cart", "logged_in", "user", "viewing_cart"]:
 def registration_form():
     st.sidebar.subheader("📝 Register")
     name = st.sidebar.text_input("Full Name")
-    email = st.sidebar.text_input("Email")
+    email = st.sidebar.text_input("Email", key="register_email")
     phone = st.sidebar.text_input("Phone")
     address = st.sidebar.text_area("Address")
-    password = st.sidebar.text_input("Password", type="password")
+    password = st.sidebar.text_input("Password", type="password", key="register_password")
     if st.sidebar.button("Register"):
         result = register_user(name, email, password, phone, address)
         if result.status_code == 201:
@@ -124,9 +124,9 @@ def registration_form():
 
 def login_form():
     st.sidebar.subheader("🔐 Login")
-    email = st.sidebar.text_input("Email")
-    password = st.sidebar.text_input("Password", type="password")
-    if st.sidebar.button("Login"):
+    email = st.sidebar.text_input("Email", key="login_email")
+    password = st.sidebar.text_input("Password", type="password", key="login_password")
+        if st.sidebar.button("Login"):
         user = authenticate(email, password)
         if user:
             st.session_state.logged_in = True
