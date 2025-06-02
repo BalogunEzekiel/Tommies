@@ -5,3 +5,7 @@ supabase
 sqlalchemy
 psycopg2-binary
 requests
+urllib.parse
+hashlib
+smtplib
+uuid
