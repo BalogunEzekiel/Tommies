@@ -42,6 +42,19 @@ def get_supabase_client():
 
 supabase = get_supabase_client()
 
+# --- HEADER: Login and Signup buttons ---
+col1, col2, col3 = st.columns([6, 1, 1])
+with col2:
+    if not st.session_state.logged_in:
+        if st.button("Login"):
+            st.session_state["show_login"] = True
+            st.session_state["show_register"] = False
+with col3:
+    if not st.session_state.logged_in:
+        if st.button("Signup"):
+            st.session_state["show_register"] = True
+            st.session_state["show_login"] = False
+
 # --- Helper Functions ---
 
 def send_confirmation_email(email, order_id):
@@ -382,22 +395,6 @@ def view_cart():
                 return
             initiate_payment(total, st.session_state.user['email'])
         
-        # You could also keep a "Place Order" button that bypasses Flutterwave if needed
-        # but typically you'd go through the payment gateway.
-        # For simplicity, if payment is required, remove this direct "Place Order" button
-        # if st.button("🧾 Place Order (Manual Order)"):
-        #     if not st.session_state.cart:
-        #         st.warning("Your cart is empty!")
-        #         return
-        #     if st.session_state.user:
-        #         order_id = create_order(st.session_state.user['user_id'], st.session_state.cart)
-        #         if order_id:
-        #             st.success(f"✅ Order #{order_id} placed! Confirmation sent to your email.")
-        #             st.session_state.cart = []
-        #             st.rerun()
-        #         else:
-        #             st.error("Failed to place order. Please try again.")
-
     else:
         st.warning("Please log in or sign up to proceed with payment.")
 
@@ -487,3 +484,43 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# --- MAIN PAGE: Admin Menu ---
+if st.session_state.logged_in and st.session_state.user.get("email") == "admin@tommiesfashion.com":
+    st.markdown("### 🔧 Admin Menu")
+    st.write("- Manage Products")
+    st.write("- View Orders")
+    st.write("- Add New Product (feature coming soon...)")
+
+# --- SIDEBAR CONTENT ---
+st.sidebar.title("About Tommies 👗🧵")
+st.sidebar.info("Tommies is your one-stop fashion destination offering premium styles at unbeatable prices.")
+
+if st.session_state.logged_in:
+    st.sidebar.success(f"👋 Welcome, {st.session_state.user.get('full_name', 'Customer')}!")
+else:
+    if st.session_state.get("show_login"):
+        login_form()
+    if st.session_state.get("show_register"):
+        registration_form()
+
+if st.sidebar.button("Logout"):
+    st.session_state.logged_in = False
+    st.session_state.user = {}
+    st.success("Logged out successfully!")
+
+# --- APP DEVELOPER INFO ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 👨‍💻 App Developer")
+st.sidebar.markdown(
+    """
+**Ezekiel BALOGUN**  
+_Data Scientist / Analyst_  
+_AI / ML Engineer_  
+_Automation / BI Expert_  
+
+📧 [ezekiel4true@yahoo.com](mailto:ezekiel4true@yahoo.com)  
+🔗 [LinkedIn Profile](https://www.linkedin.com/in/ezekiel-balogun-39a14438)  
+📞 +2348062529172
+"""
+)
