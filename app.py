@@ -161,11 +161,12 @@ def login_form():
             st.session_state.logged_in = True
             st.session_state.user = user
             st.sidebar.success(f"Welcome, {user['full_name']}!")
-            st.session_state.login_email = ""
-            st.session_state.login_password = ""
+            # Clear input fields safely using dict-style assignment:
+            st.session_state["login_email"] = ""
+            st.session_state["login_password"] = ""
         else:
             st.sidebar.error("Invalid credentials")
-
+        
 def product_list():
     st.subheader("🛍️ Available Products")
     products = fetch_products()
