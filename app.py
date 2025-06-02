@@ -112,7 +112,11 @@ def register_user(name, email, password, phone, address):
 
 def authenticate(email, password):
     hashed = hash_password(password)
-    user = get_user(email) # Reuse get_user to fetch user details
+    user = get_user(email)
+
+    st.write("🔐 Hashed Input:", hashed)
+    st.write("🗃️ Stored Hash:", user["password_hash"] if user else "No user")
+
     if user and user["password_hash"] == hashed:
         return user
     return None
