@@ -8,6 +8,30 @@ from supabase import create_client, Client
 
 st.set_page_config(page_title="Tommies Fashion", layout="wide")
 
+# Initialize session state keys for login inputs to avoid StreamlitAPIException
+def main():
+    # Initialize session state keys before using them
+    if "login_email" not in st.session_state:
+        st.session_state.setdefault("login_email", "")
+    if "login_password" not in st.session_state:
+        st.session_state["login_password"] = ""
+    if "logged_in" not in st.session_state:
+        st.session_state["logged_in"] = False
+    if "user" not in st.session_state:
+        st.session_state["user"] = None
+
+    login_form()
+    # ... rest of main()
+
+def init_session_state():
+    for key in ["login_email", "login_password", "logged_in"]:
+        if key not in st.session_state:
+            st.session_state[key] = ""
+
+def main():
+    init_session_state()
+    login_form()
+
 # --- Database Connection ---
 @st.cache_resource
 def get_engine():
@@ -152,7 +176,6 @@ def login_form():
     st.sidebar.subheader("🔐 Login")
     email = st.sidebar.text_input("Email", key="login_email")
     password = st.sidebar.text_input("Password", type="password", key="login_password")
-
     if st.sidebar.button("Login"):
         if not email or not password:
             st.sidebar.warning("Enter both email and password")
@@ -162,12 +185,12 @@ def login_form():
             st.session_state.logged_in = True
             st.session_state.user = user
             st.sidebar.success(f"Welcome, {user['full_name']}!")
-            # Clear login fields
-            st.session_state["login_email"] = ""
+            # Clear input fields safely using dict-style assignment:
+            st.session_state.setdefault("login_email", "")
             st.session_state["login_password"] = ""
         else:
             st.sidebar.error("Invalid credentials")
-            
+        
 def product_list():
     st.subheader("🛍️ Available Products")
     products = fetch_products()
