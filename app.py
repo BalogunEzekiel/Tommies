@@ -453,7 +453,7 @@ if st.session_state.logged_in and st.session_state.user.get("email") == "admin@t
 
     if not orders:
         st.info("No orders found.")
-        return
+    return
 
     for order in orders:
         st.markdown(f"**Order #{order['order_id']}**")
