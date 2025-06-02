@@ -524,15 +524,15 @@ def main():
       #      st.session_state.viewing_cart = False
             # No explicit rerun needed, Streamlit will rerun naturally
 
-#        if st.session_state.viewing_cart:
-#            view_cart()
-#            # "Back to Products" button is now inside view_cart for consistency
-#        else:
-#            product_list()
-#    else:
+        if st.session_state.viewing_cart:
+            view_cart()
+            # "Back to Products" button is now inside view_cart for consistency
+        else:
+            product_list()
+    else:
         # Not logged in
-#        product_list() # Show products even when not logged in
-#        st.sidebar.markdown("---")
+        product_list() # Show products even when not logged in
+        st.sidebar.markdown("---")
 #        login_form()
 #        st.sidebar.markdown("---")
 #        registration_form()
@@ -551,18 +551,18 @@ if st.session_state.logged_in and st.session_state.user.get("email") == "admin@t
 st.sidebar.title("About Tommies 👗🧵")
 st.sidebar.info("Tommies is your one-stop fashion destination offering premium styles at unbeatable prices.")
 
-if st.session_state.logged_in:
+ if st.session_state.logged_in:
     st.sidebar.success(f"👋 Welcome, {st.session_state.user.get('full_name', 'Customer')}!")
-else:
-    if st.session_state.get("show_login"):
-        login_form()
-    if st.session_state.get("show_register"):
-        registration_form()
+# else:
+#    if st.session_state.get("show_login"):
+#        login_form()
+#    if st.session_state.get("show_register"):
+#        registration_form()
 
-if st.sidebar.button("Logout"):
-    st.session_state.logged_in = False
-    st.session_state.user = {}
-    st.success("Logged out successfully!")
+# if st.sidebar.button("Logout"):
+#    st.session_state.logged_in = False
+#    st.session_state.user = {}
+#    st.success("Logged out successfully!")
 
 # --- APP DEVELOPER INFO ---
 st.sidebar.markdown("---")
@@ -571,8 +571,8 @@ st.sidebar.markdown(
     """
 **Ezekiel BALOGUN**  
 _Data Scientist / Analyst_  
-_AI / ML Engineer_  
-_Automation / BI Expert_  
+_AI / Machine Learning Engineer_  
+_Automation / Business Intelligence Expert_  
 
 📧 [ezekiel4true@yahoo.com](mailto:ezekiel4true@yahoo.com)  
 🔗 [LinkedIn Profile](https://www.linkedin.com/in/ezekiel-balogun-39a14438)  
