@@ -11,6 +11,8 @@ import smtplib
 from email.message import EmailMessage
 from sqlalchemy import create_engine
 
+st.set_page_config(page_title="Tommies Fashion", layout="wide")
+
 # --- Database Connection ---
 @st.cache_resource
 def get_engine():
@@ -185,7 +187,6 @@ def admin_panel():
 
 # --- Main App ---
 def main():
-    st.set_page_config(page_title="Tommies Fashion", layout="wide")
     st.title("👗 Tommies Fashion Store")
 
     if st.session_state.logged_in:
