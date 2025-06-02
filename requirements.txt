@@ -2,5 +2,4 @@ streamlit
 sqlalchemy
 supabase
 requests
-uuid
-smtplib
+
