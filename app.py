@@ -150,19 +150,26 @@ def registration_form():
 
 def login_form():
     st.sidebar.subheader("🔐 Login")
+
+    # Use keys to bind inputs to session state
     email = st.sidebar.text_input("Email", key="login_email")
     password = st.sidebar.text_input("Password", type="password", key="login_password")
+
     if st.sidebar.button("Login"):
         if not email or not password:
             st.sidebar.warning("Enter both email and password")
             return
+
         user = authenticate(email, password)
+
         if user:
             st.session_state.logged_in = True
             st.session_state.user = user
             st.sidebar.success(f"Welcome, {user['full_name']}!")
-            st.session_state.login_email = ""
-            st.session_state.login_password = ""
+
+            # Clear email and password **after** widgets are rendered and login is successful
+            st.session_state["login_email"] = ""
+            st.session_state["login_password"] = ""
         else:
             st.sidebar.error("Invalid credentials")
 
