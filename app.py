@@ -152,6 +152,7 @@ def login_form():
     st.sidebar.subheader("🔐 Login")
     email = st.sidebar.text_input("Email", key="login_email")
     password = st.sidebar.text_input("Password", type="password", key="login_password")
+
     if st.sidebar.button("Login"):
         if not email or not password:
             st.sidebar.warning("Enter both email and password")
@@ -161,11 +162,12 @@ def login_form():
             st.session_state.logged_in = True
             st.session_state.user = user
             st.sidebar.success(f"Welcome, {user['full_name']}!")
-            st.session_state.login_email = ""
-            st.session_state.login_password = ""
+            # Clear login fields
+            st.session_state["login_email"] = ""
+            st.session_state["login_password"] = ""
         else:
             st.sidebar.error("Invalid credentials")
-
+            
 def product_list():
     st.subheader("🛍️ Available Products")
     products = fetch_products()
