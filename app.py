@@ -177,7 +177,7 @@ def login_form():
             st.session_state.user = user
             st.sidebar.success(f"Welcome, {user['full_name']}!")
             # Clear input fields safely using dict-style assignment:
-            st.session_state["login_email"] = ""
+            st.session_state.setdefault("login_email", "")
             st.session_state["login_password"] = ""
         else:
             st.sidebar.error("Invalid credentials")
