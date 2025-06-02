@@ -181,6 +181,9 @@ def registration_form():
             st.session_state.show_login = True  # Automatically show login form
             for key in ["reg_name", "reg_email", "reg_phone", "reg_address", "reg_password"]:
                 st.session_state[key + "_input"] = ""
+
+            st.rerun()  # 👈 rerun app to apply changes safely
+
         else:
             st.error("❌ Registration failed. Please try again.")
 
