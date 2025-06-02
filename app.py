@@ -220,23 +220,70 @@ def product_list():
     ]
 
     for p in filtered:
-        st.image(p['image_url'], use_container_width=True)
+        st.image(p['image_url'], use_column_width=True)
         st.markdown(f"**{p['product_name']}**  \n₦{float(p['price']):,.2f}")
         st.markdown(f"Stock: {p['stock_quantity']} | Size: {p['size']} | Category: {p['category']}")
 
-        if st.session_state.logged_in:
-            qty = st.number_input(
-                "Qty", min_value=1, max_value=p['stock_quantity'], key=f"qty_{p['product_id']}", value=1
-            )
-            if st.button("Add to Cart", key=f"cart_{p['product_id']}"):
+        qty = st.number_input(
+            "Qty", min_value=1, max_value=p['stock_quantity'], key=f"qty_{p['product_id']}", value=1
+        )
+        if st.button("Add to Cart", key=f"cart_{p['product_id']}"):
+            if not st.session_state.logged_in:
+                st.warning("Please log in or sign up to add items to your cart.")
+                # Optionally, trigger login/signup modal or redirect
+            else:
                 existing = next((item for item in st.session_state.cart if item['product_id'] == p['product_id']), None)
                 if existing:
                     st.warning("Item already in cart. Adjust quantity in cart view.")
                 else:
                     st.session_state.cart.append({**p, 'qty': qty})
                     st.success(f"Added {qty} x {p['product_name']} to cart.")
+
+import requests
+
+# Function to initiate payment with Flutterwave
+def initiate_payment(amount, email):
+    flutterwave_public_key = st.secrets["flutterwave"]["public_key"]
+    payment_url = "https://api.flutterwave.com/v3/payments"
+    headers = {
+        "Authorization": f"Bearer {flutterwave_public_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "tx_ref": "tx_ref_id",
+        "amount": amount,
+        "currency": "NGN",
+        "redirect_url": "http://localhost:8501/payment_callback",
+        "customer": {
+            "email": email
+        },
+        "customizations": {
+            "title": "Tommies Fashion Store",
+            "description": "Payment for items in cart"
+        }
+    }
+    response = requests.post(payment_url, json=payload, headers=headers)
+    if response.status_code == 200:
+        payment_link = response.json()['data']['link']
+        st.markdown(f"[Proceed to Payment]({payment_link})")
+    else:
+        st.error("Failed to initiate payment. Please try again.")
+
+# Display cart and handle checkout
+def view_cart():
+    if not st.session_state.cart:
+        st.info("Your cart is empty.")
+        return
+    total_amount = sum(item['price'] * item['quantity'] for item in st.session_state.cart)
+    for item in st.session_state.cart:
+        st.write(f"{item['quantity']} x {item['product_name']} - ₦{item['price']:,.2f} each")
+    st.markdown(f"**Total: ₦{total_amount:,.2f}**")
+    if st.button("Proceed to Checkout"):
+        if st.session_state.logged_in:
+            initiate_payment(total_amount, st.session_state.user['email'])
         else:
-            st.info("Login to add to cart.")
+            st.warning("Please log in or sign up to proceed with payment.")
+
 
 def view_cart():
     st.subheader("🛒 Your Cart")
@@ -317,3 +364,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+if st.session_state.logged_in:
+    st.sidebar.markdown(f"👤 Logged in as: **{st.session_state.user['full_name']}**")
