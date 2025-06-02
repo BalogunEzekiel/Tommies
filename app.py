@@ -445,7 +445,9 @@ if st.session_state.logged_in and st.session_state.user.get("email") == "admin@t
 
     try:
         # Ensure 'users' table is joined correctly for full_name
-        orders_result = supabase.table("orders").select("*, users!inner(full_name, email), order_items(*)").order("created_at", desc=True).execute()
+        orders_result = supabase.table("orders").select(
+            "*, users!inner(full_name, email), order_items(*)"
+        ).order("created_at", desc=True).execute()
         orders = orders_result.data if orders_result.data else []
     except Exception as e:
         st.error(f"Error fetching orders: {e}")
@@ -453,26 +455,25 @@ if st.session_state.logged_in and st.session_state.user.get("email") == "admin@t
 
     if not orders:
         st.info("No orders found.")
-    return
+    else:
+        for order in orders:
+            st.markdown(f"**Order #{order['order_id']}**")
+            st.write(f"**Customer:** {order['users']['full_name']} ({order['users']['email']})")
+            st.write(f"**Date:** {order['created_at']}")
+            st.write("---")
+            st.write("**Items:**")
 
-    for order in orders:
-        st.markdown(f"**Order #{order['order_id']}**")
-        st.write(f"**Customer:** {order['users']['full_name']} ({order['users']['email']})")
-        st.write(f"**Date:** {order['created_at']}")
-        st.write("---")
-        st.write("**Items:**")
-        
-        if order['order_items']:
-            for item in order['order_items']:
-                # Fetch product name for each item
-                prod_result = supabase.table("products").select("product_name").eq("product_id", item['product_id']).execute()
-                prod_name = prod_result.data[0]['product_name'] if prod_result.data else "Unknown Product"
-                st.write(f"- {item['quantity']} x {prod_name} at ₦{item['price_at_purchase']:,.2f}")
-        else:
-            st.write("- No items found for this order.")
-            
-        st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
-        st.divider() # Horizontal line separator
+            if order['order_items']:
+                for item in order['order_items']:
+                    # Fetch product name for each item
+                    prod_result = supabase.table("products").select("product_name").eq("product_id", item['product_id']).execute()
+                    prod_name = prod_result.data[0]['product_name'] if prod_result.data else "Unknown Product"
+                    st.write(f"- {item['quantity']} x {prod_name} at ₦{item['price_at_purchase']:,.2f}")
+            else:
+                st.write("- No items found for this order.")
+
+            st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
+            st.divider()  # Horizontal line separator
 
 # --- Main App Logic ---
 def main():
