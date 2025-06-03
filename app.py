@@ -267,8 +267,6 @@ def initiate_payment(amount, email):
     except Exception as e:
         st.error(f"An unexpected error occurred during payment initiation: {e}")
 
-import streamlit as st
-
 # --- Initialize session state variables ---
 default_state = {
     "cart": [],
@@ -285,35 +283,35 @@ for key, value in default_state.items():
 
 # --- Example UI Logic ---
 
-if st.session_state.show_login:
-    st.subheader("🔐 Login")
-    # login_form()  # Call your login form function here
+#if st.session_state.show_login:
+#    st.subheader("🔐 Login")
+#    # login_form()  # Call your login form function here
 
-elif st.session_state.show_register:
-    st.subheader("📝 Register")
-    # registration_form()  # Call your registration form function here
+# elif st.session_state.show_register:
+#    st.subheader("📝 Register")
+#    # registration_form()  # Call your registration form function here
 
-else:
-    st.title("🛒 Welcome to the Store!")
-    if not st.session_state.logged_in:
-        if st.button("Login"):
-            st.session_state.show_login = True
-        if st.button("Register"):
-            st.session_state.show_register = True
-    else:
-        st.success(f"Welcome, {st.session_state.user.get('name', 'User')}!")
-        if st.button("View Cart"):
-            st.session_state.viewing_cart = True
+#else:
+#    st.title("🛒 Welcome to the Store!")
+#    if not st.session_state.logged_in:
+#        if st.button("Login"):
+#            st.session_state.show_login = True
+#        if st.button("Register"):
+#            st.session_state.show_register = True
+#    else:
+#        st.success(f"Welcome, {st.session_state.user.get('name', 'User')}!")
+#        if st.button("View Cart"):
+#            st.session_state.viewing_cart = True
 
 # Dummy auth functions (replace with real logic)
-def get_user(email):
-    return None
+# def get_user(email):
+#    return None
 
-def register_user(name, email, password, phone, address):
-    return True
+# def register_user(name, email, password, phone, address):
+#    return True
 
 def authenticate(email, password):
-    if email == "admin@example.com" and password == "admin":
+    if email == "admin@tommies.com" and password == "admin":
         return {"full_name": "Admin User"}
     return None
 
@@ -484,30 +482,30 @@ def main():
         st.sidebar.markdown(f"👤 Logged in as: **{st.session_state.user.get('full_name', 'User')}**")
         st.sidebar.markdown("---") # Separator
 
-    if st.session_state.logged_in:
-        # Admin Panel
-        if st.session_state.user.get('email') == 'admin@tommies.com':
-            admin_panel()
-            return # Stop here for admin view
+#    if st.session_state.logged_in:
+#        # Admin Panel
+#        if st.session_state.user.get('email') == 'admin@tommies.com':
+#            admin_panel()
+#            return # Stop here for admin view
 
         # User options
         if st.sidebar.button("🛒 View Cart"):
             st.session_state.viewing_cart = True
 
-        if st.sidebar.button("Logout"):
-            st.session_state.logged_in = False
-            st.session_state.user = {}
-            st.success("Logged out.")
+#        if st.sidebar.button("Logout"):
+#            st.session_state.logged_in = False
+#            st.session_state.user = {}
+#            st.success("Logged out.")
      
-        if st.session_state.viewing_cart:
-            view_cart()
-            # "Back to Products" button is now inside view_cart for consistency
-        else:
-            product_list()
-    else:
-        # Not logged in
-        product_list() # Show products even when not logged in
-        st.sidebar.markdown("---")
+#        if st.session_state.viewing_cart:
+#            view_cart()
+#            # "Back to Products" button is now inside view_cart for consistency
+#        else:
+#            product_list()
+#    else:
+#        # Not logged in
+#        product_list() # Show products even when not logged in
+#        st.sidebar.markdown("---")
 #        login_form()
 #        st.sidebar.markdown("---")
 #        registration_form()
