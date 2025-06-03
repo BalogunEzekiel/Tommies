@@ -540,31 +540,9 @@ def main():
             st.markdown("## 🔧 Admin Dashboard")
             st.write("You have access to administrative tools.")
             show_admin_dashboard()  # Optional: create this function
-        else:
-            st.markdown("## 🛍️ Browse our Collection")
-            st.write("Welcome to Tommies! Explore and shop now.")
 
-    else:
-        # Toggle between login and register forms
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔐 Login"):
-                st.session_state.show_login = True
-                st.session_state.show_register = False
-        with col2:
-            if st.button("📝 Register"):
-                st.session_state.show_register = True
-                st.session_state.show_login = False
-
-        if st.session_state.get("show_login"):
-            st.subheader("🔐 Login")
-            login_form()
-        elif st.session_state.get("show_register"):
-            st.subheader("📝 Register")
-            registration_form()
-        else:
-            st.subheader("Welcome to Tommies!")
-            st.write("Please log in or register to continue.")
+if __name__ == "__main__":
+    main()
 
 # --- APP DEVELOPER INFO ---
 st.sidebar.markdown("---")
