@@ -525,24 +525,48 @@ def main():
 #    main()
 
 # --- SIDEBAR CONTENT ---
+import streamlit as st
+
 def main():
-    # st.set_page_config(page_title="Auth App", page_icon="🔐")
-    
+    # Sidebar Branding
     st.sidebar.title("About Tommies 👗🧵")
-    st.sidebar.info("Tommies is your one-stop fashion destination offering premium styles at unbeatable prices.")
+    st.sidebar.info("Tommies is your one-stop fashion store offering premium styles at unbeatable prices.")
 
+    # Session-based greeting
     if st.session_state.logged_in:
-        st.sidebar.success(f"👋 Welcome, {st.session_state.user.get('full_name', 'Customer')}!")
-    else:
-        if st.session_state.get("show_login"):
-            login_form()
-        if st.session_state.get("show_register"):
-            registration_form()
+        full_name = st.session_state.user.get("full_name", "Customer")
+        st.sidebar.success(f"👋 Welcome, {full_name}!")
 
-# if st.sidebar.button("Logout"):
-#    st.session_state.logged_in = False
-#    st.session_state.user = {}
-#    st.success("Logged out successfully!")
+        # Admin panel for specific user
+        if st.session_state.user.get("email") == "admin@tommiesfashion.com":
+            st.markdown("## 🔧 Admin Dashboard")
+            st.write("You have access to administrative tools.")
+            show_admin_dashboard()  # Optional: create this function
+        else:
+            st.markdown("## 🛍️ Browse our Collection")
+            st.write("Welcome to Tommies! Explore and shop now.")
+
+    else:
+        # Toggle between login and register forms
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔐 Login"):
+                st.session_state.show_login = True
+                st.session_state.show_register = False
+        with col2:
+            if st.button("📝 Register"):
+                st.session_state.show_register = True
+                st.session_state.show_login = False
+
+        if st.session_state.get("show_login"):
+            st.subheader("🔐 Login")
+            login_form()
+        elif st.session_state.get("show_register"):
+            st.subheader("📝 Register")
+            registration_form()
+        else:
+            st.subheader("Welcome to Tommies!")
+            st.write("Please log in or register to continue.")
 
 # --- APP DEVELOPER INFO ---
 st.sidebar.markdown("---")
