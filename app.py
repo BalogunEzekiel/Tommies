@@ -525,8 +525,6 @@ def main():
 #    main()
 
 # --- SIDEBAR CONTENT ---
-import streamlit as st
-
 def main():
     # Sidebar Branding
     st.sidebar.title("About Tommies 👗🧵")
