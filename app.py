@@ -474,13 +474,24 @@ if st.session_state.logged_in and st.session_state.user.get("email") == "admin@t
             st.divider()  # Horizontal line separator
 
 # --- Main App Logic ---
-#def main():
-#    st.title("👗 Tommies Fashion Store")
+def main():
+    st.title("👗 Tommies Fashion Store")
 
-#    # Display user info if logged in (moved from end of file for better placement)
-#    if st.session_state.logged_in and st.session_state.user:
-#        st.sidebar.markdown(f"👤 Logged in as: **{st.session_state.user.get('full_name', 'User')}**")
-#        st.sidebar.markdown("---") # Separator
+# Initialize session state flags
+    if "show_login" not in st.session_state:
+        st.session_state.show_login = True
+    if "show_register" not in st.session_state:
+        st.session_state.show_register = False
+
+    # Sidebar - show welcome message and logout
+    with st.sidebar:
+        if "user" in st.session_state:
+            st.success(f"👋 Welcome, {st.session_state.user['full_name']}!")
+            if st.button("Logout"):
+                del st.session_state.user
+                st.session_state.show_login = True
+                st.rerun()
+                st.sidebar.markdown("---") # Separator
 
 #    if st.session_state.logged_in:
 #        # Admin Panel
@@ -516,30 +527,7 @@ if st.session_state.logged_in and st.session_state.user.get("email") == "admin@t
 # --- SIDEBAR CONTENT ---
 def main():
 #    st.set_page_config(page_title="Auth App", page_icon="🔐")
-
-    # Initialize session state flags
-    if "show_login" not in st.session_state:
-        st.session_state.show_login = True
-    if "show_register" not in st.session_state:
-        st.session_state.show_register = False
-
-    # Sidebar - show welcome message and logout
-    with st.sidebar:
-        if "user" in st.session_state:
-            st.success(f"👋 Welcome, {st.session_state.user['full_name']}!")
-            if st.button("Logout"):
-                del st.session_state.user
-                st.session_state.show_login = True
-                st.rerun()
-        else:
-            st.title("User Portal")
-            if st.button("Login"):
-                st.session_state.show_login = True
-                st.session_state.show_register = False
-            if st.button("Register"):
-                st.session_state.show_register = True
-                st.session_state.show_login = False
-                
+               
 st.sidebar.title("About Tommies 👗🧵")
 st.sidebar.info("Tommies is your one-stop fashion destination offering premium styles at unbeatable prices.")
 
