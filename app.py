@@ -100,6 +100,9 @@ def authenticate(email, password):
         return user
     return None
 
+print("LOGIN HASH:", hashed)
+print("USER FROM DB:", user)
+
 def get_user(email):
     response = supabase.table("users").select("*").eq("email", email).execute()
     if response.data and len(response.data) > 0:
@@ -125,6 +128,8 @@ def register_user(name, email, password, phone, address):
     except Exception as e:
         st.error(f"❌ Database registration exception: {e}")
         return None
+
+print("REGISTERED HASH:", hashed)
 
 def fetch_products():
     result = supabase.table("products").select("*").execute()
