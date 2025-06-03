@@ -528,8 +528,8 @@ def main():
 def main():
 #    st.set_page_config(page_title="Auth App", page_icon="🔐")
                
-st.sidebar.title("About Tommies 👗🧵")
-st.sidebar.info("Tommies is your one-stop fashion destination offering premium styles at unbeatable prices.")
+    st.sidebar.title("About Tommies 👗🧵")
+    st.sidebar.info("Tommies is your one-stop fashion destination offering premium styles at unbeatable prices.")
 
 if st.session_state.logged_in:
     st.sidebar.success(f"👋 Welcome, {st.session_state.user.get('full_name', 'Customer')}!")
