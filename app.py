@@ -66,46 +66,11 @@ with st.container():
             st.session_state.show_login = False  # Hide login form
 
 # --- Login Form Function ---
-def login_form():
-    st.subheader("🔐 Login")
-    email = st.text_input("Email", key="login_email")
-    password = st.text_input("Password", type="password", key="login_password")
-
-    if st.button("Login Now", key="main_login_btn"):
-        if not email or not password:
-            st.warning("Please enter both email and password.")
-            return
-
-        # Normalize inputs
-        email = email.strip().lower()
-        password = password.strip()
-
-        user = authenticate(email, password)
-
-        if user:
-            st.session_state.user = user  # Save user in session for use elsewhere
-            st.success("✅ Logged in successfully!")
-            st.session_state.show_login = False
-            st.rerun()
-        else:
-            st.error("❌ Invalid credentials.")
-
 def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
-def authenticate(email, password):
-    hashed = hash_password(password)
-    user = get_user(email)
-
-    if user and user["password_hash"] == hashed:
-        return user
-    return None
-
-def get_user(email):
-    response = supabase.table("users").select("*").eq("email", email).execute()
-    if response.data and len(response.data) > 0:
-        return response.data[0]
-    return None
+def check_password(password, hashed):
+    return bcrypt.checkpw(password.encode(), hashed.encode())
 
 def register_user(name, email, password, phone, address):
     hashed = hash_password(password)
@@ -113,7 +78,7 @@ def register_user(name, email, password, phone, address):
         result = supabase.table("users").insert({
             "full_name": name.strip(),
             "email": email.strip().lower(),
-            "password_hash": hashed,  # Use hashed password
+            "password_hash": hashed,
             "phone": phone.strip(),
             "address": address.strip(),
         }).execute()
@@ -126,6 +91,41 @@ def register_user(name, email, password, phone, address):
     except Exception as e:
         st.error(f"❌ Database registration exception: {e}")
         return None
+
+def authenticate(email, password):
+    user = get_user(email)
+    if user and check_password(password, user["password_hash"]):
+        return user
+    return None
+
+def get_user(email):
+    response = supabase.table("users").select("*").eq("email", email).execute()
+    if response.data and len(response.data) > 0:
+        return response.data[0]
+    return None
+
+def login_form():
+    st.subheader("🔐 Login")
+    email = st.text_input("Email", key="login_email")
+    password = st.text_input("Password", type="password", key="login_password")
+
+    if st.button("Login Now", key="main_login_btn"):
+        if not email or not password:
+            st.warning("Please enter both email and password.")
+            return
+
+        email = email.strip().lower()
+        password = password.strip()
+
+        user = authenticate(email, password)
+
+        if user:
+            st.session_state.user = user
+            st.success("✅ Logged in successfully!")
+            st.session_state.show_login = False
+            st.rerun()
+        else:
+            st.error("❌ Invalid credentials.")
 
 def registration_form():
     st.subheader("📝 Register")
@@ -152,7 +152,6 @@ def registration_form():
             st.session_state.show_register = False
             st.session_state.show_login = True
 
-            # Clear widget values safely
             for key in ["reg_name_input", "reg_email_input", "reg_phone_input", "reg_address_input", "reg_password_input"]:
                 if key in st.session_state:
                     del st.session_state[key]
@@ -160,7 +159,6 @@ def registration_form():
             st.rerun()
         else:
             st.error("❌ Registration failed. Please try again.")
-
 def fetch_products():
     result = supabase.table("products").select("*").execute()
     return result.data if result.data else []
@@ -476,13 +474,13 @@ if st.session_state.logged_in and st.session_state.user.get("email") == "admin@t
             st.divider()  # Horizontal line separator
 
 # --- Main App Logic ---
-def main():
-    st.title("👗 Tommies Fashion Store")
+#def main():
+#    st.title("👗 Tommies Fashion Store")
 
-    # Display user info if logged in (moved from end of file for better placement)
-    if st.session_state.logged_in and st.session_state.user:
-        st.sidebar.markdown(f"👤 Logged in as: **{st.session_state.user.get('full_name', 'User')}**")
-        st.sidebar.markdown("---") # Separator
+#    # Display user info if logged in (moved from end of file for better placement)
+#    if st.session_state.logged_in and st.session_state.user:
+#        st.sidebar.markdown(f"👤 Logged in as: **{st.session_state.user.get('full_name', 'User')}**")
+#        st.sidebar.markdown("---") # Separator
 
 #    if st.session_state.logged_in:
 #        # Admin Panel
@@ -512,10 +510,36 @@ def main():
 #        st.sidebar.markdown("---")
 #        registration_form()
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+#    main()
 
 # --- SIDEBAR CONTENT ---
+def main():
+#    st.set_page_config(page_title="Auth App", page_icon="🔐")
+
+    # Initialize session state flags
+    if "show_login" not in st.session_state:
+        st.session_state.show_login = True
+    if "show_register" not in st.session_state:
+        st.session_state.show_register = False
+
+    # Sidebar - show welcome message and logout
+    with st.sidebar:
+        if "user" in st.session_state:
+            st.success(f"👋 Welcome, {st.session_state.user['full_name']}!")
+            if st.button("Logout"):
+                del st.session_state.user
+                st.session_state.show_login = True
+                st.rerun()
+        else:
+            st.title("User Portal")
+            if st.button("Login"):
+                st.session_state.show_login = True
+                st.session_state.show_register = False
+            if st.button("Register"):
+                st.session_state.show_register = True
+                st.session_state.show_login = False
+                
 st.sidebar.title("About Tommies 👗🧵")
 st.sidebar.info("Tommies is your one-stop fashion destination offering premium styles at unbeatable prices.")
 
