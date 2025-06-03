@@ -65,29 +65,29 @@ with st.container():
             st.session_state.show_login = False  # Hide login form
 
 # --- Login Form Function ---
-def login_form():
-    st.subheader("🔐 Login")
-    email = st.text_input("Email", key="login_email")
-    password = st.text_input("Password", type="password", key="login_password")
+#def login_form():
+#    st.subheader("🔐 Login")
+#    email = st.text_input("Email", key="login_email")
+#    password = st.text_input("Password", type="password", key="login_password")
 
-    if st.button("Login Now", key="main_login_btn"):
-        if not email or not password:
-            st.warning("Please enter both email and password.")
-            return
+#    if st.button("Login Now", key="main_login_btn"):
+#        if not email or not password:
+#            st.warning("Please enter both email and password.")
+#            return
 
-        # Normalize inputs
-        email = email.strip().lower()
-        password = password.strip()
+#        # Normalize inputs
+#        email = email.strip().lower()
+#        password = password.strip()
 
-        user = authenticate(email, password)
+#        user = authenticate(email, password)
 
-        if user:
-            st.session_state.user = user  # Save user in session for use elsewhere
-            st.success("✅ Logged in successfully!")
-            st.session_state.show_login = False
-            st.rerun()
-        else:
-            st.error("❌ Invalid credentials.")
+#        if user:
+#            st.session_state.user = user  # Save user in session for use elsewhere
+#            st.success("✅ Logged in successfully!")
+#            st.session_state.show_login = False
+#            st.rerun()
+#        else:
+#            st.error("❌ Invalid credentials.")
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
