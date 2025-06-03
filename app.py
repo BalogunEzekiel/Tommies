@@ -519,11 +519,11 @@ st.sidebar.info("Tommies is your one-stop fashion destination offering premium s
 
 if st.session_state.logged_in:
     st.sidebar.success(f"👋 Welcome, {st.session_state.user.get('full_name', 'Customer')}!")
-# else:
-#    if st.session_state.get("show_login"):
-#        login_form()
-#    if st.session_state.get("show_register"):
-#        registration_form()
+else:
+    if st.session_state.get("show_login"):
+        login_form()
+    if st.session_state.get("show_register"):
+        registration_form()
 
 # if st.sidebar.button("Logout"):
 #    st.session_state.logged_in = False
