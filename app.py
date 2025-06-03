@@ -283,13 +283,13 @@ for key, value in default_state.items():
 
 # --- Example UI Logic ---
 
-if st.session_state.show_login:
-    st.subheader("🔐 Login")
-    # login_form()  # Call your login form function here
+#if st.session_state.show_login:
+#    st.subheader("🔐 Login")
+#    login_form()  # Call your login form function here
 
-elif st.session_state.show_register:
-    st.subheader("📝 Register")
-    # registration_form()  # Call your registration form function here
+#elif st.session_state.show_register:]
+#    st.subheader("📝 Register")
+#    registration_form()  # Call your registration form function here
 
 #else:
 #    st.title("🛒 Welcome to the Store!")
@@ -536,7 +536,7 @@ st.sidebar.markdown("### 👨‍💻 App Developer")
 st.sidebar.markdown(
     """
 **Ezekiel BALOGUN**  
-_Data Scientist / Analyst_  
+_Data Scientist / Data Analyst_  
 _AI / Machine Learning Engineer_  
 _Automation / Business Intelligence Expert_  
 
