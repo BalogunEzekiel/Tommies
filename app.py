@@ -92,6 +92,14 @@ def login_form():
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+def authenticate(email, password):
+    hashed = hash_password(password)
+    user = get_user(email)
+
+    if user and user["password_hash"] == hashed:
+        return user
+    return None
+
 def get_user(email):
     response = supabase.table("users").select("*").eq("email", email).execute()
     if response.data and len(response.data) > 0:
@@ -103,8 +111,10 @@ def register_user(name, email, password, phone, address):
     try:
         result = supabase.table("users").insert({
             "full_name": name,
-            "email": email,
-            "password_hash": hashed,
+            "email": email.strip().lower()
+            "password": password.strip()
+#            "email": email,
+#            "password_hash": hashed,
             "phone": phone,
             "address": address,
         }).execute()
@@ -117,14 +127,6 @@ def register_user(name, email, password, phone, address):
     except Exception as e:
         st.error(f"❌ Database registration exception: {e}")
         return None
-
-def authenticate(email, password):
-    hashed = hash_password(password)
-    user = get_user(email)
-
-    if user and user["password_hash"] == hashed:
-        return user
-    return None
 
 def fetch_products():
     result = supabase.table("products").select("*").execute()
