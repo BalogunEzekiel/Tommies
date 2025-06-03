@@ -110,13 +110,11 @@ def register_user(name, email, password, phone, address):
     hashed = hash_password(password)
     try:
         result = supabase.table("users").insert({
-            "full_name": name,
-            "email": email.strip().lower()
-            "password": password.strip()
-#            "email": email,
-#            "password_hash": hashed,
-            "phone": phone,
-            "address": address,
+            "full_name": name.strip(),
+            "email": email.strip().lower(),
+            "password_hash": hashed,  # Use hashed password
+            "phone": phone.strip(),
+            "address": address.strip(),
         }).execute()
 
         if result.data:
