@@ -2,4 +2,4 @@ streamlit
 sqlalchemy
 supabase
 requests
-
+bcrypt
