@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from supabase import create_client, Client
 import requests # For Flutterwave API calls
 import uuid # For unique transaction references
+import bcrypt
 
 st.set_page_config(page_title="Tommies Fashion", layout="wide")
 
@@ -100,9 +101,6 @@ def authenticate(email, password):
         return user
     return None
 
-print("LOGIN HASH:", hashed)
-print("USER FROM DB:", user)
-
 def get_user(email):
     response = supabase.table("users").select("*").eq("email", email).execute()
     if response.data and len(response.data) > 0:
@@ -129,7 +127,39 @@ def register_user(name, email, password, phone, address):
         st.error(f"❌ Database registration exception: {e}")
         return None
 
-print("REGISTERED HASH:", hashed)
+def registration_form():
+    st.subheader("📝 Register")
+
+    name = st.text_input("Full Name", key="reg_name_input")
+    email = st.text_input("Email", key="reg_email_input")
+    phone = st.text_input("Phone", key="reg_phone_input")
+    address = st.text_area("Address", key="reg_address_input")
+    password = st.text_input("Password", type="password", key="reg_password_input")
+
+    if st.button("Register", key="main_register_btn"):
+        if not all([name, email, phone, address, password]):
+            st.warning("Please fill in all fields")
+            return
+
+        if get_user(email):
+            st.error("Email already registered. Please login.")
+            return
+
+        result = register_user(name, email, password, phone, address)
+
+        if result:
+            st.success("✅ Registration successful! Please log in.")
+            st.session_state.show_register = False
+            st.session_state.show_login = True
+
+            # Clear widget values safely
+            for key in ["reg_name_input", "reg_email_input", "reg_phone_input", "reg_address_input", "reg_password_input"]:
+                if key in st.session_state:
+                    del st.session_state[key]
+
+            st.rerun()
+        else:
+            st.error("❌ Registration failed. Please try again.")
 
 def fetch_products():
     result = supabase.table("products").select("*").execute()
@@ -168,39 +198,6 @@ def create_order(user_id, cart):
         return None
 
 # --- UI Functions ---
-def registration_form():
-    st.subheader("📝 Register")
-
-    name = st.text_input("Full Name", key="reg_name_input")
-    email = st.text_input("Email", key="reg_email_input")
-    phone = st.text_input("Phone", key="reg_phone_input")
-    address = st.text_area("Address", key="reg_address_input")
-    password = st.text_input("Password", type="password", key="reg_password_input")
-
-    if st.button("Register", key="main_register_btn"):
-        if not all([name, email, phone, address, password]):
-            st.warning("Please fill in all fields")
-            return
-
-        if get_user(email):
-            st.error("Email already registered. Please login.")
-            return
-
-        result = register_user(name, email, password, phone, address)
-
-        if result:
-            st.success("✅ Registration successful! Please log in.")
-            st.session_state.show_register = False
-            st.session_state.show_login = True
-
-            # Clear widget values safely
-            for key in ["reg_name_input", "reg_email_input", "reg_phone_input", "reg_address_input", "reg_password_input"]:
-                if key in st.session_state:
-                    del st.session_state[key]
-
-            st.rerun()
-        else:
-            st.error("❌ Registration failed. Please try again.")
 
 # --- Email Confirmation ---
 def send_confirmation_email(email, order_id):
