@@ -125,6 +125,7 @@ def login_form():
 
         if user:
             st.session_state.user = user
+            st.session_state.logged_in = True
             st.success("✅ Logged in successfully!")
             st.session_state.show_login = False
             st.rerun()
@@ -294,13 +295,13 @@ elif st.session_state.show_register:
     # st.subheader("📝 Register")
     registration_form()  # Call your registration form function here
 
-else:
+#else:
 #    st.title("🛒 Welcome to the Store!")
-    if not st.session_state.logged_in:
-        if st.button("Login"):
-            st.session_state.show_login = True
-        if st.button("Register"):
-            st.session_state.show_register = True
+#    if not st.session_state.logged_in:
+#        if st.button("Login"):
+#            st.session_state.show_login = True
+#        if st.button("Register"):
+#            st.session_state.show_register = True
 #    else:
 #        st.success(f"Welcome, {st.session_state.user.get('name', 'User')}!")
 #        if st.button("View Cart"):
