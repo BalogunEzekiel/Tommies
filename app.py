@@ -536,10 +536,10 @@ def main():
     st.sidebar.title("About Tommies 👗🧵")
     st.sidebar.info("Tommies is your one-stop fashion store offering premium styles at unbeatable prices.")
 
-    # Session-based greeting
-    if st.session_state.logged_in:
-        full_name = st.session_state.user.get("full_name", "Customer")
-        st.sidebar.success(f"👋 Welcome, {full_name}!")
+#    # Session-based greeting
+#    if st.session_state.logged_in:
+#        full_name = st.session_state.user.get("full_name", "Customer")
+#        st.sidebar.success(f"👋 Welcome, {full_name}!")
 
         # Admin panel for specific user
         if st.session_state.user.get("email") == "admin@tommiesfashion.com":
