@@ -302,10 +302,10 @@ elif st.session_state.show_register:
 #            st.session_state.show_login = True
 #        if st.button("Register"):
 #            st.session_state.show_register = True
-#    else:
-#        st.success(f"Welcome, {st.session_state.user.get('name', 'User')}!")
-#        if st.button("View Cart"):
-#            st.session_state.viewing_cart = True
+else:
+    st.success(f"Welcome, {st.session_state.user.get('name', 'User')}!")
+    if st.button("View Cart"):
+        st.session_state.viewing_cart = True
 
 # Dummy auth functions (replace with real logic)
 # def get_user(email):
