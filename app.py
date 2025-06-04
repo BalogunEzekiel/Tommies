@@ -539,7 +539,7 @@ def main():
         if st.session_state.user.get("email") == "admin@tommiesfashion.com":
             st.markdown("## 🔧 Admin Dashboard")
             st.write("You have access to administrative tools.")
-            show_admin_dashboard()  # Optional: create this function
+            admin_panel()  # Optional: create this function
 
 if __name__ == "__main__":
     main()
