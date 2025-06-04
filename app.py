@@ -359,7 +359,66 @@ def product_list():
             else:
                 st.info("Out of Stock")
 
-import streamlit as st
+def view_cart():
+    st.subheader("🛒 Your Cart")
+    if not st.session_state.cart:
+        st.info("Your cart is empty.")
+        if st.button("🔙 Back to Products"):
+            st.session_state.viewing_cart = False
+            st.rerun() # Rerun to show product list
+        return
+
+    total = 0
+    remove_indices = []
+    
+    # Display cart items and allow removal
+    for i, item in enumerate(st.session_state.cart):
+        col1, col2, col3 = st.columns([0.6, 0.2, 0.2])
+        with col1:
+            st.write(f"**{item.get('product_name', 'N/A')}**")
+            st.write(f"{item['qty']} x ₦{item['price']:,.2f} each")
+        with col2:
+            # Allow adjusting quantity directly in cart
+            new_qty = st.number_input("Change Qty", min_value=1, max_value=item.get('stock_quantity', item['qty']), value=item['qty'], key=f"cart_qty_{item['product_id']}")
+            if new_qty != item['qty']:
+                item['qty'] = new_qty
+                st.rerun() # Rerun to update total and display immediately
+        with col3:
+            if st.button("Remove", key=f"remove_{item['product_id']}"):
+                remove_indices.append(i)
+
+        total += item['qty'] * item['price']
+
+    # Process removals
+    for i in sorted(remove_indices, reverse=True):
+        st.session_state.cart.pop(i)
+        st.rerun() # Rerun to reflect immediate removal
+
+    st.markdown("---") # Separator
+    st.markdown(f"**Total: ₦{total:,.2f}**")
+    st.markdown("---") # Separator
+
+    # Checkout Options
+    if st.session_state.logged_in:
+        if st.button("Proceed to Flutterwave Payment"):
+            if not st.session_state.cart:
+                st.warning("Your cart is empty!")
+                return
+            initiate_payment(total, st.session_state.user['email'])
+        
+    else:
+        st.warning("Please log in or sign up to proceed with payment.")
+
+    st.markdown("---") # Separator
+    if st.button("🔙 Back to Products"):
+        st.session_state.viewing_cart = False
+        st.rerun() # Rerun to switch view
+
+if st.session_state.viewing_cart:
+    view_cart()
+    # "Back to Products" button is now inside view_cart for consistency
+else:
+    product_list()
 
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
@@ -451,76 +510,20 @@ def main():
                 st.rerun()
             st.sidebar.markdown("---")
 
+        # Check if cart should be viewed
+    if st.session_state.get("viewing_cart"):
+        view_cart()
+        return  # Prevent further rendering (like product_list or admin_panel)
+
     # Show Admin Panel or User Product List
     if st.session_state.get("logged_in"):
-        if st.session_state.user["email"] == "admin@tommiesfashion.com":
+        ]        if st.session_state.user["email"] == "admin@tommiesfashion.com":
             admin_panel()
         else:
             product_list()
 
 if __name__ == "__main__":
     main()
-
-def view_cart():
-    st.subheader("🛒 Your Cart")
-    if not st.session_state.cart:
-        st.info("Your cart is empty.")
-        if st.button("🔙 Back to Products"):
-            st.session_state.viewing_cart = False
-            st.rerun() # Rerun to show product list
-        return
-
-    total = 0
-    remove_indices = []
-    
-    # Display cart items and allow removal
-    for i, item in enumerate(st.session_state.cart):
-        col1, col2, col3 = st.columns([0.6, 0.2, 0.2])
-        with col1:
-            st.write(f"**{item.get('product_name', 'N/A')}**")
-            st.write(f"{item['qty']} x ₦{item['price']:,.2f} each")
-        with col2:
-            # Allow adjusting quantity directly in cart
-            new_qty = st.number_input("Change Qty", min_value=1, max_value=item.get('stock_quantity', item['qty']), value=item['qty'], key=f"cart_qty_{item['product_id']}")
-            if new_qty != item['qty']:
-                item['qty'] = new_qty
-                st.rerun() # Rerun to update total and display immediately
-        with col3:
-            if st.button("Remove", key=f"remove_{item['product_id']}"):
-                remove_indices.append(i)
-
-        total += item['qty'] * item['price']
-
-    # Process removals
-    for i in sorted(remove_indices, reverse=True):
-        st.session_state.cart.pop(i)
-        st.rerun() # Rerun to reflect immediate removal
-
-    st.markdown("---") # Separator
-    st.markdown(f"**Total: ₦{total:,.2f}**")
-    st.markdown("---") # Separator
-
-    # Checkout Options
-    if st.session_state.logged_in:
-        if st.button("Proceed to Flutterwave Payment"):
-            if not st.session_state.cart:
-                st.warning("Your cart is empty!")
-                return
-            initiate_payment(total, st.session_state.user['email'])
-        
-    else:
-        st.warning("Please log in or sign up to proceed with payment.")
-
-    st.markdown("---") # Separator
-    if st.button("🔙 Back to Products"):
-        st.session_state.viewing_cart = False
-        st.rerun() # Rerun to switch view
-
-if st.session_state.viewing_cart:
-    view_cart()
-    # "Back to Products" button is now inside view_cart for consistency
-else:
-    product_list()
 
 # --- SIDEBAR CONTENT ---
 def main():
