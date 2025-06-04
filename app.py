@@ -408,19 +408,6 @@ def product_list():
             else:
                 st.info("Out of Stock")
 
-if st.session_state.viewing_cart:
-    view_cart()
-    # "Back to Products" button is now inside view_cart for consistency
-else:
-    product_list()
-# else:
-#    Not logged in
-#    product_list() # Show products even when not logged in
-#        st.sidebar.markdown("---")
-#        login_form()
-#        st.sidebar.markdown("---")
-#        registration_form()
-
 def view_cart():
     st.subheader("🛒 Your Cart")
     if not st.session_state.cart:
@@ -475,6 +462,19 @@ def view_cart():
     if st.button("🔙 Back to Products"):
         st.session_state.viewing_cart = False
         st.rerun() # Rerun to switch view
+
+if st.session_state.viewing_cart:
+    view_cart()
+    # "Back to Products" button is now inside view_cart for consistency
+else:
+    product_list()
+# else:
+#    Not logged in
+#    product_list() # Show products even when not logged in
+#        st.sidebar.markdown("---")
+#        login_form()
+#        st.sidebar.markdown("---")
+#        registration_form()
 
 def admin_panel():
     st.title("🛠️ Admin Dashboard")
