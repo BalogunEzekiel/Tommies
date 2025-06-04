@@ -414,12 +414,6 @@ def view_cart():
         st.session_state.viewing_cart = False
         st.rerun() # Rerun to switch view
 
-if st.session_state.viewing_cart:
-    view_cart()
-    # "Back to Products" button is now inside view_cart for consistency
-else:
-    product_list()
-
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
 
@@ -510,7 +504,13 @@ def main():
                 st.rerun()
             st.sidebar.markdown("---")
 
-        # Check if cart should be viewed
+    if st.session_state.viewing_cart:
+        view_cart()
+        # "Back to Products" button is now inside view_cart for consistency
+    else:
+        product_list()
+
+    # Check if cart should be viewed
     if st.session_state.get("viewing_cart"):
         view_cart()
         return  # Prevent further rendering (like product_list or admin_panel)
