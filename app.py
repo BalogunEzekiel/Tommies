@@ -323,9 +323,9 @@ def main():
 
 if st.session_state.get("logged_in"):
     if st.session_state.user["email"] == "admin@tommiesfashion.com":
-        show_admin_dashboard()
+        admin_panel()
     else:
-        show_user_dashboard()
+        get_user()
 else:
     main()
 
