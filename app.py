@@ -504,11 +504,16 @@ def main():
                 st.rerun()
             st.sidebar.markdown("---")
 
-    if st.session_state.viewing_cart:
+#    if st.session_state.viewing_cart:
+#        view_cart()
+#        # "Back to Products" button is now inside view_cart for consistency
+#    else:
+#        product_list()
+        
+    # Check if cart should be viewed
+    if st.session_state.get("viewing_cart"):
         view_cart()
-        # "Back to Products" button is now inside view_cart for consistency
-    else:
-        product_list()
+        return  # Prevent further rendering (like product_list or admin_panel)
 
     # Check if cart should be viewed
 #    if st.session_state.get("viewing_cart"):
