@@ -515,13 +515,13 @@ def main():
         view_cart()
         return  # Prevent further rendering (like product_list or admin_panel)
 
-    # Show Admin Panel or User Product List
+# Show Admin Panel or User Product List
     if st.session_state.get("logged_in"):
-        ]        if st.session_state.user["email"] == "admin@tommiesfashion.com":
+        if st.session_state.user["email"] == "admin@tommiesfashion.com":
             admin_panel()
         else:
             product_list()
-
+            
 if __name__ == "__main__":
     main()
 
