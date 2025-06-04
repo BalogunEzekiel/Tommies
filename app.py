@@ -318,6 +318,49 @@ def authenticate(email, password):
         return {"full_name": "Admin User"}
     return None
 
+# --- Main App Logic ---
+def main():
+    st.title("👗 Tommies Fashion Store")
+
+# Initialize session state flags
+    if "show_login" not in st.session_state:
+        st.session_state.show_login = True
+    if "show_register" not in st.session_state:
+        st.session_state.show_register = False
+
+    # Sidebar - show welcome message and logout
+    with st.sidebar:
+        if "user" in st.session_state:
+            user = st.session_state.get("user", {})
+            full_name = user.get("full_name", "Guest")
+            st.success(f"👋 Welcome, {full_name}!")
+            if st.button("Logout"):
+                del st.session_state.user
+                st.session_state.show_login = True
+                st.rerun()
+                st.sidebar.markdown("---") # Separator
+
+        # User options
+#        if st.sidebar.button("🛒 View Cart"):
+#            st.session_state.viewing_cart = True
+
+if st.session_state.viewing_cart:
+    view_cart()
+    # "Back to Products" button is now inside view_cart for consistency
+else:
+    product_list()
+# else:
+#    Not logged in
+#    product_list() # Show products even when not logged in
+#        st.sidebar.markdown("---")
+#        login_form()
+#        st.sidebar.markdown("---")
+#        registration_form()
+
+
+if __name__ == "__main__":
+    main()
+
 def product_list():
     st.subheader("🛍️ Available Products")
 
@@ -481,49 +524,6 @@ email = user.get("email")
 
 if email == "admin@tommiesfashion.com":
     admin_panel()
-
-# --- Main App Logic ---
-def main():
-    st.title("👗 Tommies Fashion Store")
-
-# Initialize session state flags
-    if "show_login" not in st.session_state:
-        st.session_state.show_login = True
-    if "show_register" not in st.session_state:
-        st.session_state.show_register = False
-
-    # Sidebar - show welcome message and logout
-    with st.sidebar:
-        if "user" in st.session_state:
-            user = st.session_state.get("user", {})
-            full_name = user.get("full_name", "Guest")
-            st.success(f"👋 Welcome, {full_name}!")
-            if st.button("Logout"):
-                del st.session_state.user
-                st.session_state.show_login = True
-                st.rerun()
-                st.sidebar.markdown("---") # Separator
-
-        # User options
-#        if st.sidebar.button("🛒 View Cart"):
-#            st.session_state.viewing_cart = True
-
-if st.session_state.viewing_cart:
-    view_cart()
-    # "Back to Products" button is now inside view_cart for consistency
-else:
-    product_list()
-# else:
-#    Not logged in
-#    product_list() # Show products even when not logged in
-#        st.sidebar.markdown("---")
-#        login_form()
-#        st.sidebar.markdown("---")
-#        registration_form()
-
-
-if __name__ == "__main__":
-    main()
 
 # --- SIDEBAR CONTENT ---
 def main():
