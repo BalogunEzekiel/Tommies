@@ -511,8 +511,8 @@ def main():
 #            return # Stop here for admin view
 
         # User options
-        if st.sidebar.button("🛒 View Cart"):
-            st.session_state.viewing_cart = True
+#        if st.sidebar.button("🛒 View Cart"):
+#            st.session_state.viewing_cart = True
 
 #        if st.sidebar.button("Logout"):
 #            st.session_state.logged_in = False
@@ -541,11 +541,6 @@ def main():
     # Sidebar Branding
     st.sidebar.title("About Tommies 👗🧵")
     st.sidebar.info("Tommies is your one-stop fashion store offering premium styles at unbeatable prices.")
-
-#    # Session-based greeting
-#    if st.session_state.logged_in:
-#        full_name = st.session_state.user.get("full_name", "Customer")
-#        st.sidebar.success(f"👋 Welcome, {full_name}!")
 
 if __name__ == "__main__":
     main()
