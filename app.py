@@ -504,29 +504,18 @@ def main():
                 st.rerun()
                 st.sidebar.markdown("---") # Separator
 
-#    if st.session_state.logged_in:
-#        # Admin Panel
-#        if st.session_state.user.get('email') == 'admin@tommies.com':
-#            admin_panel()
-#            return # Stop here for admin view
-
         # User options
 #        if st.sidebar.button("🛒 View Cart"):
 #            st.session_state.viewing_cart = True
 
-#        if st.sidebar.button("Logout"):
-#            st.session_state.logged_in = False
-#            st.session_state.user = {}
-#            st.success("Logged out.")
-     
-        if st.session_state.viewing_cart:
-            view_cart()
-#            # "Back to Products" button is now inside view_cart for consistency
-#        else:
-#            product_list()
-    else:
-        # Not logged in
-        product_list() # Show products even when not logged in
+if st.session_state.viewing_cart:
+    view_cart()
+    # "Back to Products" button is now inside view_cart for consistency
+else:
+    product_list()
+# else:
+#    Not logged in
+#    product_list() # Show products even when not logged in
 #        st.sidebar.markdown("---")
 #        login_form()
 #        st.sidebar.markdown("---")
