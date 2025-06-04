@@ -511,9 +511,9 @@ def main():
         product_list()
 
     # Check if cart should be viewed
-    if st.session_state.get("viewing_cart"):
-        view_cart()
-        return  # Prevent further rendering (like product_list or admin_panel)
+#    if st.session_state.get("viewing_cart"):
+#        view_cart()
+#        return  # Prevent further rendering (like product_list or admin_panel)
 
 # Show Admin Panel or User Product List
     if st.session_state.get("logged_in"):
