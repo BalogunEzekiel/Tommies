@@ -299,6 +299,66 @@ else:
     if st.button("View Cart"):
         st.session_state.viewing_cart = True
 
+def product_list():
+    st.subheader("🛍️ Available Products")
+
+    if 'cart' not in st.session_state:
+        st.session_state.cart = []
+
+    products = fetch_products()
+
+    if not products:
+        st.info("No products available at the moment.")
+        return
+
+    categories = sorted({p.get('category') for p in products if p.get('category')})
+    sizes = sorted({p.get('size') for p in products if p.get('size')})
+
+    category_filter = st.selectbox("Category", ["All"] + categories)
+    size_filter = st.selectbox("Size", ["All"] + sizes)
+    price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
+
+    filtered = [
+        p for p in products
+        if (category_filter == "All" or p.get('category') == category_filter) and
+           (size_filter == "All" or p.get('size') == size_filter) and
+           (price_range[0] <= float(p.get('price', 0) or 0) <= price_range[1])
+    ]
+
+    if not filtered:
+        st.info("No products match your filters.")
+        return
+
+    cols_per_row = 3
+    cols = st.columns(cols_per_row)
+
+    for i, p in enumerate(filtered):
+        with cols[i % cols_per_row]:
+            st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
+            st.markdown(f"**{p.get('product_name', 'N/A')}**")
+            price = float(p.get('price', 0) or 0)
+            st.markdown(f"₦{price:,.2f}")
+            stock = int(p.get('stock_quantity', 0) or 0)
+            st.markdown(f"Stock: {stock} | Size: {p.get('size', 'N/A')} | Category: {p.get('category', 'N/A')}")
+
+            if stock > 0:
+                qty = st.number_input(
+                    "Qty", min_value=1, max_value=stock, key=f"qty_{p['product_id']}", value=1
+                )
+                if st.button("Add to Cart", key=f"cart_{p['product_id']}"):
+                    if not st.session_state.get('logged_in', False):
+                        st.warning("Please log in or sign up to add items to your cart.")
+                    else:
+                        existing = next((item for item in st.session_state.cart if item['product_id'] == p['product_id']), None)
+                        if existing:
+                            existing['qty'] += qty
+                            st.success(f"Updated quantity of {p['product_name']} in cart to {existing['qty']}.")
+                        else:
+                            st.session_state.cart.append({**p, 'qty': qty})
+                            st.success(f"Added {qty} x {p['product_name']} to cart.")
+            else:
+                st.info("Out of Stock")
+
 def admin_panel():
     if st.session_state.get("logged_in") and st.session_state.get("is_admin"):
         st.subheader("🛠️ Admin Dashboard")
@@ -402,72 +462,12 @@ if st.session_state.get("logged_in"):
     if st.session_state.user["email"] == "admin@tommiesfashion.com":
         admin_panel()
     else:
-        get_user()
+        product_list()
 else:
     main()
 
 #if __name__ == "__main__":
 #    main()
-
-def product_list():
-    st.subheader("🛍️ Available Products")
-
-    if 'cart' not in st.session_state:
-        st.session_state.cart = []
-
-    products = fetch_products()
-
-    if not products:
-        st.info("No products available at the moment.")
-        return
-
-    categories = sorted({p.get('category') for p in products if p.get('category')})
-    sizes = sorted({p.get('size') for p in products if p.get('size')})
-
-    category_filter = st.selectbox("Category", ["All"] + categories)
-    size_filter = st.selectbox("Size", ["All"] + sizes)
-    price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
-
-    filtered = [
-        p for p in products
-        if (category_filter == "All" or p.get('category') == category_filter) and
-           (size_filter == "All" or p.get('size') == size_filter) and
-           (price_range[0] <= float(p.get('price', 0) or 0) <= price_range[1])
-    ]
-
-    if not filtered:
-        st.info("No products match your filters.")
-        return
-
-    cols_per_row = 3
-    cols = st.columns(cols_per_row)
-
-    for i, p in enumerate(filtered):
-        with cols[i % cols_per_row]:
-            st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
-            st.markdown(f"**{p.get('product_name', 'N/A')}**")
-            price = float(p.get('price', 0) or 0)
-            st.markdown(f"₦{price:,.2f}")
-            stock = int(p.get('stock_quantity', 0) or 0)
-            st.markdown(f"Stock: {stock} | Size: {p.get('size', 'N/A')} | Category: {p.get('category', 'N/A')}")
-
-            if stock > 0:
-                qty = st.number_input(
-                    "Qty", min_value=1, max_value=stock, key=f"qty_{p['product_id']}", value=1
-                )
-                if st.button("Add to Cart", key=f"cart_{p['product_id']}"):
-                    if not st.session_state.get('logged_in', False):
-                        st.warning("Please log in or sign up to add items to your cart.")
-                    else:
-                        existing = next((item for item in st.session_state.cart if item['product_id'] == p['product_id']), None)
-                        if existing:
-                            existing['qty'] += qty
-                            st.success(f"Updated quantity of {p['product_name']} in cart to {existing['qty']}.")
-                        else:
-                            st.session_state.cart.append({**p, 'qty': qty})
-                            st.success(f"Added {qty} x {p['product_name']} to cart.")
-            else:
-                st.info("Out of Stock")
 
 def view_cart():
     st.subheader("🛒 Your Cart")
