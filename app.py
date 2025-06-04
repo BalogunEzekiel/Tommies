@@ -304,8 +304,8 @@ def main():
     st.title("👗 Tommies Fashion Store")
 
 # Initialize session state flags
-    if "show_login" not in st.session_state:
-        st.session_state.show_login = True
+#    if "show_login" not in st.session_state:
+#        st.session_state.show_login = True
     if "show_register" not in st.session_state:
         st.session_state.show_register = False
 
@@ -321,8 +321,16 @@ def main():
                 st.rerun()
                 st.sidebar.markdown("---") # Separator
 
-if __name__ == "__main__":
+if st.session_state.get("logged_in"):
+    if st.session_state.user["email"] == "admin@tommiesfashion.com":
+        show_admin_dashboard()
+    else:
+        show_user_dashboard()
+else:
     main()
+
+#if __name__ == "__main__":
+#    main()
 
 def product_list():
     st.subheader("🛍️ Available Products")
