@@ -299,6 +299,83 @@ else:
     if st.button("View Cart"):
         st.session_state.viewing_cart = True
 
+def admin_panel():
+    if st.session_state.get("logged_in") and st.session_state.get("is_admin"):
+        st.subheader("🛠️ Admin Dashboard")
+
+        tabs = st.tabs(["Overview", "Manage Users", "Manage Products", "View Orders"])
+
+        with tabs[0]:
+            st.session_state.admin_dashboard_page = "Overview"
+            st.subheader("🧰 Summary")
+            st.info("Overview details will be displayed here.")
+
+        with tabs[1]:
+            st.session_state.admin_dashboard_page = "Manage Users"
+            st.subheader("🧰 Customers Info Management")
+
+            try:
+                user_result = supabase.table("users").select("*").execute()
+                users = user_result.data
+                for user in users:
+                    st.write(f"- {user['user_name']} | {user['email']}")
+            except Exception as e:
+                st.error(f"Failed to fetch users: {e}")
+
+        with tabs[2]:
+            st.session_state.admin_dashboard_page = "Manage Products"
+            st.subheader("🧰 Manage Products")
+            st.info("This section will allow editing, deleting, or updating products. (Implementation pending)")
+
+            try:
+                product_result = supabase.table("products").select("*").execute()
+                products = product_result.data
+                for prod in products:
+                    st.write(f"- {prod['product_name']} | ₦{prod['price']:,.2f}")
+            except Exception as e:
+                st.error(f"Failed to fetch products: {e}")
+
+        with tabs[3]:
+            st.session_state.admin_dashboard_page = "View Orders"
+            st.subheader("📦 Recent Orders")
+
+            try:
+                orders_result = supabase.table("orders").select(
+                    "*, users!inner(full_name, email), order_items(*)"
+                ).order("created_at", desc=True).execute()
+                orders = orders_result.data if orders_result.data else []
+            except Exception as e:
+                st.error(f"Error fetching orders: {e}")
+                return
+
+            if not orders:
+                st.info("No orders found.")
+                return
+
+            for order in orders:
+                st.markdown(f"**Order #{order['order_id']}**")
+                st.write(f"**Customer:** {order['users']['full_name']} ({order['users']['email']})")
+                st.write(f"**Date:** {order['created_at']}")
+                st.write("**Items:**")
+
+                if order['order_items']:
+                    for item in order['order_items']:
+                        try:
+                            prod_result = supabase.table("products").select("product_name").eq("product_id", item['product_id']).execute()
+                            prod_name = prod_result.data[0]['product_name'] if prod_result.data else "Unknown Product"
+                        except Exception as e:
+                            prod_name = f"Error loading product: {e}"
+
+                        st.write(f"- {item['quantity']} x {prod_name} at ₦{item['price_at_purchase']:,.2f}")
+                else:
+                    st.write("- No items found for this order.")
+
+                st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
+                st.divider()
+
+# Show the admin panel
+#admin_panel()
+
 # --- Main App Logic ---
 def main():
     st.title("👗 Tommies Fashion Store")
@@ -452,83 +529,6 @@ if st.session_state.viewing_cart:
     # "Back to Products" button is now inside view_cart for consistency
 else:
     product_list()
-
-def admin_panel():
-    if st.session_state.get("logged_in") and st.session_state.get("is_admin"):
-        st.subheader("🛠️ Admin Dashboard")
-
-        tabs = st.tabs(["Overview", "Manage Users", "Manage Products", "View Orders"])
-
-        with tabs[0]:
-            st.session_state.admin_dashboard_page = "Overview"
-            st.subheader("🧰 Summary")
-            st.info("Overview details will be displayed here.")
-
-        with tabs[1]:
-            st.session_state.admin_dashboard_page = "Manage Users"
-            st.subheader("🧰 Customers Info Management")
-
-            try:
-                user_result = supabase.table("users").select("*").execute()
-                users = user_result.data
-                for user in users:
-                    st.write(f"- {user['user_name']} | {user['email']}")
-            except Exception as e:
-                st.error(f"Failed to fetch users: {e}")
-
-        with tabs[2]:
-            st.session_state.admin_dashboard_page = "Manage Products"
-            st.subheader("🧰 Manage Products")
-            st.info("This section will allow editing, deleting, or updating products. (Implementation pending)")
-
-            try:
-                product_result = supabase.table("products").select("*").execute()
-                products = product_result.data
-                for prod in products:
-                    st.write(f"- {prod['product_name']} | ₦{prod['price']:,.2f}")
-            except Exception as e:
-                st.error(f"Failed to fetch products: {e}")
-
-        with tabs[3]:
-            st.session_state.admin_dashboard_page = "View Orders"
-            st.subheader("📦 Recent Orders")
-
-            try:
-                orders_result = supabase.table("orders").select(
-                    "*, users!inner(full_name, email), order_items(*)"
-                ).order("created_at", desc=True).execute()
-                orders = orders_result.data if orders_result.data else []
-            except Exception as e:
-                st.error(f"Error fetching orders: {e}")
-                return
-
-            if not orders:
-                st.info("No orders found.")
-                return
-
-            for order in orders:
-                st.markdown(f"**Order #{order['order_id']}**")
-                st.write(f"**Customer:** {order['users']['full_name']} ({order['users']['email']})")
-                st.write(f"**Date:** {order['created_at']}")
-                st.write("**Items:**")
-
-                if order['order_items']:
-                    for item in order['order_items']:
-                        try:
-                            prod_result = supabase.table("products").select("product_name").eq("product_id", item['product_id']).execute()
-                            prod_name = prod_result.data[0]['product_name'] if prod_result.data else "Unknown Product"
-                        except Exception as e:
-                            prod_name = f"Error loading product: {e}"
-
-                        st.write(f"- {item['quantity']} x {prod_name} at ₦{item['price_at_purchase']:,.2f}")
-                else:
-                    st.write("- No items found for this order.")
-
-                st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
-                st.divider()
-
-# Show the admin panel
-admin_panel()
 
 # --- SIDEBAR CONTENT ---
 def main():
