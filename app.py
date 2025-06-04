@@ -437,44 +437,50 @@ def admin_panel():
     st.title("🛠️ Admin Dashboard")
     st.subheader("Recent Orders")
 
-# --- MAIN PAGE: Admin Menu ---
-if st.session_state.logged_in and st.session_state.user.get("email") == "admin@tommiesfashion.com":
     st.markdown("### 🔧 Admin Menu")
     st.write("- Manage Products")
     st.write("- View Orders")
     st.write("- Add New Product (feature coming soon...)")
 
     try:
-        # Ensure 'users' table is joined correctly for full_name
         orders_result = supabase.table("orders").select(
             "*, users!inner(full_name, email), order_items(*)"
         ).order("created_at", desc=True).execute()
         orders = orders_result.data if orders_result.data else []
     except Exception as e:
         st.error(f"Error fetching orders: {e}")
-        orders = []
+        return
 
     if not orders:
         st.info("No orders found.")
-    else:
-        for order in orders:
-            st.markdown(f"**Order #{order['order_id']}**")
-            st.write(f"**Customer:** {order['users']['full_name']} ({order['users']['email']})")
-            st.write(f"**Date:** {order['created_at']}")
-            st.write("---")
-            st.write("**Items:**")
+        return
 
-            if order['order_items']:
-                for item in order['order_items']:
-                    # Fetch product name for each item
+    for order in orders:
+        st.markdown(f"**Order #{order['order_id']}**")
+        st.write(f"**Customer:** {order['users']['full_name']} ({order['users']['email']})")
+        st.write(f"**Date:** {order['created_at']}")
+        st.write("**Items:**")
+
+        if order['order_items']:
+            for item in order['order_items']:
+                try:
                     prod_result = supabase.table("products").select("product_name").eq("product_id", item['product_id']).execute()
                     prod_name = prod_result.data[0]['product_name'] if prod_result.data else "Unknown Product"
-                    st.write(f"- {item['quantity']} x {prod_name} at ₦{item['price_at_purchase']:,.2f}")
-            else:
-                st.write("- No items found for this order.")
+                except Exception as e:
+                    prod_name = f"Error loading product: {e}"
 
-            st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
-            st.divider()  # Horizontal line separator
+                st.write(f"- {item['quantity']} x {prod_name} at ₦{item['price_at_purchase']:,.2f}")
+        else:
+            st.write("- No items found for this order.")
+
+        st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
+        st.divider()
+
+user = st.session_state.get("user", {})
+email = user.get("email")
+
+if email == "admin@tommiesfashion.com":
+    admin_panel()
 
 # --- Main App Logic ---
 def main():
@@ -540,12 +546,6 @@ def main():
 #    if st.session_state.logged_in:
 #        full_name = st.session_state.user.get("full_name", "Customer")
 #        st.sidebar.success(f"👋 Welcome, {full_name}!")
-
-        # Admin panel for specific user
-        if st.session_state.user.get("email") == "admin@tommiesfashion.com":
-            st.markdown("## 🔧 Admin Dashboard")
-            st.write("You have access to administrative tools.")
-            admin_panel()  # Optional: create this function
 
 if __name__ == "__main__":
     main()
