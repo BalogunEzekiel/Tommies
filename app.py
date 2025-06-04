@@ -489,7 +489,9 @@ def main():
     # Sidebar - show welcome message and logout
     with st.sidebar:
         if "user" in st.session_state:
-            st.success(f"👋 Welcome, {st.session_state.user['full_name']}!")
+            user = st.session_state.get("user", {})
+            full_name = user.get("full_name", "Guest")
+            st.success(f"👋 Welcome, {full_name}!")
             if st.button("Logout"):
                 del st.session_state.user
                 st.session_state.show_login = True
