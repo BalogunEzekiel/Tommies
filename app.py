@@ -524,8 +524,9 @@ def main():
 #        st.sidebar.markdown("---")
 #        registration_form()
 
-#if __name__ == "__main__":
-#    main()
+
+if __name__ == "__main__":
+    main()
 
 # --- SIDEBAR CONTENT ---
 def main():
