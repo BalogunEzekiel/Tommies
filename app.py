@@ -314,10 +314,10 @@ else:
 # def register_user(name, email, password, phone, address):
 #    return True
 
-def authenticate(email, password):
-    if email == "admin@tommies.com" and password == "admin":
-        return {"full_name": "Admin User"}
-    return None
+# def authenticate(email, password):
+#    if email == "admin@tommies.com" and password == "admin":
+#        return {"full_name": "Admin User"}
+#    return None
 
 # --- Main App Logic ---
 def main():
