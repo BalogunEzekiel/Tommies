@@ -70,7 +70,11 @@ def hash_password(password):
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def check_password(password, hashed):
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+    if not password or not hashed:
+        return False
+    if isinstance(hashed, str):
+        hashed = hashed.encode()
+    return bcrypt.checkpw(password.encode(), hashed)
 
 def register_user(name, email, password, phone, address):
     hashed = hash_password(password)
