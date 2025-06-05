@@ -529,9 +529,8 @@ def view_cart():
         # "Back to Products" button is now inside view_cart for consistency
     else:
         product_list()
-
-    else:
-        st.warning("Please log in or sign up to proceed with payment.")
+#    else:
+#        st.warning("Please log in or sign up to proceed with payment.")
 
     st.markdown("---") # Separator
     if st.button("🔙 Back to Products"):
