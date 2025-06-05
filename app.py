@@ -551,7 +551,19 @@ def admin_panel():
 
             st.metric("👥 Total Customers", total_customers)
             st.metric("💰 Total Sales", f"₦{total_sales:,.2f}")
-            st.metric("📦 Total Orders", tota
+            st.metric("📦 Total Orders", total_orders)
+
+            st.subheader("🏆 Top Selling Products")
+            for pid, qty in top_products:
+                pname = next((p['product_name'] for p in products if p['product_id'] == pid), "Unknown")
+                st.write(f"- {pname} ({qty} sold)")
+
+            st.subheader("👑 Best Spending Customers")
+            for cid, amt in top_customers:
+                cname = next((u['full_name'] for u in users if u['user_id'] == cid), "Unknown")
+                st.write(f"- {cname} - ₦{amt:,.2f}")
+        except Exception as e:
+            st.error(f"Failed to generate insights: {e}")
                       
 #----------------------- Main Logic --------------------------
 def main():
