@@ -211,7 +211,7 @@ def send_confirmation_email(email, order_id):
         msg = EmailMessage()
         msg.set_content(f"Thank you for your order #{order_id} from Tommies Fashion Store!")
         msg["Subject"] = "Order Confirmation"
-        msg["From"] = "no-reply@tommiesfashion.com"
+        msg["From"] = "tommiesfashion@gmail.com"
         msg["To"] = email
 
         with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
@@ -308,7 +308,7 @@ elif st.session_state.show_register:
     registration_form()  # Call your registration form function here
 else:
     # ✅ Place your new condition here]
-    if not (st.session_state.get("logged_in") and st.session_state.user.get("email") == "admin@tommiesfashion.com"):
+    if not (st.session_state.get("logged_in") and st.session_state.user.get("email") == "tommiesfashion@gmail.com"):
         if st.button("View Cart"):
             st.session_state.viewing_cart = True
             
@@ -536,9 +536,6 @@ def admin_panel():
             products = supabase.table("products").select("*").execute().data
             order_items = supabase.table("order_items").select("*").execute().data
 
-#            if not orders or not users or not products or not order_items:
-#                st.warning("Insufficient data for insights.")
-#            else:
             df_orders = pd.DataFrame(orders)
             df_users = pd.DataFrame(users)
             df_products = pd.DataFrame(products)
@@ -600,7 +597,7 @@ def main():
         return
 
     # ✅ Always show the product list to non-admin users
-    if st.session_state.get("logged_in") and st.session_state.user.get("email") == "admin@tommiesfashion.com":
+    if st.session_state.get("logged_in") and st.session_state.user.get("email") == "tommiesfashion@gmail.com":
         admin_panel()
     else:
         product_list()
