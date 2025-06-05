@@ -467,6 +467,12 @@ def main():
 #        view_cart()
 #        return  # Prevent further rendering (like product_list or admin_panel)
 
+    if st.session_state.viewing_cart:
+        view_cart()
+        # "Back to Products" button is now inside view_cart for consistency
+    else:
+        product_list()
+    
 # Show Admin Panel or User Product List
     if st.session_state.get("logged_in"):
         if st.session_state.user["email"] == "admin@tommiesfashion.com":
@@ -474,13 +480,7 @@ def main():
         else:
             product_list()
 
-    if st.session_state.viewing_cart:
-        view_cart()
-        # "Back to Products" button is now inside view_cart for consistency
-    else:
-        product_list()
-
-if __name__ == "__main__":
+    if __name__ == "__main__":
     main()
 
 def view_cart():
