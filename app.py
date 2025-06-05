@@ -411,6 +411,17 @@ def view_cart():
     else:
         st.warning("Please log in or sign up to proceed with payment.")
 
+    # Check if cart should be viewed
+    if st.session_state.get("viewing_cart"):
+        view_cart()
+        return  # Prevent further rendering (like product_list or admin_panel)
+
+#    if st.session_state.viewing_cart:
+#        view_cart()
+        # "Back to Products" button is now inside view_cart for consistency
+#    else:
+#        product_list()
+
     st.markdown("---") # Separator
     if st.button("🔙 Back to Products"):
         st.session_state.viewing_cart = False
