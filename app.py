@@ -528,42 +528,42 @@ def admin_panel():
 #            if not orders or not users or not products or not order_items:
 #                st.warning("Insufficient data for insights.")
 #            else:
-                df_orders = pd.DataFrame(orders)
-                df_users = pd.DataFrame(users)
-                df_products = pd.DataFrame(products)
-                df_order_items = pd.DataFrame(order_items)
+            df_orders = pd.DataFrame(orders)
+            df_users = pd.DataFrame(users)
+            df_products = pd.DataFrame(products)
+            df_order_items = pd.DataFrame(order_items)
+
+            total_customers = len(users)
+            total_orders = len(orders)
+            total_revenue = sum(order["total_amount"] for order in orders)
+            total_products = len(products)
                 
-                total_customers = len(users)
-                total_orders = len(orders)
-                total_revenue = sum(order["total_amount"] for order in orders)
-                total_products = len(products)
-                
-                total_customers = len(df_users)
-                total_sales = len(df_orders)
-                total_revenue = df_orders["total_amount"].sum()
+            total_customers = len(df_users)
+            total_sales = len(df_orders)
+            total_revenue = df_orders["total_amount"].sum()
 
-                st.metric("👥 Total Customers", total_customers)
-                st.metric("📦 Total Saless", total_saless)
-                st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
-                st.metric("🧾 Products Listed", total_products)
+            st.metric("👥 Total Customers", total_customers)
+            st.metric("📦 Total Saless", total_saless)
+            st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
+            st.metric("🧾 Products Listed", total_products)
 
-                st.metric("👥 Total Customers", total_customers)
-                st.metric("🛒 Total Sales", total_sales)
-                st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
+            st.metric("👥 Total Customers", total_customers)
+            st.metric("🛒 Total Sales", total_sales)
+            st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
 
-                # Monthly sales trend
-                df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
-                monthly_sales = df_orders.groupby(df_orders['created_at'].dt.to_period("M"))["total_amount"].sum().reset_index()
-                monthly_sales['created_at'] = monthly_sales['created_at'].astype(str)
-                st.line_chart(monthly_sales.set_index('created_at'))
+            # Monthly sales trend
+            df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
+            monthly_sales = df_orders.groupby(df_orders['created_at'].dt.to_period("M"))["total_amount"].sum().reset_index()
+            monthly_sales['created_at'] = monthly_sales['created_at'].astype(str)
+            st.line_chart(monthly_sales.set_index('created_at'))
 
-                # Top 5 Products
-                order_items = supabase.table("order_items").select("*").execute().data
-                if order_items:
-                    df_items = pd.DataFrame(order_items)
-                    top_products = df_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
-                    top_products = top_products.merge(df_products[["product_id", "product_name"]], on="product_id")
-                    st.bar_chart(top_products.set_index("product_name")["quantity"])
+            # Top 5 Products
+            order_items = supabase.table("order_items").select("*").execute().data
+            if order_items:
+                df_items = pd.DataFrame(order_items)
+                top_products = df_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
+                top_products = top_products.merge(df_products[["product_id", "product_name"]], on="product_id")
+                st.bar_chart(top_products.set_index("product_name")["quantity"])
         except Exception as e:
             st.error(f"Error generating insights: {e}")
 
