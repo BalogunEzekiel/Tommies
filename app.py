@@ -417,17 +417,17 @@ def view_cart():
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
 
-    tabs = st.tabs(["Overview", "Manage Users", "Manage Products", "View Orders"])
+    tabs = st.tabs(["Overview", "Manage Users", "Manage Products", "View Orders", "Orders Confirmation"])
 
     # --- Overview Tab ---
     with tabs[0]:
-        st.session_state.admin_dashboard_page = "Overview"
+        st.session_state.admin_panel = "Overview"
         st.subheader("🧰 Summary")
         st.info("Overview details will be displayed here.")
 
     # --- Manage Users Tab ---
     with tabs[1]:
-        st.session_state.admin_dashboard_page = "Manage Users"
+        st.session_state.admin_panel = "Manage Users"
         st.subheader("👥 Customers Info Management")
         try:
             user_result = supabase.table("users").select("*").execute()
@@ -439,7 +439,7 @@ def admin_panel():
 
     # --- Manage Products Tab ---
     with tabs[2]:
-        st.session_state.admin_dashboard_page = "Manage Products"
+        st.session_state.admin_panel = "Manage Products"
         st.subheader("🛍️ Manage Products")
         try:
             product_result = supabase.table("products").select("*").execute()
@@ -451,7 +451,7 @@ def admin_panel():
 
     # --- View Orders Tab ---
     with tabs[3]:
-        st.session_state.admin_dashboard_page = "View Orders"
+        st.session_state.admin_panel = "View Orders"
         st.subheader("📦 Recent Orders")
         try:
             orders_result = supabase.table("orders").select(
@@ -487,6 +487,11 @@ def admin_panel():
             st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
             st.divider()
 
+    # --- View Orders Tab ---
+    with tabs[4]:
+        st.session_state.admin_panel = "Orders Confirmation"
+        st.subheader("📦 Confirm Orders Status")
+
 def main():
     st.title("👗 Tommies Fashion Store")
 
@@ -504,16 +509,16 @@ def main():
                 st.rerun()
             st.sidebar.markdown("---")
 
-#    if st.session_state.viewing_cart:
-#        view_cart()
-#        # "Back to Products" button is now inside view_cart for consistency
-#    else:
-#        product_list()
+    if st.session_state.viewing_cart:
+        view_cart()
+        # "Back to Products" button is now inside view_cart for consistency
+    else:
+        product_list()
         
     # Check if cart should be viewed
-    if st.session_state.get("viewing_cart"):
-        view_cart()
-        return  # Prevent further rendering (like product_list or admin_panel)
+#    if st.session_state.get("viewing_cart"):
+#        view_cart()
+#        return  # Prevent further rendering (like product_list or admin_panel)
 
     # Check if cart should be viewed
 #    if st.session_state.get("viewing_cart"):
