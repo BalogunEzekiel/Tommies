@@ -294,11 +294,12 @@ if st.session_state.show_login:
 elif st.session_state.show_register:
     # st.subheader("📝 Register")
     registration_form()  # Call your registration form function here
-
 else:
-    if st.button("View Cart"):
-        st.session_state.viewing_cart = True
-
+    # ✅ Place your new condition here
+    if not (st.session_state.get("logged_in") and st.session_state.user.get("email") == "admin@tommiesfashion.com"):
+        if st.button("View Cart"):
+            st.session_state.viewing_cart = True
+            
 #------------------------ Main Page --------------------------
 st.title("👗 Tommies Fashion Store")
 
