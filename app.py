@@ -368,64 +368,55 @@ def view_cart():
         st.info("Your cart is empty.")
         if st.button("🔙 Back to Products"):
             st.session_state.viewing_cart = False
-            st.rerun() # Rerun to show product list
+            st.rerun()
         return
 
     total = 0
     remove_indices = []
-    
-    # Display cart items and allow removal
+
+    # Show cart items
     for i, item in enumerate(st.session_state.cart):
         col1, col2, col3 = st.columns([0.6, 0.2, 0.2])
         with col1:
             st.write(f"**{item.get('product_name', 'N/A')}**")
             st.write(f"{item['qty']} x ₦{item['price']:,.2f} each")
         with col2:
-            # Allow adjusting quantity directly in cart
-            new_qty = st.number_input("Change Qty", min_value=1, max_value=item.get('stock_quantity', item['qty']), value=item['qty'], key=f"cart_qty_{item['product_id']}")
+            new_qty = st.number_input(
+                f"Qty for {item['product_name']}",
+                min_value=1,
+                max_value=item.get('stock_quantity', item['qty']),
+                value=item['qty'],
+                key=f"cart_qty_{item['product_id']}"
+            )
             if new_qty != item['qty']:
                 item['qty'] = new_qty
-                st.rerun() # Rerun to update total and display immediately
+                st.rerun()
         with col3:
             if st.button("Remove", key=f"remove_{item['product_id']}"):
                 remove_indices.append(i)
 
-        total += item['qty'] * item['price']
+        total += item.get('qty', 1) * item.get('price', 0)
 
-    # Process removals
     for i in sorted(remove_indices, reverse=True):
         st.session_state.cart.pop(i)
-        st.rerun() # Rerun to reflect immediate removal
+        st.rerun()
 
-    st.markdown("---") # Separator
-    st.markdown(f"**Total: ₦{total:,.2f}**")
-    st.markdown("---") # Separator
+    st.markdown("---")
+    st.markdown(f"### 🧾 Total: ₦{total:,.2f}")
+    st.markdown("---")
 
-    # Checkout Options
     if st.session_state.logged_in:
-        if st.button("Proceed to Flutterwave Payment"):
-            if not st.session_state.cart:
-                st.warning("Your cart is empty!")
-                return
-            initiate_payment(total, st.session_state.user['email'])
+        if total > 0:
+            if st.button("Proceed to Flutterwave Payment"):
+                initiate_payment(total, st.session_state.user['email'])
+        else:
+            st.warning("Cannot proceed with an empty cart.")
     else:
         st.warning("Please log in or sign up to proceed with payment.")
 
-    # Check if cart should be viewed
-#    if st.session_state.get("viewing_cart"):
-#        view_cart()
-#        return  # Prevent further rendering (like product_list or admin_panel)
-
-#    if st.session_state.viewing_cart:
-#        view_cart()
-        # "Back to Products" button is now inside view_cart for consistency
-#    else:
-#        product_list()
-
-    st.markdown("---") # Separator
     if st.button("🔙 Back to Products"):
         st.session_state.viewing_cart = False
-        st.rerun() # Rerun to switch view
+        st.rerun()
 
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
