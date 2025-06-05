@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-st.set_page_config(page_title="Tommies Fashion", layout="wide")
+st.set_page_config(page_title="Perfectfit Fashion", layout="wide")
 
 # --- Database Connection (Currently unused, primarily using Supabase Client) ---
 @st.cache_resource
@@ -209,9 +209,9 @@ def create_order(user_id, cart):
 def send_confirmation_email(email, order_id):
     try:
         msg = EmailMessage()
-        msg.set_content(f"Thank you for your order #{order_id} from Tommies Fashion Store!")
+        msg.set_content(f"Thank you for your order #{order_id} from Perfectfit Fashion Store!")
         msg["Subject"] = "Order Confirmation"
-        msg["From"] = "tommiesfashion@gmail.com"
+        msg["From"] = "perfectfitfashion@gmail.com"
         msg["To"] = email
 
         with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
@@ -255,7 +255,7 @@ def initiate_payment(amount, email, cart, user_id): # Add cart and user_id as ar
             "name": st.session_state.user.get('full_name', 'Customer')
         },
         "customizations": {
-            "title": "Tommies Fashion Store",
+            "title": "Perfectfit Fashion Store",
             "description": f"Payment for Order #{order_id}"
         }
     }
@@ -308,12 +308,12 @@ elif st.session_state.show_register:
     registration_form()  # Call your registration form function here
 else:
     # ✅ Place your new condition here]
-    if not (st.session_state.get("logged_in") and st.session_state.user.get("email") == "tommiesfashion@gmail.com"):
+    if not (st.session_state.get("logged_in") and st.session_state.user.get("email") == "perfectfitfashion@gmail.com"):
         if st.button("View Cart"):
             st.session_state.viewing_cart = True
             
 #------------------------ Main Page --------------------------
-st.title("👗 Tommies Fashion Store")
+st.title("👗 Perfectfit Fashion Store")
 
 def product_list():
     st.subheader("🛍️ Available Products")
@@ -597,7 +597,7 @@ def main():
         return
 
     # ✅ Always show the product list to non-admin users
-    if st.session_state.get("logged_in") and st.session_state.user.get("email") == "tommiesfashion@gmail.com":
+    if st.session_state.get("logged_in") and st.session_state.user.get("email") == "perfectfitfashion@gmail.com":
         admin_panel()
     else:
         product_list()
@@ -608,8 +608,8 @@ if __name__ == "__main__":
 # --- SIDEBAR CONTENT ---
 def main():
     # Sidebar Branding
-    st.sidebar.title("About Tommies 👗🧵")
-    st.sidebar.info("Tommies is your one-stop fashion store offering premium styles at unbeatable prices.")
+    st.sidebar.title("About Perfectfit 👗🧵")
+    st.sidebar.info("Perfectfit is your one-stop fashion store offering premium styles at unbeatable prices.")
 
 if __name__ == "__main__":
     main()
