@@ -412,9 +412,9 @@ def view_cart():
         st.warning("Please log in or sign up to proceed with payment.")
 
     # Check if cart should be viewed
-    if st.session_state.get("viewing_cart"):
-        view_cart()
-        return  # Prevent further rendering (like product_list or admin_panel)
+#    if st.session_state.get("viewing_cart"):
+#        view_cart()
+#        return  # Prevent further rendering (like product_list or admin_panel)
 
 #    if st.session_state.viewing_cart:
 #        view_cart()
@@ -506,8 +506,6 @@ def admin_panel():
         st.subheader("📦 Confirm Orders Status")
 
 def main():
-#    st.title("👗 Tommies Fashion Store")
-
     if "show_register" not in st.session_state:
         st.session_state.show_register = False
 
@@ -520,25 +518,12 @@ def main():
                 del st.session_state.user
                 st.session_state.logged_in = False
                 st.rerun()
-            st.sidebar.markdown("---")
-        
-    # Check if cart should be viewed
-#    if st.session_state.get("viewing_cart"):
-#        view_cart()
-#        return  # Prevent further rendering (like product_list or admin_panel)
+        st.sidebar.markdown("---")
 
-    # Check if cart should be viewed
     if st.session_state.get("viewing_cart"):
         view_cart()
-        return  # Prevent further rendering (like product_list or admin_panel)
+        return
 
-#    if st.session_state.viewing_cart:
-#        view_cart()
-        # "Back to Products" button is now inside view_cart for consistency
-#    else:
-#        product_list()
-    
-# Show Admin Panel or User Product List
     if st.session_state.get("logged_in"):
         if st.session_state.user["email"] == "admin@tommiesfashion.com":
             admin_panel()
