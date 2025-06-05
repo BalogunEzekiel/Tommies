@@ -222,7 +222,7 @@ def send_confirmation_email(email, order_id):
         st.warning(f"Email failed to send: {e}")
         
 # --- Flutterwave Integration ---
-def initiate_payment(amount, email):
+def initiate_payment(amount, email, cart, user_id): # Add cart and user_id as arguments
     # Retrieve Flutterwave public key from Streamlit secrets
     try:
         flutterwave_public_key = st.secrets["flutterwave"]["public_key"]
@@ -230,9 +230,15 @@ def initiate_payment(amount, email):
         st.error("Flutterwave public key not found in secrets.toml")
         return
 
+    # Create the order in your database first
+    order_id = create_order(user_id, cart)
+    if not order_id:
+        st.error("Failed to create order. Please try again.")
+        return
+
     payment_url = "https://api.flutterwave.com/v3/payments"
     headers = {
-        "Authorization": f"Bearer {flutterwave_public_key}",
+        "Authorization": f"Bearer {st.secrets['flutterwave']['secret_key']}", # Use secret key for initiating payments
         "Content-Type": "application/json"
     }
 
@@ -243,37 +249,42 @@ def initiate_payment(amount, email):
         "tx_ref": tx_ref,
         "amount": amount,
         "currency": "NGN",
-        # Important: For deployment, replace localhost with your deployed Streamlit app URL
-        # You'll need to figure out how to handle the callback to verify payment on Streamlit Cloud
-        "redirect_url": "http://localhost:8501", # Redirect back to the app's base URL
+        "redirect_url": f"http://localhost:8501?tx_ref={tx_ref}&order_id={order_id}", # Pass order_id and tx_ref
         "customer": {
             "email": email,
-            "name": st.session_state.user.get('full_name', 'Customer') # Get customer name if available
+            "name": st.session_state.user.get('full_name', 'Customer')
         },
         "customizations": {
             "title": "Tommies Fashion Store",
-            "description": "Payment for fashion items"
+            "description": f"Payment for Order #{order_id}"
         }
     }
 
     try:
         response = requests.post(payment_url, json=payload, headers=headers)
-        response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
+        response.raise_for_status()
         response_json = response.json()
 
         if response_json['status'] == 'success':
             payment_link = response_json['data']['link']
             st.success("Payment initiated successfully! Click the link below to complete your payment.")
             st.markdown(f"**[Proceed to Payment]({payment_link})**")
-            # Optionally, save tx_ref to session_state to check later
             st.session_state.current_tx_ref = tx_ref
+            st.session_state.current_order_id = order_id # Store the order ID for later verification
         else:
             st.error(f"Failed to initiate payment: {response_json.get('message', 'Unknown error')}")
-            # print(response_json) # For debugging
+            # If payment initiation fails, you might want to revert the order status or delete it
+            supabase.table("orders").delete().eq("order_id", order_id).execute()
+            st.error("Order creation rolled back due to payment initiation failure.")
+
     except requests.exceptions.RequestException as e:
         st.error(f"Network or API error initiating payment: {e}")
+        supabase.table("orders").delete().eq("order_id", order_id).execute()
+        st.error("Order creation rolled back due to network/API error.")
     except Exception as e:
         st.error(f"An unexpected error occurred during payment initiation: {e}")
+        supabase.table("orders").delete().eq("order_id", order_id).execute()
+        st.error("Order creation rolled back due to an unexpected error.")
 
 # --- Initialize session state variables ---
 default_state = {
@@ -410,12 +421,12 @@ def view_cart():
     if st.session_state.logged_in:
         if total > 0:
             if st.button("Proceed to Flutterwave Payment"):
-                initiate_payment(total, st.session_state.user['email'])
+                initiate_payment(total, st.session_state.user['email'], st.session_state.cart, st.session_state.user['user_id']) # Pass cart and user_id
         else:
             st.warning("Cannot proceed with an empty cart.")
     else:
         st.warning("Please log in or sign up to proceed with payment.")
-
+        
     if st.button("🔙 Back to Products"):
         st.session_state.viewing_cart = False
         st.rerun()
