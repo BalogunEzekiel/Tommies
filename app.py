@@ -518,22 +518,34 @@ def admin_panel():
 
     # --- Insights Tab ---
     with tabs[5]:
-        st.subheader("📊 Insights and KPIs")
+        st.subheader("📊 Business Insights")
         try:
-            orders = supabase.table("orders").select("*").execute().data
             users = supabase.table("users").select("*").execute().data
+            orders = supabase.table("orders").select("*").execute().data
             products = supabase.table("products").select("*").execute().data
+            order_items = supabase.table("order_items").select("*").execute().data
 
-            if not orders or not users or not products:
-                st.warning("Insufficient data for insights.")
-            else:
+#            if not orders or not users or not products or not order_items:
+#                st.warning("Insufficient data for insights.")
+#            else:
                 df_orders = pd.DataFrame(orders)
                 df_users = pd.DataFrame(users)
                 df_products = pd.DataFrame(products)
-
+                df_order_items = pd.DataFrame(order_items)
+                
+                total_customers = len(users)
+                total_orders = len(orders)
+                total_revenue = sum(order["total_amount"] for order in orders)
+                total_products = len(products)
+                
                 total_customers = len(df_users)
                 total_sales = len(df_orders)
                 total_revenue = df_orders["total_amount"].sum()
+
+                st.metric("👥 Total Customers", total_customers)
+                st.metric("📦 Total Saless", total_saless)
+                st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
+                st.metric("🧾 Products Listed", total_products)
 
                 st.metric("👥 Total Customers", total_customers)
                 st.metric("🛒 Total Sales", total_sales)
