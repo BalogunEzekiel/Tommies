@@ -536,10 +536,10 @@ def admin_panel():
             products = supabase.table("products").select("*").execute().data
             order_items = supabase.table("order_items").select("*").execute().data
 
-            df_orders = pd.DataFrame(orders)
-            df_users = pd.DataFrame(users)
-            df_products = pd.DataFrame(products)
-            df_order_items = pd.DataFrame(order_items)
+#            df_orders = pd.DataFrame(orders)
+#            df_users = pd.DataFrame(users)
+#            df_products = pd.DataFrame(products)
+#            df_order_items = pd.DataFrame(order_items)
 
             total_customers = len(users)
             total_orders = len(orders)
