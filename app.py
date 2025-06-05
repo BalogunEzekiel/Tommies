@@ -500,7 +500,7 @@ def admin_panel():
             st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
             st.divider()
 
-    # --- View Orders Tab ---
+    # --- Orders Confirmation Tab ---
     with tabs[4]:
         st.session_state.admin_dashboard_page = "Orders Confirmation"
         st.subheader("📦 Confirm Orders Status")
@@ -518,7 +518,7 @@ def main():
                 del st.session_state.user
                 st.session_state.logged_in = False
                 st.rerun()
-        st.sidebar.markdown("---")
+        st.markdown("---")  # Corrected: no need for st.sidebar.markdown again
 
     if st.session_state.get("viewing_cart"):
         view_cart()
@@ -529,6 +529,7 @@ def main():
             admin_panel()
         else:
             product_list()
+
 
 if __name__ == "__main__":
     main()
