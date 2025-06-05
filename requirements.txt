@@ -3,3 +3,6 @@ sqlalchemy
 supabase
 requests
 bcrypt
+pandas
+numpy
+datetime
