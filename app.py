@@ -299,6 +299,9 @@ else:
     if st.button("View Cart"):
         st.session_state.viewing_cart = True
 
+#------------------------ Main Page --------------------------
+st.title("👗 Tommies Fashion Store")
+
 def product_list():
     st.subheader("🛍️ Available Products")
 
@@ -421,13 +424,13 @@ def admin_panel():
 
     # --- Overview Tab ---
     with tabs[0]:
-        st.session_state.admin_panel = "Overview"
+        st.session_state.admin_dashboard_page = "Overview"
         st.subheader("🧰 Summary")
         st.info("Overview details will be displayed here.")
 
     # --- Manage Users Tab ---
     with tabs[1]:
-        st.session_state.admin_panel = "Manage Users"
+        st.session_state.admin_dashboard_page = "Manage Users"
         st.subheader("👥 Customers Info Management")
         try:
             user_result = supabase.table("users").select("*").execute()
@@ -439,7 +442,7 @@ def admin_panel():
 
     # --- Manage Products Tab ---
     with tabs[2]:
-        st.session_state.admin_panel = "Manage Products"
+        st.session_state.admin_dashboard_page = "Manage Products"
         st.subheader("🛍️ Manage Products")
         try:
             product_result = supabase.table("products").select("*").execute()
@@ -451,7 +454,7 @@ def admin_panel():
 
     # --- View Orders Tab ---
     with tabs[3]:
-        st.session_state.admin_panel = "View Orders"
+        st.session_state.admin_dashboard_page = "View Orders"
         st.subheader("📦 Recent Orders")
         try:
             orders_result = supabase.table("orders").select(
@@ -489,7 +492,7 @@ def admin_panel():
 
     # --- View Orders Tab ---
     with tabs[4]:
-        st.session_state.admin_panel = "Orders Confirmation"
+        st.session_state.admin_dashboard_page = "Orders Confirmation"
         st.subheader("📦 Confirm Orders Status")
 
 def main():
