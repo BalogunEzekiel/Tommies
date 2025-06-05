@@ -289,13 +289,11 @@ for key, value in default_state.items():
 # --- Example UI Logic ---
 
 if st.session_state.show_login:
-    # st.subheader("🔐 Login")
     login_form()  # Call your login form function here
 elif st.session_state.show_register:
-    # st.subheader("📝 Register")
     registration_form()  # Call your registration form function here
 else:
-    # ✅ Place your new condition here
+    # ✅ Place your new condition here]
     if not (st.session_state.get("logged_in") and st.session_state.user.get("email") == "admin@tommiesfashion.com"):
         if st.button("View Cart"):
             st.session_state.viewing_cart = True
@@ -422,7 +420,7 @@ def view_cart():
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
 
-    tabs = st.tabs(["Overview", "Manage Users", "Manage Products", "View Orders", "Orders Confirmation"])
+    tabs = st.tabs(["Overview", "Manage Users", "Manage Products", "View Orders", "Orders Confirmation", "Insights"])
 
     # --- Overview Tab ---
     with tabs[0]:
@@ -437,8 +435,13 @@ def admin_panel():
         try:
             user_result = supabase.table("users").select("*").execute()
             users = user_result.data
-            for user in users:
-                st.write(f"- {user['user_name']} | {user['email']}")
+            editable_users = pd.DataFrame(users)
+            edited_users = st.experimental_data_editor(editable_users, num_rows="dynamic")
+
+            if st.button("💾 Save User Changes"):
+                for _, row in edited_users.iterrows():
+                    supabase.table("users").update(row.to_dict()).eq("user_id", row["user_id"]).execute()
+                st.success("Users updated successfully.")
         except Exception as e:
             st.error(f"Failed to fetch users: {e}")
 
@@ -449,8 +452,13 @@ def admin_panel():
         try:
             product_result = supabase.table("products").select("*").execute()
             products = product_result.data
-            for prod in products:
-                st.write(f"- {prod['product_name']} | ₦{prod['price']:,.2f}")
+            editable_products = pd.DataFrame(products)
+            edited_products = st.experimental_data_editor(editable_products, num_rows="dynamic")
+
+            if st.button("💾 Save Product Changes"):
+                for _, row in edited_products.iterrows():
+                    supabase.table("products").update(row.to_dict()).eq("product_id", row["product_id"]).execute()
+                st.success("Products updated successfully.")
         except Exception as e:
             st.error(f"Failed to fetch products: {e}")
 
@@ -496,7 +504,56 @@ def admin_panel():
     with tabs[4]:
         st.session_state.admin_dashboard_page = "Orders Confirmation"
         st.subheader("📦 Confirm Orders Status")
+        try:
+            orders_result = supabase.table("orders").select("order_id, status").execute()
+            orders = orders_result.data
 
+            for order in orders:
+                new_status = st.selectbox(
+                    f"Update status for Order #{order['order_id']}",
+                    ["Pending", "Confirmed", "Shipping", "Delivered"],
+                    index=["Pending", "Confirmed", "Shipping", "Delivered"].index(order["status"])
+                )
+                if st.button(f"✅ Save Status for Order #{order['order_id']}"):
+                    supabase.table("orders").update({"status": new_status}).eq("order_id", order["order_id"]).execute()
+                    st.success(f"Status updated for Order #{order['order_id']}")
+        except Exception as e:
+            st.error(f"Failed to fetch or update order statuses: {e}")
+
+    # --- Insights Tab ---
+    with tabs[5]:
+        st.session_state.admin_dashboard_page = "Insights"
+        st.subheader("📊 Business Insights")
+
+        try:
+            users = supabase.table("users").select("*").execute().data
+            products = supabase.table("products").select("*").execute().data
+            orders = supabase.table("orders").select("*, order_items(*)").execute().data
+
+            total_customers = len(users)
+            total_sales = sum(o['total_amount'] for o in orders)
+            total_orders = len(orders)
+
+            product_sales = {}
+            customer_spend = {}
+
+            for order in orders:
+                for item in order['order_items']:
+                    pid = item['product_id']
+                    qty = item['quantity']
+                    amt = item['price_at_purchase'] * qty
+                    product_sales[pid] = product_sales.get(pid, 0) + qty
+                    cid = order['user_id']
+                    customer_spend[cid] = customer_spend.get(cid, 0) + amt
+
+            top_products = sorted(product_sales.items(), key=lambda x: x[1], reverse=True)[:5]
+            top_customers = sorted(customer_spend.items(), key=lambda x: x[1], reverse=True)[:5]
+
+            st.metric("👥 Total Customers", total_customers)
+            st.metric("💰 Total Sales", f"₦{total_sales:,.2f}")
+            st.metric("📦 Total Orders", tota
+                      
+#----------------------- Main Logic --------------------------
 def main():
     if "show_register" not in st.session_state:
         st.session_state.show_register = False
