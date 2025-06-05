@@ -480,7 +480,7 @@ def main():
         else:
             product_list()
 
-    if __name__ == "__main__":
+if __name__ == "__main__":
     main()
 
 def view_cart():
