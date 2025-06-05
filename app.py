@@ -238,7 +238,7 @@ def initiate_payment(amount, email, cart, user_id): # Add cart and user_id as ar
 
     payment_url = "https://api.flutterwave.com/v3/payments"
     headers = {
-        "Authorization": f"Bearer {st.secrets['flutterwave']['secret_key']}", # Use secret key for initiating payments
+        "Authorization": f"Bearer {flutterwave_public_key}",
         "Content-Type": "application/json"
     }
 
