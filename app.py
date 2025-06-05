@@ -419,6 +419,10 @@ def view_cart():
         st.session_state.viewing_cart = False
         st.rerun()
 
+import streamlit as st
+import pandas as pd
+from datetime import datetime
+
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
 
@@ -426,146 +430,134 @@ def admin_panel():
 
     # --- Overview Tab ---
     with tabs[0]:
-        st.session_state.admin_dashboard_page = "Overview"
         st.subheader("🧰 Summary")
         st.info("Overview details will be displayed here.")
 
     # --- Manage Users Tab ---
     with tabs[1]:
-        st.session_state.admin_dashboard_page = "Manage Users"
         st.subheader("👥 Customers Info Management")
         try:
-            user_result = supabase.table("users").select("*").execute()
-            users = user_result.data
-            editable_users = pd.DataFrame(users)
-            edited_users = st.experimental_data_editor(editable_users, num_rows="dynamic")
-
-            if st.button("💾 Save User Changes"):
-                for _, row in edited_users.iterrows():
-                    supabase.table("users").update(row.to_dict()).eq("user_id", row["user_id"]).execute()
-                st.success("Users updated successfully.")
+            users = supabase.table("users").select("*").execute().data
+            if users:
+                df_users = pd.DataFrame(users)
+                edited_df = st.data_editor(df_users, num_rows="dynamic", key="user_editor")
+                if st.button("Save Changes to Users"):
+                    for _, row in edited_df.iterrows():
+                        supabase.table("users").update(row.to_dict()).eq("user_id", row["user_id"]).execute()
+                    st.success("✅ Users updated successfully!")
+            else:
+                st.info("No users found.")
         except Exception as e:
             st.error(f"Failed to fetch users: {e}")
 
     # --- Manage Products Tab ---
     with tabs[2]:
-        st.session_state.admin_dashboard_page = "Manage Products"
         st.subheader("🛍️ Manage Products")
         try:
-            product_result = supabase.table("products").select("*").execute()
-            products = product_result.data
-            editable_products = pd.DataFrame(products)
-            edited_products = st.experimental_data_editor(editable_products, num_rows="dynamic")
-
-            if st.button("💾 Save Product Changes"):
-                for _, row in edited_products.iterrows():
-                    supabase.table("products").update(row.to_dict()).eq("product_id", row["product_id"]).execute()
-                st.success("Products updated successfully.")
+            products = supabase.table("products").select("*").execute().data
+            if products:
+                df_products = pd.DataFrame(products)
+                edited_products = st.data_editor(df_products, num_rows="dynamic", key="product_editor")
+                if st.button("Save Changes to Products"):
+                    for _, row in edited_products.iterrows():
+                        supabase.table("products").update(row.to_dict()).eq("product_id", row["product_id"]).execute()
+                    st.success("✅ Products updated successfully!")
+            else:
+                st.info("No products available.")
         except Exception as e:
             st.error(f"Failed to fetch products: {e}")
 
     # --- View Orders Tab ---
     with tabs[3]:
-        st.session_state.admin_dashboard_page = "View Orders"
         st.subheader("📦 Recent Orders")
         try:
-            orders_result = supabase.table("orders").select(
-                "*, users!inner(full_name, email), order_items(*)"
-            ).order("created_at", desc=True).execute()
-            orders = orders_result.data if orders_result.data else []
+            orders = supabase.table("orders").select("*, users!inner(full_name, email), order_items(*)").order("created_at", desc=True).execute().data
+            if not orders:
+                st.info("No orders found.")
+            for order in orders:
+                st.markdown(f"**Order #{order['order_id']}**")
+                st.write(f"**Customer:** {order['users']['full_name']} ({order['users']['email']})")
+                st.write(f"**Date:** {order['created_at']}")
+                st.write("**Items:**")
+
+                if order['order_items']:
+                    for item in order['order_items']:
+                        prod_name = "Unknown"
+                        try:
+                            prod = supabase.table("products").select("product_name").eq("product_id", item["product_id"]).execute().data
+                            if prod:
+                                prod_name = prod[0]["product_name"]
+                        except:
+                            pass
+                        st.write(f"- {item['quantity']} x {prod_name} @ ₦{item['price_at_purchase']:,.2f}")
+                else:
+                    st.write("- No items found.")
+                st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
+                st.divider()
         except Exception as e:
             st.error(f"Error fetching orders: {e}")
-            return
-
-        if not orders:
-            st.info("No orders found.")
-            return
-
-        for order in orders:
-            st.markdown(f"**Order #{order['order_id']}**")
-            st.write(f"**Customer:** {order['users']['full_name']} ({order['users']['email']})")
-            st.write(f"**Date:** {order['created_at']}")
-            st.write("**Items:**")
-
-            if order['order_items']:
-                for item in order['order_items']:
-                    try:
-                        prod_result = supabase.table("products").select("product_name").eq("product_id", item['product_id']).execute()
-                        prod_name = prod_result.data[0]['product_name'] if prod_result.data else "Unknown Product"
-                    except Exception as e:
-                        prod_name = f"Error loading product: {e}"
-
-                    st.write(f"- {item['quantity']} x {prod_name} at ₦{item['price_at_purchase']:,.2f}")
-            else:
-                st.write("- No items found for this order.")
-
-            st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
-            st.divider()
 
     # --- Orders Confirmation Tab ---
     with tabs[4]:
-        st.session_state.admin_dashboard_page = "Orders Confirmation"
-        st.subheader("📦 Confirm Orders Status")
+        st.subheader("🚚 Update Order Status")
         try:
-            orders_result = supabase.table("orders").select("order_id, status").execute()
-            orders = orders_result.data
-
-            for order in orders:
-                new_status = st.selectbox(
-                    f"Update status for Order #{order['order_id']}",
-                    ["Pending", "Confirmed", "Shipping", "Delivered"],
-                    index=["Pending", "Confirmed", "Shipping", "Delivered"].index(order["status"])
-                )
-                if st.button(f"✅ Save Status for Order #{order['order_id']}"):
-                    supabase.table("orders").update({"status": new_status}).eq("order_id", order["order_id"]).execute()
-                    st.success(f"Status updated for Order #{order['order_id']}")
+            orders = supabase.table("orders").select("*").eq("status", "Pending").execute().data
+            if orders:
+                for order in orders:
+                    st.write(f"Order #{order['order_id']} - Total: ₦{order['total_amount']:,.2f}")
+                    new_status = st.selectbox(
+                        f"Update status for Order #{order['order_id']}",
+                        options=["Pending", "Confirmed", "Shipping", "Delivered"],
+                        index=["Pending", "Confirmed", "Shipping", "Delivered"].index(order.get("status", "Pending")),
+                        key=f"status_{order['order_id']}"
+                    )
+                    if st.button(f"Save Status for Order #{order['order_id']}"):
+                        supabase.table("orders").update({"status": new_status}).eq("order_id", order["order_id"]).execute()
+                        st.success(f"✅ Order #{order['order_id']} status updated to {new_status}")
+            else:
+                st.info("No pending orders.")
         except Exception as e:
-            st.error(f"Failed to fetch or update order statuses: {e}")
+            st.error(f"Error updating orders: {e}")
 
     # --- Insights Tab ---
     with tabs[5]:
-        st.session_state.admin_dashboard_page = "Insights"
-        st.subheader("📊 Business Insights")
-
+        st.subheader("📊 Insights and KPIs")
         try:
+            orders = supabase.table("orders").select("*").execute().data
             users = supabase.table("users").select("*").execute().data
             products = supabase.table("products").select("*").execute().data
-            orders = supabase.table("orders").select("*, order_items(*)").execute().data
 
-            total_customers = len(users)
-            total_sales = sum(o['total_amount'] for o in orders)
-            total_orders = len(orders)
+            if not orders or not users or not products:
+                st.warning("Insufficient data for insights.")
+            else:
+                df_orders = pd.DataFrame(orders)
+                df_users = pd.DataFrame(users)
+                df_products = pd.DataFrame(products)
 
-            product_sales = {}
-            customer_spend = {}
+                total_customers = len(df_users)
+                total_sales = len(df_orders)
+                total_revenue = df_orders["total_amount"].sum()
 
-            for order in orders:
-                for item in order['order_items']:
-                    pid = item['product_id']
-                    qty = item['quantity']
-                    amt = item['price_at_purchase'] * qty
-                    product_sales[pid] = product_sales.get(pid, 0) + qty
-                    cid = order['user_id']
-                    customer_spend[cid] = customer_spend.get(cid, 0) + amt
+                st.metric("👥 Total Customers", total_customers)
+                st.metric("🛒 Total Sales", total_sales)
+                st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
 
-            top_products = sorted(product_sales.items(), key=lambda x: x[1], reverse=True)[:5]
-            top_customers = sorted(customer_spend.items(), key=lambda x: x[1], reverse=True)[:5]
+                # Monthly sales trend
+                df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
+                monthly_sales = df_orders.groupby(df_orders['created_at'].dt.to_period("M"))["total_amount"].sum().reset_index()
+                monthly_sales['created_at'] = monthly_sales['created_at'].astype(str)
+                st.line_chart(monthly_sales.set_index('created_at'))
 
-            st.metric("👥 Total Customers", total_customers)
-            st.metric("💰 Total Sales", f"₦{total_sales:,.2f}")
-            st.metric("📦 Total Orders", total_orders)
-
-            st.subheader("🏆 Top Selling Products")
-            for pid, qty in top_products:
-                pname = next((p['product_name'] for p in products if p['product_id'] == pid), "Unknown")
-                st.write(f"- {pname} ({qty} sold)")
-
-            st.subheader("👑 Best Spending Customers")
-            for cid, amt in top_customers:
-                cname = next((u['full_name'] for u in users if u['user_id'] == cid), "Unknown")
-                st.write(f"- {cname} - ₦{amt:,.2f}")
+                # Top 5 Products
+                order_items = supabase.table("order_items").select("*").execute().data
+                if order_items:
+                    df_items = pd.DataFrame(order_items)
+                    top_products = df_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
+                    top_products = top_products.merge(df_products[["product_id", "product_name"]], on="product_id")
+                    st.bar_chart(top_products.set_index("product_name")["quantity"])
         except Exception as e:
-            st.error(f"Failed to generate insights: {e}")
+            st.error(f"Error generating insights: {e}")
+
                       
 #----------------------- Main Logic --------------------------
 def main():
