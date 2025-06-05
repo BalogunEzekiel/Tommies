@@ -554,7 +554,7 @@ def admin_panel():
             total_revenue = df_orders["total_amount"].sum()
 
             st.metric("👥 Total Customers", total_customers)
-            st.metric("📦 Total Saless", total_saless)
+            st.metric("📦 Total Sales", total_sales)
             st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
             st.metric("🧾 Products Listed", total_products)
 
