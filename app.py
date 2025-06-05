@@ -10,6 +10,7 @@ import uuid # For unique transaction references
 import bcrypt
 import pandas as pd
 import numpy as np
+from datetime import datetime
 
 st.set_page_config(page_title="Tommies Fashion", layout="wide")
 
@@ -418,10 +419,6 @@ def view_cart():
     if st.button("🔙 Back to Products"):
         st.session_state.viewing_cart = False
         st.rerun()
-
-import streamlit as st
-import pandas as pd
-from datetime import datetime
 
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
