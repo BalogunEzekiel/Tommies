@@ -473,7 +473,13 @@ def main():
             admin_panel()
         else:
             product_list()
-            
+
+    if st.session_state.viewing_cart:
+        view_cart()
+        # "Back to Products" button is now inside view_cart for consistency
+    else:
+        product_list()
+
 if __name__ == "__main__":
     main()
 
@@ -523,14 +529,8 @@ def view_cart():
                 st.warning("Your cart is empty!")
                 return
             initiate_payment(total, st.session_state.user['email'])
-
-    if st.session_state.viewing_cart:
-        view_cart()
-        # "Back to Products" button is now inside view_cart for consistency
     else:
-        product_list()
-#    else:
-#        st.warning("Please log in or sign up to proceed with payment.")
+        st.warning("Please log in or sign up to proceed with payment.")
 
     st.markdown("---") # Separator
     if st.button("🔙 Back to Products"):
