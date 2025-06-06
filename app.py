@@ -367,12 +367,12 @@ def product_list():
             product_id = p['product_id']
             liked = product_id in st.session_state.liked_products
             heart_label = "❤️" if liked else "🤍"
-
             if st.button(heart_label, key=f"like_{product_id}"):
                 if liked:
                     st.session_state.liked_products.remove(product_id)
                 else:
                     st.session_state.liked_products.add(product_id)
+                st.experimental_rerun()
 
             if stock > 0:
                 qty = st.number_input(
