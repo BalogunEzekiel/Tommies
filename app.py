@@ -325,7 +325,6 @@ def product_list():
     if 'cart' not in st.session_state:
         st.session_state.cart = []
 
-    # Initialize liked products storage if not already
     if 'liked_products' not in st.session_state:
         st.session_state.liked_products = set()
 
@@ -365,17 +364,15 @@ def product_list():
             stock = int(p.get('stock_quantity', 0) or 0)
             st.markdown(f"Stock: {stock} | Size: {p.get('size', 'N/A')} | Category: {p.get('category', 'N/A')}")
 
-            # Heart toggle using checkbox
             product_id = p['product_id']
             liked = product_id in st.session_state.liked_products
             heart_label = "❤️" if liked else "🤍"
-            liked_new = st.checkbox(heart_label, key=f"like_{product_id}")
 
-            if liked_new != liked:
-                if liked_new:
-                    st.session_state.liked_products.add(product_id)
-                else:
+            if st.button(heart_label, key=f"like_{product_id}"):
+                if liked:
                     st.session_state.liked_products.remove(product_id)
+                else:
+                    st.session_state.liked_products.add(product_id)
 
             if stock > 0:
                 qty = st.number_input(
