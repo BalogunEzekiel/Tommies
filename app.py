@@ -325,6 +325,10 @@ def product_list():
     if 'cart' not in st.session_state:
         st.session_state.cart = []
 
+    # Initialize liked products storage if not already
+    if 'liked_products' not in st.session_state:
+        st.session_state.liked_products = set()
+
     products = fetch_products()
 
     if not products:
@@ -361,15 +365,26 @@ def product_list():
             stock = int(p.get('stock_quantity', 0) or 0)
             st.markdown(f"Stock: {stock} | Size: {p.get('size', 'N/A')} | Category: {p.get('category', 'N/A')}")
 
+            # Heart toggle button for desire/like
+            product_id = p['product_id']
+            liked = product_id in st.session_state.liked_products
+            heart_icon = "❤️" if liked else "🤍"
+            if st.button(heart_icon, key=f"like_{product_id}"):
+                if liked:
+                    st.session_state.liked_products.remove(product_id)
+                else:
+                    st.session_state.liked_products.add(product_id)
+                st.experimental_rerun()
+
             if stock > 0:
                 qty = st.number_input(
-                    "Qty", min_value=1, max_value=stock, key=f"qty_{p['product_id']}", value=1
+                    "Qty", min_value=1, max_value=stock, key=f"qty_{product_id}", value=1
                 )
-                if st.button("Add to Cart", key=f"cart_{p['product_id']}"):
+                if st.button("Add to Cart", key=f"cart_{product_id}"):
                     if not st.session_state.get('logged_in', False):
                         st.warning("Please log in or sign up to add items to your cart.")
                     else:
-                        existing = next((item for item in st.session_state.cart if item['product_id'] == p['product_id']), None)
+                        existing = next((item for item in st.session_state.cart if item['product_id'] == product_id), None)
                         if existing:
                             existing['qty'] += qty
                             st.success(f"Updated quantity of {p['product_name']} in cart to {existing['qty']}.")
