@@ -328,6 +328,10 @@ def product_list():
     if 'liked_products' not in st.session_state:
         st.session_state.liked_products = set()
 
+    # Flag to defer rerun
+    if 'trigger_rerun' not in st.session_state:
+        st.session_state.trigger_rerun = False
+
     products = fetch_products()
 
     if not products:
@@ -373,7 +377,8 @@ def product_list():
                     st.session_state.liked_products.remove(product_id)
                 else:
                     st.session_state.liked_products.add(product_id)
-                st.experimental_rerun()  # refresh to update icon
+                # Mark for rerun
+                st.session_state.trigger_rerun = True
 
             if stock > 0:
                 qty = st.number_input(
@@ -392,6 +397,11 @@ def product_list():
                             st.success(f"Added {qty} x {p['product_name']} to cart.")
             else:
                 st.info("Out of Stock")
+
+    # ⏱ Rerun after loop ends
+    if st.session_state.trigger_rerun:
+        st.session_state.trigger_rerun = False
+        st.experimental_rerun()
 
 def view_cart():
     st.subheader("🛒 Your Cart")
