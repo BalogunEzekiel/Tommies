@@ -369,7 +369,7 @@ def product_list():
             heart_label = "❤️" if liked else "🤍"
 
             # Use checkbox as toggle button for like/unlike
-            liked_new = st.checkbox(label=heart_label, key=f"like_{product_id}", value=liked)
+£            liked_new = st.checkbox(label=heart_label, key=f"like_{product_id}", value=liked)
 
             # Update liked_products set based on checkbox
             if liked_new and not liked:
