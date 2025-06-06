@@ -307,8 +307,12 @@ if st.session_state.show_login:
 elif st.session_state.show_register:
     registration_form()  # Call your registration form function here
 else:
-    # ✅ Place your new condition here]
-    if not (st.session_state.get("logged_in") and st.session_state.user.get("email") == "tommiesfashion@gmail.com"):
+    # ✅ Show "View Cart" only to non-admin logged-in users
+    if (
+        st.session_state.get("logged_in") and
+        "user" in st.session_state and
+        st.session_state.user.get("email") != "tommiesfashion@gmail.com"
+    ):
         if st.button("View Cart"):
             st.session_state.viewing_cart = True
             
