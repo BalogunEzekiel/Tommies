@@ -328,9 +328,6 @@ def product_list():
     if 'liked_products' not in st.session_state:
         st.session_state.liked_products = set()
 
-    if 'rerun_needed' not in st.session_state:
-        st.session_state.rerun_needed = False
-
     products = fetch_products()
 
     if not products:
@@ -371,12 +368,14 @@ def product_list():
             liked = product_id in st.session_state.liked_products
             heart_label = "❤️" if liked else "🤍"
 
-            if st.button(heart_label, key=f"like_{product_id}"):
-                if liked:
-                    st.session_state.liked_products.remove(product_id)
-                else:
-                    st.session_state.liked_products.add(product_id)
-                st.session_state.rerun_needed = True  # set flag
+            # Use checkbox as toggle button for like/unlike
+            liked_new = st.checkbox(label=heart_label, key=f"like_{product_id}", value=liked)
+
+            # Update liked_products set based on checkbox
+            if liked_new and not liked:
+                st.session_state.liked_products.add(product_id)
+            elif not liked_new and liked:
+                st.session_state.liked_products.remove(product_id)
 
             if stock > 0:
                 qty = st.number_input(
@@ -395,10 +394,6 @@ def product_list():
                             st.success(f"Added {qty} x {p['product_name']} to cart.")
             else:
                 st.info("Out of Stock")
-
-    if st.session_state.rerun_needed:
-        st.session_state.rerun_needed = False
-        st.experimental_rerun()
 
 def view_cart():
     st.subheader("🛒 Your Cart")
