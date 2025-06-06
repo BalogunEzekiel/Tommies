@@ -328,9 +328,6 @@ def product_list():
     if 'liked_products' not in st.session_state:
         st.session_state.liked_products = set()
 
-    if 'like_clicked' not in st.session_state:
-        st.session_state.like_clicked = None  # Track which product's heart was clicked
-
     products = fetch_products()
     if not products:
         st.info("No products available at the moment.")
@@ -369,15 +366,14 @@ def product_list():
             liked = product_id in st.session_state.liked_products
             heart_label = "❤️" if liked else "🤍"
 
-            if st.button(heart_label, key=f"like_{product_id}"):
-                st.session_state.like_clicked = product_id
+            # Unique key for each toggle
+            button_key = f"like_{product_id}_{liked}"
 
-            if st.session_state.like_clicked == product_id:
+            if st.button(heart_label, key=button_key):
                 if liked:
                     st.session_state.liked_products.remove(product_id)
                 else:
                     st.session_state.liked_products.add(product_id)
-                st.session_state.like_clicked = None  # Reset after handling
 
             if stock > 0:
                 qty = st.number_input(
