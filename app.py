@@ -619,8 +619,22 @@ if __name__ == "__main__":
 def main():
     # Sidebar Branding
     st.sidebar.title("About Perfectfit 👗🧵")
-    st.sidebar.info("***.....fast and reliable.***")
-    st.sidebar.info("Perfectfit is your one-stop fashion store offering premium styles at unbeatable prices.")
+    st.sidebar.markdown(
+        """
+        <div style="
+            background-color: #28a745;  /* Bootstrap green */
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-style: italic;
+            ">
+            .....fast and reliable.<br><br>
+            Perfectfit is your one-stop fashion store offering premium styles at unbeatable prices.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 if __name__ == "__main__":
     main()
