@@ -328,19 +328,16 @@ def product_list():
     if 'liked_products' not in st.session_state:
         st.session_state.liked_products = set()
 
-    # Flag to defer rerun
-    if 'trigger_rerun' not in st.session_state:
-        st.session_state.trigger_rerun = False
+    if 'like_clicked' not in st.session_state:
+        st.session_state.like_clicked = None  # Track which product's heart was clicked
 
     products = fetch_products()
-
     if not products:
         st.info("No products available at the moment.")
         return
 
     categories = sorted({p.get('category') for p in products if p.get('category')})
     sizes = sorted({p.get('size') for p in products if p.get('size')})
-
     category_filter = st.selectbox("Category", ["All"] + categories)
     size_filter = st.selectbox("Size", ["All"] + sizes)
     price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
@@ -373,12 +370,14 @@ def product_list():
             heart_label = "❤️" if liked else "🤍"
 
             if st.button(heart_label, key=f"like_{product_id}"):
+                st.session_state.like_clicked = product_id
+
+            if st.session_state.like_clicked == product_id:
                 if liked:
                     st.session_state.liked_products.remove(product_id)
                 else:
                     st.session_state.liked_products.add(product_id)
-                # Mark for rerun
-                st.session_state.trigger_rerun = True
+                st.session_state.like_clicked = None  # Reset after handling
 
             if stock > 0:
                 qty = st.number_input(
@@ -397,11 +396,6 @@ def product_list():
                             st.success(f"Added {qty} x {p['product_name']} to cart.")
             else:
                 st.info("Out of Stock")
-
-    # ⏱ Rerun after loop ends
-    if st.session_state.trigger_rerun:
-        st.session_state.trigger_rerun = False
-        st.experimental_rerun()
 
 def view_cart():
     st.subheader("🛒 Your Cart")
