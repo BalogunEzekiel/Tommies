@@ -579,24 +579,24 @@ def admin_panel():
 #----------------------- Main Logic --------------------------
 def main():
     if "show_register" not in st.session_state:
-    st.session_state.show_register = False
+        st.session_state.show_register = False
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-with st.sidebar:
-    if st.session_state.get("logged_in") and "user" in st.session_state:
-        user = st.session_state["user"]
-        full_name = user.get("full_name", "Guest")
-        st.success(f"👋 Welcome, {full_name}!")
-
-        if st.button("Logout"):
-            st.session_state.pop("user", None)
-            st.session_state.logged_in = False
-            st.rerun()
-    else:
-        st.info("👋 Welcome, Guest!")
-        st.markdown("---")
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    
+    with st.sidebar:
+        if st.session_state.get("logged_in") and "user" in st.session_state:
+            user = st.session_state["user"]
+            full_name = user.get("full_name", "Guest")
+            st.success(f"👋 Welcome, {full_name}!")
+    
+            if st.button("Logout"):
+                st.session_state.pop("user", None)
+                st.session_state.logged_in = False
+                st.rerun()
+        else:
+            st.info("👋 Welcome, Guest!")
+            st.markdown("---")
 
     if st.session_state.get("viewing_cart"):
         view_cart()
