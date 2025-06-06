@@ -619,8 +619,8 @@ if __name__ == "__main__":
 def main():
     # Sidebar Branding
     st.sidebar.title("About Perfectfit 👗🧵")
+    st.sidebar.info("***.....fast and reliable.***")
     st.sidebar.info("Perfectfit is your one-stop fashion store offering premium styles at unbeatable prices.")
-    st.sidebar.markdown("***.....fast and reliable.***")
 
 if __name__ == "__main__":
     main()
