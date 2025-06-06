@@ -633,9 +633,9 @@ st.sidebar.markdown("### 👨‍💻 App Developer")
 st.sidebar.markdown(
     """
 **Ezekiel BALOGUN**  
-_Data Scientist / Data Analyst_  
-_AI / Machine Learning Engineer_  
-_Automation / Business Intelligence Expert_  
+* _Data Scientist / Data Analyst_  
+* _AI / Machine Learning Engineer_  
+* _Automation / Business Intelligence Expert_  
 
 📧 [ezekiel4true@yahoo.com](mailto:ezekiel4true@yahoo.com)  
 🔗 [LinkedIn Profile](https://www.linkedin.com/in/ezekiel-balogun-39a14438)  
