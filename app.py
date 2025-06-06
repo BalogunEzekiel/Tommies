@@ -620,7 +620,7 @@ def main():
     # Sidebar Branding
     st.sidebar.title("About Perfectfit 👗🧵")
     st.sidebar.info(
-    "***.....fast and reliable.***\n\n"
+    "***.....fast and reliable!***\n\n"
     "Perfectfit is your one-stop fashion store offering premium styles at unbeatable prices."
     )
 
