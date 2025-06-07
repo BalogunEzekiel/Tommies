@@ -324,7 +324,6 @@ def fetch_products():
             "product_id, product_name, category, size, price, stock_quantity, description, image_url, image_gallery"
         ).execute()
 
-        # Use .get() to safely access attributes
         if hasattr(response, "status_code") and response.status_code != 200:
             st.error("Error fetching products.")
             return []
@@ -343,14 +342,6 @@ def product_list():
         st.session_state.cart = []
     if 'liked_products' not in st.session_state:
         st.session_state.liked_products = set()
-    if 'trigger_rerun' not in st.session_state:
-        st.session_state.trigger_rerun = False
-
-    # Safe rerun handling
-    if st.session_state.trigger_rerun:
-        st.session_state.trigger_rerun = False
-        st.rerun()  # or st.experimental_rerun() for older versions
-        st.stop()
 
     # Fetch products
     products = fetch_products()
@@ -408,8 +399,7 @@ def product_list():
                             st.session_state.liked_products.remove(product_id)
                         else:
                             st.session_state.liked_products.add(product_id)
-                        st.session_state.trigger_rerun = True
-                        st.stop()
+                        st.rerun()
 
                     # Add to cart logic
                     stock = int(p.get('stock_quantity', 0) or 0)
@@ -430,8 +420,7 @@ def product_list():
                                 else:
                                     st.session_state.cart.append({**p, 'qty': qty})
                                     st.success(f"Added {qty} x {p['product_name']} to cart.")
-                                st.session_state.trigger_rerun = True
-                                st.stop()
+                                st.rerun()
                     else:
                         st.info("Out of Stock")
 
@@ -446,8 +435,7 @@ def product_list():
                     st.session_state.liked_products.remove(product_id)
                 else:
                     st.session_state.liked_products.add(product_id)
-                st.session_state.trigger_rerun = True
-                st.stop()
+                st.rerun()
 
 def view_cart():
     st.subheader("🛒 Your Cart")
