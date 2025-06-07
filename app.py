@@ -11,6 +11,8 @@ import bcrypt
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from streamlit_image_gallery import streamlit_image_gallery
+
 
 st.set_page_config(page_title="Perfectfit Fashion", layout="wide")
 
@@ -355,43 +357,67 @@ def product_list():
 
     for i, p in enumerate(filtered):
         with cols[i % cols_per_row]:
-            st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
-            st.markdown(f"**{p.get('product_name', 'N/A')}**")
-            price = float(p.get('price', 0) or 0)
-            st.markdown(f"₦{price:,.2f}")
-            stock = int(p.get('stock_quantity', 0) or 0)
-            st.markdown(f"Stock: {stock} | Size: {p.get('size', 'N/A')} | Category: {p.get('category', 'N/A')}")
-
             product_id = p['product_id']
             liked = product_id in st.session_state.liked_products
             heart_label = "❤️" if liked else "🤍"
 
-            # Unique key for each toggle
-            button_key = f"like_{product_id}_{liked}"
+            # Button to trigger modal
+            if st.button("", key=f"img_btn_{product_id}"):
+                with st.modal(f"🛍️ {p.get('product_name', 'Product')} Details"):
+                    # Display image gallery
+                    images = p.get('image_gallery', [])
+                    if images:
+                        streamlit_image_gallery(images=images)
 
-            if st.button(heart_label, key=button_key):
+                    st.markdown(f"### {p.get('product_name', 'N/A')}")
+                    st.markdown(f"**Price:** ₦{float(p.get('price', 0) or 0):,.2f}")
+                    st.markdown(f"**Category:** {p.get('category', 'N/A')}")
+                    st.markdown(f"**Size:** {p.get('size', 'N/A')}")
+                    st.markdown(f"**Stock:** {int(p.get('stock_quantity', 0) or 0)}")
+                    st.markdown("#### Description:")
+                    st.write(p.get('description', 'No description provided.'))
+
+                    # Like toggle inside modal
+                    if st.button(heart_label, key=f"modal_like_{product_id}"):
+                        if liked:
+                            st.session_state.liked_products.remove(product_id)
+                        else:
+                            st.session_state.liked_products.add(product_id)
+                        st.experimental_rerun()
+
+                    # Add to cart logic
+                    stock = int(p.get('stock_quantity', 0) or 0)
+                    if stock > 0:
+                        qty = st.number_input(
+                            "Quantity", min_value=1, max_value=stock,
+                            key=f"qty_modal_{product_id}", value=1
+                        )
+                        if st.button("🛒 Add to Cart", key=f"modal_cart_{product_id}"):
+                            if not st.session_state.get('logged_in', False):
+                                st.warning("Please log in or sign up to add items to your cart.")
+                            else:
+                                existing = next((item for item in st.session_state.cart if item['product_id'] == product_id), None)
+                                if existing:
+                                    existing['qty'] += qty
+                                    st.success(f"Updated quantity of {p['product_name']} in cart to {existing['qty']}.")
+                                else:
+                                    st.session_state.cart.append({**p, 'qty': qty})
+                                    st.success(f"Added {qty} x {p['product_name']} to cart.")
+                    else:
+                        st.info("Out of Stock")
+
+            # Show image as clickable element
+            st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
+            st.markdown(f"**{p.get('product_name', 'N/A')}**")
+            st.markdown(f"₦{float(p.get('price', 0) or 0):,.2f}")
+
+            # Like toggle outside modal
+            if st.button(heart_label, key=f"like_{product_id}"):
                 if liked:
                     st.session_state.liked_products.remove(product_id)
                 else:
                     st.session_state.liked_products.add(product_id)
-
-            if stock > 0:
-                qty = st.number_input(
-                    "Qty", min_value=1, max_value=stock, key=f"qty_{product_id}", value=1
-                )
-                if st.button("Add to Cart", key=f"cart_{product_id}"):
-                    if not st.session_state.get('logged_in', False):
-                        st.warning("Please log in or sign up to add items to your cart.")
-                    else:
-                        existing = next((item for item in st.session_state.cart if item['product_id'] == product_id), None)
-                        if existing:
-                            existing['qty'] += qty
-                            st.success(f"Updated quantity of {p['product_name']} in cart to {existing['qty']}.")
-                        else:
-                            st.session_state.cart.append({**p, 'qty': qty})
-                            st.success(f"Added {qty} x {p['product_name']} to cart.")
-            else:
-                st.info("Out of Stock")
+                st.experimental_rerun()
 
 def view_cart():
     st.subheader("🛒 Your Cart")
