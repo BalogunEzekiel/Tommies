@@ -454,7 +454,8 @@ def product_list():
                 # Use st.button with no label, or custom CSS for a clickable image if desired
                 # For simplicity, we'll keep the empty button but place it below the image
                 if st.button("View Details", key=f"img_btn_{product_id}", use_container_width=True):
-                    with st.modal(f"🛍️ {p.get('product_name', 'Product')} Details"):
+                    with st.expander(f"🛍️ {p.get('product_name', 'Product')} Details"):
+#                    with st.modal(f"🛍️ {p.get('product_name', 'Product')} Details"):
                         # Display image gallery
                         images = p.get('image_gallery', [])
                         if images:
