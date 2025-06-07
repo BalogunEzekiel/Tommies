@@ -349,7 +349,8 @@ def product_list():
     # Safe rerun handling
     if st.session_state.trigger_rerun:
         st.session_state.trigger_rerun = False
-        st.experimental_rerun()
+        st.rerun()  # or st.experimental_rerun() for older versions
+        st.stop()
 
     # Fetch products
     products = fetch_products()
