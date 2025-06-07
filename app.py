@@ -169,10 +169,7 @@ def registration_form():
             st.rerun()
         else:
             st.error("❌ Registration failed. Please try again.")
-def fetch_products():
-    result = supabase.table("products").select("*").execute()
-    return result.data if result.data else []
-
+            
 def create_order(user_id, cart):
     total = sum(item['price'] * item['qty'] for item in cart)
     try:
@@ -321,30 +318,52 @@ else:
 #------------------------ Main Page --------------------------
 st.title("👗 Perfectfit Fashion Store")
 
+def fetch_products():
+    try:
+        response = supabase.table("products").select(
+            "product_id, product_name, category, size, price, stock_quantity, description, image_url, image_gallery"
+        ).execute()
+
+        if response.error:
+            st.error(f"Error fetching products: {response.error.message}")
+            return []
+
+        return response.data if response.data else []
+
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
+        return []
+
 def product_list():
     st.subheader("🛍️ Available Products")
 
+    # Initialize session state variables
     if 'cart' not in st.session_state:
         st.session_state.cart = []
-
     if 'liked_products' not in st.session_state:
         st.session_state.liked_products = set()
+    if 'trigger_rerun' not in st.session_state:
+        st.session_state.trigger_rerun = False
 
-    if st.session_state.get("trigger_rerun", False):
+    # Safe rerun handling
+    if st.session_state.trigger_rerun:
         st.session_state.trigger_rerun = False
         st.experimental_rerun()
 
+    # Fetch products
     products = fetch_products()
     if not products:
         st.info("No products available at the moment.")
         return
 
+    # Filters
     categories = sorted({p.get('category') for p in products if p.get('category')})
     sizes = sorted({p.get('size') for p in products if p.get('size')})
     category_filter = st.selectbox("Category", ["All"] + categories)
     size_filter = st.selectbox("Size", ["All"] + sizes)
     price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
 
+    # Apply filters
     filtered = [
         p for p in products
         if (category_filter == "All" or p.get('category') == category_filter) and
@@ -388,8 +407,9 @@ def product_list():
                         else:
                             st.session_state.liked_products.add(product_id)
                         st.session_state.trigger_rerun = True
+                        st.stop()
 
-                    # Add to cart
+                    # Add to cart logic
                     stock = int(p.get('stock_quantity', 0) or 0)
                     if stock > 0:
                         qty = st.number_input(
@@ -409,6 +429,7 @@ def product_list():
                                     st.session_state.cart.append({**p, 'qty': qty})
                                     st.success(f"Added {qty} x {p['product_name']} to cart.")
                                 st.session_state.trigger_rerun = True
+                                st.stop()
                     else:
                         st.info("Out of Stock")
 
