@@ -330,6 +330,10 @@ def product_list():
     if 'liked_products' not in st.session_state:
         st.session_state.liked_products = set()
 
+    if st.session_state.get("trigger_rerun", False):
+        st.session_state.trigger_rerun = False
+        st.experimental_rerun()
+
     products = fetch_products()
     if not products:
         st.info("No products available at the moment.")
@@ -361,7 +365,7 @@ def product_list():
             liked = product_id in st.session_state.liked_products
             heart_label = "❤️" if liked else "🤍"
 
-            # Button to trigger modal
+            # Modal trigger
             if st.button("", key=f"img_btn_{product_id}"):
                 with st.modal(f"🛍️ {p.get('product_name', 'Product')} Details"):
                     # Display image gallery
@@ -383,9 +387,9 @@ def product_list():
                             st.session_state.liked_products.remove(product_id)
                         else:
                             st.session_state.liked_products.add(product_id)
-                        st.experimental_rerun()
+                        st.session_state.trigger_rerun = True
 
-                    # Add to cart logic
+                    # Add to cart
                     stock = int(p.get('stock_quantity', 0) or 0)
                     if stock > 0:
                         qty = st.number_input(
@@ -396,17 +400,19 @@ def product_list():
                             if not st.session_state.get('logged_in', False):
                                 st.warning("Please log in or sign up to add items to your cart.")
                             else:
-                                existing = next((item for item in st.session_state.cart if item['product_id'] == product_id), None)
+                                existing = next(
+                                    (item for item in st.session_state.cart if item['product_id'] == product_id), None)
                                 if existing:
                                     existing['qty'] += qty
                                     st.success(f"Updated quantity of {p['product_name']} in cart to {existing['qty']}.")
                                 else:
                                     st.session_state.cart.append({**p, 'qty': qty})
                                     st.success(f"Added {qty} x {p['product_name']} to cart.")
+                                st.session_state.trigger_rerun = True
                     else:
                         st.info("Out of Stock")
 
-            # Show image as clickable element
+            # Show product preview
             st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
             st.markdown(f"**{p.get('product_name', 'N/A')}**")
             st.markdown(f"₦{float(p.get('price', 0) or 0):,.2f}")
@@ -417,7 +423,7 @@ def product_list():
                     st.session_state.liked_products.remove(product_id)
                 else:
                     st.session_state.liked_products.add(product_id)
-                st.experimental_rerun()
+                st.session_state.trigger_rerun = True
                 st.stop()
 
 def view_cart():
