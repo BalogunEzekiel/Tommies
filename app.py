@@ -418,6 +418,7 @@ def product_list():
                 else:
                     st.session_state.liked_products.add(product_id)
                 st.experimental_rerun()
+                st.stop()
 
 def view_cart():
     st.subheader("🛒 Your Cart")
