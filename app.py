@@ -324,11 +324,12 @@ def fetch_products():
             "product_id, product_name, category, size, price, stock_quantity, description, image_url, image_gallery"
         ).execute()
 
-        if response.error:
-            st.error(f"Error fetching products: {response.error.message}")
+        # Use .get() to safely access attributes
+        if hasattr(response, "status_code") and response.status_code != 200:
+            st.error("Error fetching products.")
             return []
 
-        return response.data if response.data else []
+        return response.data or []
 
     except Exception as e:
         st.error(f"An unexpected error occurred: {e}")
