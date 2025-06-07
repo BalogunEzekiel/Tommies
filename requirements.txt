@@ -6,3 +6,4 @@ bcrypt
 pandas
 numpy
 datetime
+streamlit_image_gallery
