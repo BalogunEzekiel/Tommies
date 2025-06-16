@@ -1,16 +1,70 @@
-# Perfectfit Fashion Store
+# 👗 Perfectfit Fashion Store – E-commerce Web Application
 
-A fully functional PostgreSQL-powered online fashion store (e-commerce) web application built with Streamlit, featuring product display, a shopping cart, order management, checkout and Flutterwave payment gateway integration. Supabase powers authentication, database management, product handling, and order processing.
+I developed a fully functional e-commerce web application, PostgreSQL-powered via Supabase for an online fashion store, designed to deliver a seamless shopping experience from browsing to checkout. The application is built with Streamlit, powered by PostgreSQL via Supabase, and integrated with Flutterwave for secure online payments.
+
+## 🛍️ Core Features
+**Product Display:** Clean and intuitive UI for showcasing a variety of fashion products with images, descriptions, prices, and categories.
+
+**Shopping Cart System:** Dynamic shopping cart that allows users to add, remove, and update items with real-time price calculations.
+
+**Order Management:** Customers can review their orders before finalizing, and all transactions are securely tracked in the backend.
+
+**Checkout Process:** Streamlined, user-friendly checkout interface to collect delivery details and summarize order details before payment.
+
+**Payment Gateway Integration:** Integrated with Flutterwave to enable secure, fast, and reliable online transactions.
+
+## 🔐 Backend & Infrastructure
+* ### Supabase Integration:
+
+* **Authentication:** Handles user registration, login, and session management.
+
+* **Database Management:** Real-time PostgreSQL database used for storing user data, product catalogs, order history, and inventory.
+
+* **Product Management:** CRUD operations for managing the product list, categories, sizes, prices, and stock levels.
+
+* **Order Processing:** Orders are automatically recorded and updated in the database upon payment confirmation.
+
+## 🔧 Advanced Functionalities Implemented
+✅ **Email Confirmations:**
+Automatic email notifications are sent to users upon successful order placement, improving communication and reliability.
+
+✅ **Inventory Management for Admins:**
+An admin dashboard enables authorized users to manage product inventory, update listings, and monitor sales data in real time.
+
+✅ **Mobile-Responsive UI:**
+Optimized for all screen sizes, ensuring a smooth shopping experience on smartphones, tablets, and desktops.
+
+✅ **Product Filters:**
+Users can filter the product catalog by price, size, and category, making it easy to find desired items quickly.
+
+✅ **Secure Payments:**
+All payment interactions are encrypted and securely handled through the Flutterwave payment gateway, ensuring user trust and safety.
+
+## 💻 Tech Stack
+**Frontend:** Streamlit (custom components, styled UI)
+
+**Backend:** Supabase (PostgreSQL, Auth, Storage, Realtime)
+
+**Payments:** Flutterwave API
+
+**Email Notifications:** Supabase functions or third-party SMTP integration (e.g., SendGrid)
+
+**Deployment:** Streamlit Cloud / Custom Hosting
+
+## 🚀 Outcome
+This project demonstrates how modern tools like Streamlit and Supabase can be combined to build robust, scalable, and production-ready web applications—even outside of traditional use cases like dashboards or data apps. It showcases the ability to integrate full e-commerce capabilities into a Python-powered frontend, along with real-time data sync and secure payments.
 
 ---
 
-## 📦 Features
+## 📦 Features Showcase
 
 ### 👥 User Authentication
 
 * Secure **user registration and login**
 * **Password hashing** using `bcrypt`
 * **Session state** management for persistent login
+  ![image](https://github.com/user-attachments/assets/3c4bd12a-ac9e-43bf-9480-bc8511c91f73)
+  ![WhatsApp Image 2025-06-16 at 20 50 31_d6f246a1](https://github.com/user-attachments/assets/dc4e23aa-2fdd-450c-bf25-8b3227d6438a)
 
 ### 🛍️ Product Catalog
 
@@ -197,9 +251,9 @@ streamlit run app.py
 
 ---
 
-## 📬 Contact & Contributions
+## 📬 Contact
 
-**Author:** [Ezekiel Balogun](https://www.linkedin.com/in/ezekiel-balogun-39a14438/)
+**Developer:** [Ezekiel Balogun](https://www.linkedin.com/in/ezekiel-balogun-39a14438/)
 
 **Emil:** ezekiel4true@yahoo.com
 
@@ -207,21 +261,10 @@ streamlit run app.py
 
 Feel free to fork, improve or contribute by submitting a pull request.
 
-I am open to opportunities in organizations that value hard work, uphold strong principles, encourage growth and advancement, and prioritize recognition and motivation. I look forward to collaborating with fellow Data Scientists and Analysts, Artificial Intelligence and Machine Learning Engineers, Workflow Automation specialists, and Business Intelligence experts on impactful projects.
+***I am open to opportunities in organizations that value hard work, uphold strong principles, encourage growth and advancement and prioritize recognition and motivation. I look forward to collaborating with fellow Data Scientists and Analysts, Artificial Intelligence and Machine Learning Engineers, Workflow Automation Specialists, and Business Intelligence Experts on impactful projects.***
 
 ---
 
 ## 📄 License
 
 This project is licensed under the MIT License.
-
----
-
-## ✅ To-Do (Suggestions)
-
-* Email confirmations on successful orders
-* Inventory management for admins
-* Mobile UI responsiveness
-* Product filters (price, size, category)
-* Payment gateway integration
-
