@@ -18,6 +18,8 @@ This robust architecture ensures a scalable, responsive, and user-friendly shopp
 
 I developed a fully functional e-commerce web application, PostgreSQL-powered via Supabase for an online fashion store, designed to deliver a seamless shopping experience from browsing to checkout. The application is built with Streamlit, powered by PostgreSQL via Supabase, and integrated with Flutterwave for secure online payments.
 
+* ***[Check out The Perfectfit Fashore Store](https://tommies.streamlit.app/)***
+
 ## 🛍️ Core Features
 **Product Display:** Clean and intuitive UI for showcasing a variety of fashion products with images, descriptions, prices, and categories.
 
@@ -90,6 +92,12 @@ This project demonstrates how modern tools like Streamlit and Supabase can be co
 
 * List of products with images, prices, sizes, and stock availability
 * Dynamically retrieved from Supabase `products` table
+<table>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/de98ee48-242a-4ef5-95fc-76103073bbd8" width="400"/></td>
+    <td><img src="https://github.com/user-attachments/assets/bf871abf-46d9-4e1d-a91e-2d095c1dfca1" width="400"/></td>
+  </tr>
+</table>
 
 ### 🛒 Shopping Cart
 
@@ -109,6 +117,12 @@ This project demonstrates how modern tools like Streamlit and Supabase can be co
 * Admin login (`admin@tommies.com`) for internal dashboard
 * View all orders and customers
 * Extendable to manage stock and product listings
+<table>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/68e2152d-75f0-4e9b-8f79-9bf2d310c116" width="400"/></td>
+    <td><img src="https://github.com/user-attachments/assets/73a2d039-468d-4541-866e-a07d13714391" width="400"/></td>
+  </tr>
+</table>
 
 ---
 
@@ -182,6 +196,25 @@ CREATE TABLE order_items (
     CONSTRAINT fk_product FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
 );
 ```
+
+### `password_resets`
+
+Resets users password.
+
+```sql
+CREATE TABLE password_resets (
+    password_reset_id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE
+);
+```
+
+---
+
+* **[View Perfectfit Store](https://tommies.streamlit.app/)**
 
 ---
 
@@ -263,10 +296,10 @@ streamlit run app.py
 
 ## 🔧 Tech Stack
 
-* [Streamlit](https://streamlit.io)
+* [Streamlit](https://tommies.streamlit.app/)
 * [Supabase](https://supabase.io)
 * [PostgreSQL](https://www.postgresql.org)
-* [Pandas](https://pandas.pydata.org)
+* [Python, Pandas](https://github.com/BalogunEzekiel/Perfectfit/blob/main/app.py)
 * [Pillow (PIL)](https://python-pillow.org)
 
 ---
