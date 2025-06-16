@@ -1,5 +1,21 @@
 # 👗 Perfectfit Fashion Store
 
+I developed a fully functional e-commerce web application for an online fashion store powered by PostgreSQL via Supabase, designed to provide a seamless and intuitive shopping experience—from product discovery to secure checkout.
+
+Built with Streamlit, the platform features a rich product display, dynamic shopping cart, order management system and a streamlined checkout flow. It integrates ***Flutterwave for secure online payments***, ensuring fast and reliable transactions.
+
+The backend is powered by PostgreSQL via Supabase, which handles:
+
+Authentication
+
+Database management
+
+Product catalog and inventory
+
+Order tracking and processing
+
+This robust architecture ensures a scalable, responsive, and user-friendly shopping platform tailored for modern online retail.
+
 I developed a fully functional e-commerce web application, PostgreSQL-powered via Supabase for an online fashion store, designed to deliver a seamless shopping experience from browsing to checkout. The application is built with Streamlit, powered by PostgreSQL via Supabase, and integrated with Flutterwave for secure online payments.
 
 ## 🛍️ Core Features
