@@ -1,6 +1,6 @@
-# Tommies Fashion Store
+# Perfectfit Fashion Store
 
-A fully functional online fashion store (e-commerce) web application built with Streamlit for product display, shopping cart, order management, checkout, and payment — powered by Supabase for authentication, product management, and order processing.
+A fully functional PostgreSQL-powered online fashion store (e-commerce) web application built with Streamlit, featuring product display, a shopping cart, order management, checkout and Flutterwave payment gateway integration. Supabase powers authentication, database management, product handling, and order processing.
 
 ---
 
