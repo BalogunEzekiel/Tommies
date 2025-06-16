@@ -79,8 +79,12 @@ This project demonstrates how modern tools like Streamlit and Supabase can be co
 * Secure **user registration and login**
 * **Password hashing** using `bcrypt`
 * **Session state** management for persistent login
-  ![image](https://github.com/user-attachments/assets/3c4bd12a-ac9e-43bf-9480-bc8511c91f73)
-  ![WhatsApp Image 2025-06-16 at 20 50 31_d6f246a1](https://github.com/user-attachments/assets/dc4e23aa-2fdd-450c-bf25-8b3227d6438a)
+ <table>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/3c4bd12a-ac9e-43bf-9480-bc8511c91f73" width="400"/></td>
+    <td><img src="https://github.com/user-attachments/assets/dc4e23aa-2fdd-450c-bf25-8b3227d6438a" width="400"/></td>
+  </tr>
+</table>
 
 ### 🛍️ Product Catalog
 
