@@ -18,6 +18,9 @@ This robust architecture ensures a scalable, responsive, and user-friendly shopp
 
 I developed a fully functional e-commerce web application, PostgreSQL-powered via Supabase for an online fashion store, designed to deliver a seamless shopping experience from browsing to checkout. The application is built with Streamlit, powered by PostgreSQL via Supabase, and integrated with Flutterwave for secure online payments.
 
+### Preview
+![image](https://github.com/user-attachments/assets/c4d44115-2105-429d-95bd-3ae8ba70f72d)
+
 * ***[Check out The Perfectfit Fashore Store](https://tommies.streamlit.app/)***
 
 ## 🛍️ Core Features
