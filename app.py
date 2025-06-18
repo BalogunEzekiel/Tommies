@@ -716,7 +716,7 @@ def admin_panel():
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("##### 👥 Total Customers")
-                st.markdown(f"<p style='color:green; font-size:20px;'>👥 Total Customers: {total_customers}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='color:green; font-size:28px;'> {total_customers}</p>", unsafe_allow_html=True)
                 st.write(f"#### {total_customers}")
                 st.markdown("##### 💰 Total Revenue")
                 st.write(f"#### ₦{total_revenue:,.2f}")
