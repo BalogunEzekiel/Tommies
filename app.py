@@ -277,7 +277,7 @@ else:
 def main():
     st.title("👗 Perfectfit Fashion Store")
 
-# Initialize session state flags
+    # Initialize session state flags
     if "show_login" not in st.session_state:
         st.session_state.show_login = True
     if "show_register" not in st.session_state:
@@ -285,15 +285,17 @@ def main():
 
     # Sidebar - show welcome message and logout
     with st.sidebar:
-        if "user" in st.session_state:
-            user = st.session_state.get("user", {})
-            full_name = user.get("full_name", "Guest")
+        if "user" in st.session_state or "admin" in st.session_state:
+            account = st.session_state.get("user") or st.session_state.get("admin")
+            full_name = account.get("full_name", "Guest")
             st.success(f"👋 Welcome, {full_name}!")
+
             if st.button("Logout"):
-                del st.session_state.user
+                st.session_state.pop("user", None)
+                st.session_state.pop("admin", None)
                 st.session_state.show_login = True
                 st.rerun()
-                st.sidebar.markdown("---") # Separator
+            st.markdown("---")  # Separator
 
 if __name__ == "__main__":
     main()
