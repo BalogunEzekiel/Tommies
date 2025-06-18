@@ -713,8 +713,8 @@ def admin_panel():
             else:
                 st.info("No order items or products available for top products chart.")
             
-            except Exception as e:
-                st.error(f"Error generating insights: {e}")
+        except Exception as e:
+            st.error(f"Error generating insights: {e}")
                       
 #----------------------- Main Logic --------------------------
 def main():
