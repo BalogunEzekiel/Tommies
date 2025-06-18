@@ -556,7 +556,7 @@ def view_cart():
     if st.button("🔙 Back to Products"):
         st.session_state.viewing_cart = False
         st.rerun()
-```
+        
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
 
