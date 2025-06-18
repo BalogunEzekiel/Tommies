@@ -505,9 +505,17 @@ def product_list():
                                             st.success(f"Updated {p['product_name']} to {existing['qty']} in cart.")
                                     else:
                                         st.session_state.cart.append({**p, 'qty': qty})
-                                        st.success(f"Added {qty} x {p['product_name']} to cart.")
+                                        msg = st.empty()
+                                        msg.success(f"Added {qty} x {p['product_name']} to cart.")
+                                        time.sleep(2)
+                                        msg.empty()
                                     st.session_state.trigger_rerun = True
                                     st.rerun()
+                                    #else:
+                                    #    st.session_state.cart.append({**p, 'qty': qty})
+                                    #    st.success(f"Added {qty} x {p['product_name']} to cart.")
+                                    #st.session_state.trigger_rerun = True
+                                    #st.rerun()
                             except Exception as e:
                                 st.error(f"Failed to add to cart: {str(e)}")
                     else:
