@@ -664,7 +664,6 @@ def admin_panel():
 
 # --- Insights Tab ---
     with tabs[5]:
-        st.subheader("📊 Business Insights")
         try:
             # Fetch data using st.session_state.supabase
             users = st.session_state.supabase.table("users").select("*").execute().data
@@ -685,26 +684,20 @@ def admin_panel():
             total_products = len(df_products) if not df_products.empty else 0
 
             # Key Business Metrics
-            st.markdown("### 📊 Key Business Metrics")
+            st.markdown("#### 📊 Key Business Metrics")
             st.write("Overview of customer engagement, sales, revenue, and product listings.")
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown("#### 👥 Total Customers")
-                st.write(f"{total_customers}")
-                st.markdown("#### 💰 Total Revenue")
-                st.write(f"₦{total_revenue:,.2f}")
+                st.markdown("###### 👥 Total Customers")
+                st.write(f"###### {total_customers}")
+                st.markdown("###### 💰 Total Revenue")
+                st.write(f"###### ₦{total_revenue:,.2f}")
             with col2:
-                st.markdown("#### 🛒 Total Sales")
-                st.write(f"{total_sales}")
-                st.markdown("#### 🧾 Products Listed")
-                st.write(f"{total_products}")
+                st.markdown("###### 🛒 Total Sales")
+                st.write(f"###### {total_sales}")
+                st.markdown("###### 🧾 Products Listed")
+                st.write(f"######{total_products}")
             
-            # Display metrics (removed duplicates)
-            st.metric("###👥 Total Customers", total_customers)
-            st.metric("###🛒 Total Sales", total_sales)
-            st.metric("###💰 Total Revenue", f"₦{total_revenue:,.2f}")
-            st.metric("###🧾 Products Listed", total_products)
-
             # Sales Trend Over Time
             st.markdown("### 📈 Sales Trend Over Time")
             st.write("Track your monthly sales performance with this interactive chart.")
