@@ -317,7 +317,7 @@ streamlit run app.py
 
 Feel free to fork, improve or contribute by submitting a pull request.
 
-***I am open to opportunities in organizations that value hard work, uphold strong principles, encourage growth and advancement and prioritize recognition and motivation. I look forward to collaborating with fellow Data Scientists and Analysts, Artificial Intelligence and Machine Learning Engineers, Workflow Automation Specialists, and Business Intelligence Experts on impactful projects.***
+***I am open to opportunities in organizations that value hard work, uphold strong principles, encourage growth and advancement and prioritize recognition and motivation. I look forward to collaborating with fellow Data Scientists and Analysts, Artificial Intelligence and Machine Learning Engineers, Workflow Automation Specialists, and Business Intelligence Experts on impactful data-driven and AI-powered projects.***
 
 ---
 
