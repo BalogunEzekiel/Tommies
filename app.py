@@ -372,7 +372,6 @@ def streamlit_image_gallery(images):
             # If more than 4 images, display remaining in a new row or just show them vertically
             st.image(image_url, use_container_width=True)
 
-
 def product_list():
     st.subheader("🛍️ Available Products")
 
@@ -388,7 +387,6 @@ def product_list():
         st.error("Supabase client not initialized in session state. Please set `st.session_state.supabase`.")
         return
 
-
     # Safe rerun handling
     # Use st.rerun() for Streamlit 1.28.0 and above.
     # If using older versions, uncomment st.experimental_rerun()
@@ -396,7 +394,7 @@ def product_list():
         st.session_state.trigger_rerun = False
         st.rerun()
         # st.experimental_rerun() # Use this for older Streamlit versions
-        st.stop() # Stops execution after rerun to prevent further rendering artifacts
+        # Removed st.stop() to allow UI to render fully
 
     # Fetch products
     products = fetch_products()
@@ -426,11 +424,16 @@ def product_list():
         return
 
     cols_per_row = 3
-    # Use st.columns directly in the loop or pre-define them
-    # For dynamic columns, it's often simpler to create them inside the loop if
-    # the number of items is manageable, but here, pre-defining is fine.
-    # We will create columns per row dynamically inside the loop for better flexibility
-    # with the grid.
+
+    # Helper function to toggle wishlist
+    def toggle_wishlist(product_id, product_name, liked):
+        if liked:
+            st.session_state.liked_products.discard(product_id)  # Use discard to avoid KeyError
+            st.toast(f"Removed {product_name} from wishlist!", icon="💔")
+        else:
+            st.session_state.liked_products.add(product_id)
+            st.toast(f"Added {product_name} to wishlist!", icon="❤️")
+        st.session_state.trigger_rerun = True
 
     for i, p in enumerate(filtered):
         # Create columns dynamically for each row
@@ -455,14 +458,12 @@ def product_list():
                 # For simplicity, we'll keep the empty button but place it below the image
                 if st.button("View Details", key=f"img_btn_{product_id}", use_container_width=True):
                     with st.expander(f"🛍️ {p.get('product_name', 'Product')} Details"):
-#                    with st.modal(f"🛍️ {p.get('product_name', 'Product')} Details"):
                         # Display image gallery
                         images = p.get('image_gallery', [])
                         if images:
                             streamlit_image_gallery(images=images)
                         else:
                             st.image(p.get('image_url', 'https://via.placeholder.com/600'), use_container_width=True)
-
 
                         st.markdown(f"### {p.get('product_name', 'N/A')}")
                         st.markdown(f"**Price:** ₦{float(p.get('price', 0) or 0):,.2f}")
@@ -474,14 +475,8 @@ def product_list():
 
                         # Like toggle inside modal
                         if st.button(heart_label + " Add to Wishlist", key=f"modal_like_{product_id}"):
-                            if liked:
-                                st.session_state.liked_products.remove(product_id)
-                                st.toast(f"Removed {p.get('product_name')} from wishlist!", icon="💔")
-                            else:
-                                st.session_state.liked_products.add(product_id)
-                                st.toast(f"Added {p.get('product_name')} to wishlist!", icon="❤️")
-                            st.session_state.trigger_rerun = True
-                            st.stop() # Rerun to update the heart icon on the main page
+                            toggle_wishlist(product_id, p.get('product_name'), liked)
+                            # Removed st.stop() to allow full rendering
 
                         # Add to cart logic
                         stock = int(p.get('stock_quantity', 0) or 0)
@@ -511,16 +506,9 @@ def product_list():
                 st.markdown(f"₦{float(p.get('price', 0) or 0):,.2f}")
 
                 # Like toggle outside modal
-                # Consider making this a smaller button or icon to save space
                 if st.button(heart_label, key=f"like_{product_id}"):
-                    if liked:
-                        st.session_state.liked_products.remove(product_id)
-                        st.toast(f"Removed {p.get('product_name')} from wishlist!", icon="💔")
-                    else:
-                        st.session_state.liked_products.add(product_id)
-                        st.toast(f"Added {p.get('product_name')} to wishlist!", icon="❤️")
-                    st.session_state.trigger_rerun = True
-                    st.stop() # Rerun to update the heart icon
+                    toggle_wishlist(product_id, p.get('product_name'), liked)
+                    # Removed st.stop() to allow full rendering
                     
 def view_cart():
     st.subheader("🛒 Your Cart")
