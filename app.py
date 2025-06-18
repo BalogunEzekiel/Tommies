@@ -389,12 +389,9 @@ def product_list():
 
     # Safe rerun handling
     # Use st.rerun() for Streamlit 1.28.0 and above.
-    # If using older versions, uncomment st.experimental_rerun()
     if st.session_state.trigger_rerun:
         st.session_state.trigger_rerun = False
         st.rerun()
-        # st.experimental_rerun() # Use this for older Streamlit versions
-        # Removed st.stop() to allow UI to render fully
 
     # Fetch products
     products = fetch_products()
@@ -415,7 +412,7 @@ def product_list():
     filtered = [
         p for p in products
         if (category_filter == "All" or p.get('category') == category_filter) and
-           (size_filter == "All" or p.get('size') == size_filter) and
+           (size_filter == "All" or p.get('size') == size_filter) and-
            (price_range[0] <= float(p.get('price', 0) or 0) <= price_range[1])
     ]
 
@@ -433,7 +430,7 @@ def product_list():
         else:
             st.session_state.liked_products.add(product_id)
             st.toast(f"Added {product_name} to wishlist!", icon="❤️")
-        st.session_state.trigger_rerun = True
+        st.rerun()  # Immediate rerun to update UI
 
     for i, p in enumerate(filtered):
         # Create columns dynamically for each row
@@ -451,11 +448,8 @@ def product_list():
             # Use st.container to group elements for better structure
             with st.container(border=True): # Adds a visual border around each product
                 # Modal trigger (Using image as the primary click target)
-                # Display image directly, and make it clickable to open modal
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
 
-                # Use st.button with no label, or custom CSS for a clickable image if desired
-                # For simplicity, we'll keep the empty button but place it below the image
                 if st.button("View Details", key=f"img_btn_{product_id}", use_container_width=True):
                     with st.expander(f"🛍️ {p.get('product_name', 'Product')} Details"):
                         # Display image gallery
@@ -476,7 +470,6 @@ def product_list():
                         # Like toggle inside modal
                         if st.button(heart_label + " Add to Wishlist", key=f"modal_like_{product_id}"):
                             toggle_wishlist(product_id, p.get('product_name'), liked)
-                            # Removed st.stop() to allow full rendering
 
                         # Add to cart logic
                         stock = int(p.get('stock_quantity', 0) or 0)
@@ -497,8 +490,8 @@ def product_list():
                                     else:
                                         st.session_state.cart.append({**p, 'qty': qty})
                                         st.success(f"Added {qty} x {p['product_name']} to cart.")
-                                    # st.session_state.trigger_rerun = True # No need to rerun for cart updates typically
-                                    # st.stop() # Don't stop unless you want the modal to close and app reruns immediately
+                                    st.session_state.trigger_rerun = True  # Trigger rerun to update cart
+                                    st.rerun()  # Immediate rerun to refresh UI
                         else:
                             st.info("Out of Stock")
 
@@ -508,7 +501,6 @@ def product_list():
                 # Like toggle outside modal
                 if st.button(heart_label, key=f"like_{product_id}"):
                     toggle_wishlist(product_id, p.get('product_name'), liked)
-                    # Removed st.stop() to allow full rendering
                     
 def view_cart():
     st.subheader("🛒 Your Cart")
