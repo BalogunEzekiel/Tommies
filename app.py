@@ -9,7 +9,7 @@ import requests # For Flutterwave API calls
 import uuid # For unique transaction references
 import bcrypt
 
-st.set_page_config(page_title="Tommies Fashion", layout="wide")
+st.set_page_config(page_title="Perfectfit Fashion", layout="wide")
 
 # --- Database Connection (Currently unused, primarily using Supabase Client) ---
 @st.cache_resource
@@ -206,7 +206,7 @@ def create_order(user_id, cart):
 def send_confirmation_email(email, order_id):
     try:
         msg = EmailMessage()
-        msg.set_content(f"Thank you for your order #{order_id} from Tommies Fashion Store!")
+        msg.set_content(f"Thank you for your order #{order_id} from Perfectfit Fashion Store!")
         msg["Subject"] = "Order Confirmation"
         msg["From"] = "no-reply@tommiesfashion.com"
         msg["To"] = email
@@ -234,7 +234,7 @@ def initiate_payment(amount, email):
     }
 
     # Generate a unique transaction reference
-    tx_ref = f"TOMMIES_TX_{uuid.uuid4().hex}"
+    tx_ref = f"PERFECTFIT_TX_{uuid.uuid4().hex}"
 
     payload = {
         "tx_ref": tx_ref,
@@ -248,7 +248,7 @@ def initiate_payment(amount, email):
             "name": st.session_state.user.get('full_name', 'Customer') # Get customer name if available
         },
         "customizations": {
-            "title": "Tommies Fashion Store",
+            "title": "Perfectfit Fashion Store",
             "description": "Payment for fashion items"
         }
     }
@@ -301,7 +301,7 @@ else:
 
 # --- Main App Logic ---
 def main():
-    st.title("👗 Tommies Fashion Store")
+    st.title("👗 Perfectfit Fashion Store")
 
 # Initialize session state flags
     if "show_login" not in st.session_state:
@@ -497,8 +497,14 @@ if email == "admin@tommiesfashion.com":
 # --- SIDEBAR CONTENT ---
 def main():
     # Sidebar Branding
-    st.sidebar.title("About Tommies 👗🧵")
-    st.sidebar.info("Tommies is your one-stop fashion store offering premium styles at unbeatable prices.")
+    st.sidebar.title("About Perfectfit 👗🧵")
+    st.sidebar.info(
+        "***.....fast and reliable!***\n\n"
+        "Perfectfit is your one-stop fashion store offering premium styles at unbeatable prices.\n\n"
+        "**📞 Contact us:**\n"
+        "***+234-813-689-4472***\n"
+        "***+234-806-252-9172***"
+    )
 
 if __name__ == "__main__":
     main()
