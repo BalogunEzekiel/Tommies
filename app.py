@@ -43,6 +43,9 @@ def get_supabase_client():
 
 supabase = get_supabase_client()
 
+if "supabase" not in st.session_state:
+    st.session_state.supabase = supabase
+
 # --- HEADER: Login and Signup buttons ---
 
 # --- Initialize session state variables ---
