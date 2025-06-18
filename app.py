@@ -137,6 +137,7 @@ def login_form():
             st.session_state.logged_in = True
             st.success("✅ Logged in successfully!")
             st.session_state.show_login = False
+            time.sleep(2)  # Wait 2 seconds before rerun
             st.rerun()
         else:
             st.error("❌ Invalid credentials.")
