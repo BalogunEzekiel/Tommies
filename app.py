@@ -36,7 +36,7 @@ def get_engine():
         st.stop()
     except Exception as e:
         st.error(f"Database connection error: {e}")
-        st.stop()]
+        st.stop()
 
 # --- Supabase client setup ---
 # Cache the Supabase client to avoid recreating it on every rerun
