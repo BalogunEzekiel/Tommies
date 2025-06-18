@@ -716,18 +716,17 @@ def admin_panel():
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("##### 👥 Total Customers")
-                st.markdown(f"<p style='color:green; font-size:28px;'> {total_customers}</p>", unsafe_allow_html=True)
-                st.write(f"#### {total_customers}")
+                st.markdown(f"<p style='color:blue; font-size:28px;'> {total_customers}</p>", unsafe_allow_html=True)
                 st.markdown("##### 💰 Total Revenue")
-                st.write(f"#### ₦{total_revenue:,.2f}")
+                st.markdown(f"<p style='color:blue; font-size:28px;'> ₦{total_revenue:,.2f}</p>", unsafe_allow_html=True)
             with col2:
                 st.markdown("##### 🛒 Total Sales")
-                st.write(f"#### {total_sales}")
+                st.markdown(f"<p style='color:blue; font-size:28px;'> {total_sales}</p>", unsafe_allow_html=True)
                 st.markdown("##### 🧾 Products Listed")
-                st.write(f"#### {total_products}")
-                # Thick line
-                st.markdown("<hr style='border: 3px solid #000;'>", unsafe_allow_html=True)
-            
+                st.markdown(f"<p style='color:blue; font-size:28px;'> {total_products}</p>", unsafe_allow_html=True)
+
+            # Thick line
+            st.markdown("<hr style='border: 3px solid #000;'>", unsafe_allow_html=True)
             # Sales Trend Over Time
             st.markdown("#### 📈 Sales Trend Over Time")
             st.write("Track your monthly sales performance with this interactive chart.")
