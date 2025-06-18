@@ -471,8 +471,8 @@ def product_list():
                     st.markdown("#### Description:")
                     st.write(p.get('description', 'No description provided.'))
 
-                    if st.button(heart_label + " Add to Wishlist", key=f"modal_like_{product_id}"):
-                        toggle_wishlist(product_id, p.get('product_name'), liked)
+                    #if st.button(heart_label + " Add to Wishlist", key=f"modal_like_{product_id}"):
+                    #    toggle_wishlist(product_id, p.get('product_name'), liked)
 
                     stock = int(p.get('stock_quantity', 0))
                     if stock > 0:
