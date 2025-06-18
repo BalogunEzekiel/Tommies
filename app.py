@@ -688,18 +688,18 @@ def admin_panel():
             st.write("Overview of customer engagement, sales, revenue, and product listings.")
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown("###### 👥 Total Customers")
-                st.write(f"###### {total_customers}")
-                st.markdown("###### 💰 Total Revenue")
-                st.write(f"###### ₦{total_revenue:,.2f}")
+                st.markdown("##### 👥 Total Customers")
+                st.write(f"#### {total_customers}")
+                st.markdown("##### 💰 Total Revenue")
+                st.write(f"#### ₦{total_revenue:,.2f}")
             with col2:
-                st.markdown("###### 🛒 Total Sales")
-                st.write(f"###### {total_sales}")
-                st.markdown("###### 🧾 Products Listed")
-                st.write(f"######{total_products}")
+                st.markdown("##### 🛒 Total Sales")
+                st.write(f"#### {total_sales}")
+                st.markdown("##### 🧾 Products Listed")
+                st.write(f"#### {total_products}")
             
             # Sales Trend Over Time
-            st.markdown("### 📈 Sales Trend Over Time")
+            st.markdown("#### 📈 Sales Trend Over Time")
             st.write("Track your monthly sales performance with this interactive chart.")
             
             if not df_orders.empty and "created_at" in df_orders:
@@ -711,7 +711,7 @@ def admin_panel():
                 st.info("No order data available for monthly sales trend.")
                 
             # Top 5 Best-Selling Products
-            st.markdown("### 🏆 Top 5 Best-Selling Products")
+            st.markdown("#### 🏆 Top 5 Best-Selling Products")
             st.write("Discover the most popular products based on total units sold.")
             
             if not df_order_items.empty and not df_products.empty:
