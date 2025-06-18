@@ -685,12 +685,15 @@ def admin_panel():
             total_products = len(df_products) if not df_products.empty else 0
 
             # Display metrics (removed duplicates)
-            st.metric("👥 Total Customers", total_customers)
-            st.metric("🛒 Total Sales", total_sales)
-            st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
-            st.metric("🧾 Products Listed", total_products)
+            st.metric("###👥 Total Customers", total_customers)
+            st.metric("###🛒 Total Sales", total_sales)
+            st.metric("###💰 Total Revenue", f"₦{total_revenue:,.2f}")
+            st.metric("###🧾 Products Listed", total_products)
 
-            # Monthly sales trend
+            # Sales Trend Over Time
+            st.markdown("### 📈 Sales Trend Over Time")
+            st.write("Track your monthly sales performance with this interactive chart.")
+            
             if not df_orders.empty and "created_at" in df_orders:
                 df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
                 monthly_sales = df_orders.groupby(df_orders['created_at'].dt.to_period("M"))["total_amount"].sum().reset_index()
@@ -698,17 +701,20 @@ def admin_panel():
                 st.line_chart(monthly_sales.set_index('created_at'))
             else:
                 st.info("No order data available for monthly sales trend.")
-
-            # Top 5 Products
+                
+            # Top 5 Best-Selling Products
+            st.markdown("### 🏆 Top 5 Best-Selling Products")
+            st.write("Discover the most popular products based on total units sold.")
+            
             if not df_order_items.empty and not df_products.empty:
                 top_products = df_order_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
                 top_products = top_products.merge(df_products[["product_id", "product_name"]], on="product_id")
                 st.bar_chart(top_products.set_index("product_name")["quantity"])
             else:
                 st.info("No order items or products available for top products chart.")
-
-        except Exception as e:
-            st.error(f"Error generating insights: {e}")
+            
+            except Exception as e:
+                st.error(f"Error generating insights: {e}")
                       
 #----------------------- Main Logic --------------------------
 def main():
