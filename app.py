@@ -692,11 +692,13 @@ def admin_panel():
                 st.write(f"#### {total_customers}")
                 st.markdown("##### 💰 Total Revenue")
                 st.write(f"#### ₦{total_revenue:,.2f}")
+                st.markdown("---")
             with col2:
                 st.markdown("##### 🛒 Total Sales")
                 st.write(f"#### {total_sales}")
                 st.markdown("##### 🧾 Products Listed")
                 st.write(f"#### {total_products}")
+                st.markdown("---")
             
             # Sales Trend Over Time
             st.markdown("#### 📈 Sales Trend Over Time")
@@ -709,6 +711,7 @@ def admin_panel():
                 st.line_chart(monthly_sales.set_index('created_at'))
             else:
                 st.info("No order data available for monthly sales trend.")
+                st.markdown("---")
                 
             # Top 5 Best-Selling Products
             st.markdown("#### 🏆 Top 5 Best-Selling Products")
@@ -723,6 +726,8 @@ def admin_panel():
             
         except Exception as e:
             st.error(f"Error generating insights: {e}")
+            st.markdown("---")
+
                       
 #----------------------- Main Logic --------------------------
 def main():
