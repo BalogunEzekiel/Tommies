@@ -273,56 +273,6 @@ else:
         if st.button("View Cart"):
             st.session_state.viewing_cart = True
 
-# --- Main App Logic ---
-def main():
-    st.title("👗 Perfectfit Fashion Store")
-
-    # Initialize session state flags
-    if "show_login" not in st.session_state:
-        st.session_state.show_login = True
-    if "show_register" not in st.session_state:
-        st.session_state.show_register = False
-
-    # Sidebar - show welcome message and logout
-    with st.sidebar:
-        user = st.session_state.get("user")
-    
-        if user:
-            full_name = user.get("full_name", "Guest")
-            email = user.get("email", "").lower()
-    
-            # Identify if this user is the admin
-            is_admin = email == "tommiesfashion@gmail.com"
-    
-            if is_admin:
-                st.success(f"👑 Admin: {full_name}")
-            else:
-                st.success(f"👋 Welcome, {full_name}!")
-    
-            if st.button("Logout"):
-                st.session_state.pop("user", None)
-                st.session_state.show_login = True
-                st.rerun()
-    
-            st.markdown("---")  # Separator
-
-    
-    with st.sidebar:
-        if "user" in st.session_state or "admin" in st.session_state:
-            account = st.session_state.get("user") or st.session_state.get("admin")
-            full_name = account.get("full_name", "Guest")
-            st.success(f"👋 Welcome, {full_name}!")
-
-            if st.button("Logout"):
-                st.session_state.pop("user", None)
-                st.session_state.pop("admin", None)
-                st.session_state.show_login = True
-                st.rerun()
-            st.markdown("---")  # Separator
-
-if __name__ == "__main__":
-    main()
-
 def fetch_products():
     """
     Fetches product data from the Supabase 'products' table.
@@ -662,6 +612,42 @@ def create_order(user_id, cart):
     except Exception as e:
         st.error(f"Error creating order: {e}")
         return None
+
+#----------------------- Main Logic --------------------------
+def main():
+    if "show_register" not in st.session_state:
+        st.session_state.show_register = False
+
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    
+    with st.sidebar:
+        if st.session_state.get("logged_in") and "user" in st.session_state:
+            user = st.session_state["user"]
+            full_name = user.get("full_name", "Guest")
+            st.success(f"👋 Welcome, {full_name}!")
+    
+            if st.button("Logout"):
+                st.session_state.pop("user", None)
+                st.session_state.logged_in = False
+                st.rerun()
+        else:
+            st.info("👋 Welcome, Guest!")
+            st.markdown("---")
+
+    if st.session_state.get("viewing_cart"):
+        view_cart()
+        return
+
+    # ✅ Always show the product list to non-admin users
+    if st.session_state.get("logged_in") and st.session_state.user.get("email") == "tommiesfashion@gmail.com":
+        admin_panel()
+    else:
+        product_list()
+
+if __name__ == "__main__":
+    main()
+
 
 # --- SIDEBAR CONTENT ---
 def main():
