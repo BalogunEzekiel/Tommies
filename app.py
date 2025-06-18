@@ -692,7 +692,6 @@ def admin_panel():
                 st.write(f"#### {total_customers}")
                 st.markdown("##### 💰 Total Revenue")
                 st.write(f"#### ₦{total_revenue:,.2f}")
-                st.markdown("---")
             with col2:
                 st.markdown("##### 🛒 Total Sales")
                 st.write(f"#### {total_sales}")
