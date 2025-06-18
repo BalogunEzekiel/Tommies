@@ -164,165 +164,52 @@ def registration_form():
             st.rerun()
         else:
             st.error("❌ Registration failed. Please try again.")
+#def fetch_products():
+#    result = supabase.table("products").select("*").execute()
+#    return result.data if result.data else []
+
 def fetch_products():
-    result = supabase.table("products").select("*").execute()
-    return result.data if result.data else []
-
-def create_order(user_id, cart):
-    total = sum(item['price'] * item['qty'] for item in cart)
+    """
+    Fetches product data from the Supabase 'products' table.
+    Handles potential errors during the fetch operation.
+    """
     try:
-        order_result = supabase.table("orders").insert({
-            "user_id": user_id,
-            "total_amount": total,
-            "status": "pending"
-        }).execute()
+        response = st.session_state.supabase.table("products").select(
+            "product_id, product_name, category, size, price, stock_quantity, description, image_url, image_gallery"
+        ).execute()
 
-        if not order_result.data:
-            raise Exception("Failed to create order in database.")
+        # Check for non-2xx status codes (Supabase client typically raises exceptions for network errors)
+        # This check is more robust if response is not guaranteed to raise an exception on API errors
+        if hasattr(response, "status_code") and not (200 <= response.status_code < 300):
+            st.error(f"Error fetching products: Status code {response.status_code}")
+            return []
 
-        order_id = order_result.data[0]['order_id']
+        return response.data if response.data is not None else []
 
-        for item in cart:
-            supabase.table("order_items").insert({
-                "order_id": order_id,
-                "product_id": item['product_id'],
-                "quantity": item['qty'],
-                "price_at_purchase": item['price']
-            }).execute()
-
-            supabase.table("products").update({
-                "stock_quantity": item['stock_quantity'] - item['qty']
-            }).eq("product_id", item['product_id']).execute()
-
-        send_confirmation_email(st.session_state.user['email'], order_id)
-        return order_id
     except Exception as e:
-        st.error(f"Error creating order: {e}")
-        return None
+        st.error(f"An unexpected error occurred while fetching products: {e}")
+        return []
 
-# --- UI Functions ---
-
-# --- Email Confirmation ---
-def send_confirmation_email(email, order_id):
-    try:
-        msg = EmailMessage()
-        msg.set_content(f"Thank you for your order #{order_id} from Perfectfit Fashion Store!")
-        msg["Subject"] = "Order Confirmation"
-        msg["From"] = "no-reply@tommiesfashion.com"
-        msg["To"] = email
-
-        with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
-            smtp.starttls()
-            smtp.login(st.secrets["email"]["username"], st.secrets["email"]["password"])
-            smtp.send_message(msg)
-    except Exception as e:
-        st.warning(f"Email failed to send: {e}")
-        
-# --- Flutterwave Integration ---
-def initiate_payment(amount, email):
-    # Retrieve Flutterwave public key from Streamlit secrets
-    try:
-        flutterwave_public_key = st.secrets["flutterwave"]["public_key"]
-    except KeyError:
-        st.error("Flutterwave public key not found in secrets.toml")
+def streamlit_image_gallery(images):
+    """
+    Displays a simple image gallery in Streamlit.
+    For a more advanced gallery, consider using a custom component or a more complex layout.
+    """
+    if not images:
+        st.write("No images available for this product.")
         return
 
-    payment_url = "https://api.flutterwave.com/v3/payments"
-    headers = {
-        "Authorization": f"Bearer {flutterwave_public_key}",
-        "Content-Type": "application/json"
-    }
+    # Display images in columns for a gallery-like effect
+    num_images = len(images)
+    cols = st.columns(min(num_images, 4)) # Limit columns to max 4 for better display
 
-    # Generate a unique transaction reference
-    tx_ref = f"PERFECTFIT_TX_{uuid.uuid4().hex}"
-
-    payload = {
-        "tx_ref": tx_ref,
-        "amount": amount,
-        "currency": "NGN",
-        # Important: For deployment, replace localhost with your deployed Streamlit app URL
-        # You'll need to figure out how to handle the callback to verify payment on Streamlit Cloud
-        "redirect_url": "http://localhost:8501", # Redirect back to the app's base URL
-        "customer": {
-            "email": email,
-            "name": st.session_state.user.get('full_name', 'Customer') # Get customer name if available
-        },
-        "customizations": {
-            "title": "Perfectfit Fashion Store",
-            "description": "Payment for fashion items"
-        }
-    }
-
-    try:
-        response = requests.post(payment_url, json=payload, headers=headers)
-        response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
-        response_json = response.json()
-
-        if response_json['status'] == 'success':
-            payment_link = response_json['data']['link']
-            st.success("Payment initiated successfully! Click the link below to complete your payment.")
-            st.markdown(f"**[Proceed to Payment]({payment_link})**")
-            # Optionally, save tx_ref to session_state to check later
-            st.session_state.current_tx_ref = tx_ref
+    for i, image_url in enumerate(images):
+        if i < len(cols): # Ensure we don't try to access a non-existent column
+            with cols[i]:
+                st.image(image_url, use_container_width=True)
         else:
-            st.error(f"Failed to initiate payment: {response_json.get('message', 'Unknown error')}")
-            # print(response_json) # For debugging
-    except requests.exceptions.RequestException as e:
-        st.error(f"Network or API error initiating payment: {e}")
-    except Exception as e:
-        st.error(f"An unexpected error occurred during payment initiation: {e}")
-
-# --- Initialize session state variables ---
-default_state = {
-    "cart": [],
-    "logged_in": False,
-    "user": {},
-    "viewing_cart": False,
-    "show_login": False,
-    "show_register": False
-}
-
-for key, value in default_state.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
-
-# --- Example UI Logic ---
-
-if st.session_state.show_login:
-    # st.subheader("🔐 Login")
-    login_form()  # Call your login form function here
-elif st.session_state.show_register:
-    # st.subheader("📝 Register")
-    registration_form()  # Call your registration form function here
-
-else:
-    if st.button("View Cart"):
-        st.session_state.viewing_cart = True
-
-# --- Main App Logic ---
-def main():
-    st.title("👗 Perfectfit Fashion Store")
-
-# Initialize session state flags
-    if "show_login" not in st.session_state:
-        st.session_state.show_login = True
-    if "show_register" not in st.session_state:
-        st.session_state.show_register = False
-
-    # Sidebar - show welcome message and logout
-    with st.sidebar:
-        if "user" in st.session_state:
-            user = st.session_state.get("user", {})
-            full_name = user.get("full_name", "Guest")
-            st.success(f"👋 Welcome, {full_name}!")
-            if st.button("Logout"):
-                del st.session_state.user
-                st.session_state.show_login = True
-                st.rerun()
-                st.sidebar.markdown("---") # Separator
-
-if __name__ == "__main__":
-    main()
+            # If more than 4 images, display remaining in a new row or just show them vertically
+            st.image(image_url, use_container_width=True)
 
 def product_list():
     st.subheader("🛍️ Available Products")
@@ -446,53 +333,307 @@ else:
     product_list()
 
 def admin_panel():
-    st.title("🛠️ Admin Dashboard")
-    st.subheader("Recent Orders")
+    st.subheader("🛠️ Admin Dashboard")
 
-    st.markdown("### 🔧 Admin Menu")
-    st.write("- Manage Products")
-    st.write("- View Orders")
-    st.write("- Add New Product (feature coming soon...)")
+    tabs = st.tabs(["Overview", "Manage Users", "Manage Products", "View Orders", "Orders Confirmation", "Insights"])
+
+    # --- Overview Tab ---
+    with tabs[0]:
+        st.subheader("🧰 Summary")
+        st.info("Overview details will be displayed here.")
+
+    # --- Manage Users Tab ---
+    with tabs[1]:
+        st.subheader("👥 Customers Info Management")
+        try:
+            users = supabase.table("users").select("*").execute().data
+            if users:
+                df_users = pd.DataFrame(users)
+                edited_df = st.data_editor(df_users, num_rows="dynamic", key="user_editor")
+                if st.button("Save Changes to Users"):
+                    for _, row in edited_df.iterrows():
+                        supabase.table("users").update(row.to_dict()).eq("user_id", row["user_id"]).execute()
+                    st.success("✅ Users updated successfully!")
+            else:
+                st.info("No users found.")
+        except Exception as e:
+            st.error(f"Failed to fetch users: {e}")
+
+    # --- Manage Products Tab ---
+    with tabs[2]:
+        st.subheader("🛍️ Manage Products")
+        try:
+            products = supabase.table("products").select("*").execute().data
+            if products:
+                df_products = pd.DataFrame(products)
+                edited_products = st.data_editor(df_products, num_rows="dynamic", key="product_editor")
+                if st.button("Save Changes to Products"):
+                    for _, row in edited_products.iterrows():
+                        supabase.table("products").update(row.to_dict()).eq("product_id", row["product_id"]).execute()
+                    st.success("✅ Products updated successfully!")
+            else:
+                st.info("No products available.")
+        except Exception as e:
+            st.error(f"Failed to fetch products: {e}")
+
+    # --- View Orders Tab ---
+    with tabs[3]:
+        st.subheader("📦 Recent Orders")
+        try:
+            orders = supabase.table("orders").select("*, users!inner(full_name, email), order_items(*)").order("created_at", desc=True).execute().data
+            if not orders:
+                st.info("No orders found.")
+            for order in orders:
+                st.markdown(f"**Order #{order['order_id']}**")
+                st.write(f"**Customer:** {order['users']['full_name']} ({order['users']['email']})")
+                st.write(f"**Date:** {order['created_at']}")
+                st.write("**Items:**")
+
+                if order['order_items']:
+                    for item in order['order_items']:
+                        prod_name = "Unknown"
+                        try:
+                            prod = supabase.table("products").select("product_name").eq("product_id", item["product_id"]).execute().data
+                            if prod:
+                                prod_name = prod[0]["product_name"]
+                        except:
+                            pass
+                        st.write(f"- {item['quantity']} x {prod_name} @ ₦{item['price_at_purchase']:,.2f}")
+                else:
+                    st.write("- No items found.")
+                st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
+                st.divider()
+        except Exception as e:
+            st.error(f"Error fetching orders: {e}")
+
+    # --- Orders Confirmation Tab ---
+    with tabs[4]:
+        st.subheader("🚚 Update Order Status")
+        try:
+            orders = supabase.table("orders").select("*").eq("status", "Pending").execute().data
+            if orders:
+                for order in orders:
+                    st.write(f"Order #{order['order_id']} - Total: ₦{order['total_amount']:,.2f}")
+                    new_status = st.selectbox(
+                        f"Update status for Order #{order['order_id']}",
+                        options=["Pending", "Confirmed", "Shipping", "Delivered"],
+                        index=["Pending", "Confirmed", "Shipping", "Delivered"].index(order.get("status", "Pending")),
+                        key=f"status_{order['order_id']}"
+                    )
+                    if st.button(f"Save Status for Order #{order['order_id']}"):
+                        supabase.table("orders").update({"status": new_status}).eq("order_id", order["order_id"]).execute()
+                        st.success(f"✅ Order #{order['order_id']} status updated to {new_status}")
+            else:
+                st.info("No pending orders.")
+        except Exception as e:
+            st.error(f"Error updating orders: {e}")
+
+    # --- Insights Tab ---
+    with tabs[5]:
+        st.subheader("📊 Business Insights")
+        try:
+            users = supabase.table("users").select("*").execute().data
+            orders = supabase.table("orders").select("*").execute().data
+            products = supabase.table("products").select("*").execute().data
+            order_items = supabase.table("order_items").select("*").execute().data
+
+#            df_orders = pd.DataFrame(orders)
+#            df_users = pd.DataFrame(users)
+#            df_products = pd.DataFrame(products)
+#            df_order_items = pd.DataFrame(order_items)
+
+            total_customers = len(users)
+            total_orders = len(orders)
+            total_revenue = sum(order["total_amount"] for order in orders)
+            total_products = len(products)
+                
+            total_customers = len(df_users)
+            total_sales = len(df_orders)
+            total_revenue = df_orders["total_amount"].sum()
+
+            st.metric("👥 Total Customers", total_customers)
+            st.metric("📦 Total Sales", total_sales)
+            st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
+            st.metric("🧾 Products Listed", total_products)
+
+            st.metric("👥 Total Customers", total_customers)
+            st.metric("🛒 Total Sales", total_sales)
+            st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
+
+            # Monthly sales trend
+            df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
+            monthly_sales = df_orders.groupby(df_orders['created_at'].dt.to_period("M"))["total_amount"].sum().reset_index()
+            monthly_sales['created_at'] = monthly_sales['created_at'].astype(str)
+            st.line_chart(monthly_sales.set_index('created_at'))
+
+            # Top 5 Products
+            order_items = supabase.table("order_items").select("*").execute().data
+            if order_items:
+                df_items = pd.DataFrame(order_items)
+                top_products = df_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
+                top_products = top_products.merge(df_products[["product_id", "product_name"]], on="product_id")
+                st.bar_chart(top_products.set_index("product_name")["quantity"])
+        except Exception as e:
+            st.error(f"Error generating insights: {e}")
+
+def create_order(user_id, cart):
+    total = sum(item['price'] * item['qty'] for item in cart)
+    try:
+        order_result = supabase.table("orders").insert({
+            "user_id": user_id,
+            "total_amount": total,
+            "status": "pending"
+        }).execute()
+
+        if not order_result.data:
+            raise Exception("Failed to create order in database.")
+
+        order_id = order_result.data[0]['order_id']
+
+        for item in cart:
+            supabase.table("order_items").insert({
+                "order_id": order_id,
+                "product_id": item['product_id'],
+                "quantity": item['qty'],
+                "price_at_purchase": item['price']
+            }).execute()
+
+            supabase.table("products").update({
+                "stock_quantity": item['stock_quantity'] - item['qty']
+            }).eq("product_id", item['product_id']).execute()
+
+        send_confirmation_email(st.session_state.user['email'], order_id)
+        return order_id
+    except Exception as e:
+        st.error(f"Error creating order: {e}")
+        return None
+
+# --- UI Functions ---
+
+# --- Email Confirmation ---
+def send_confirmation_email(email, order_id):
+    try:
+        msg = EmailMessage()
+        msg.set_content(f"Thank you for your order #{order_id} from Perfectfit Fashion Store!")
+        msg["Subject"] = "Order Confirmation"
+        msg["From"] = "no-reply@tommiesfashion.com"
+        msg["To"] = email
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+            smtp.starttls()
+            smtp.login(st.secrets["email"]["username"], st.secrets["email"]["password"])
+            smtp.send_message(msg)
+    except Exception as e:
+        st.warning(f"Email failed to send: {e}")
+        
+# --- Flutterwave Integration ---
+def initiate_payment(amount, email):
+    # Retrieve Flutterwave public key from Streamlit secrets
+    try:
+        flutterwave_public_key = st.secrets["flutterwave"]["public_key"]
+    except KeyError:
+        st.error("Flutterwave public key not found in secrets.toml")
+        return
+
+    payment_url = "https://api.flutterwave.com/v3/payments"
+    headers = {
+        "Authorization": f"Bearer {flutterwave_public_key}",
+        "Content-Type": "application/json"
+    }
+
+    # Generate a unique transaction reference
+    tx_ref = f"PERFECTFIT_TX_{uuid.uuid4().hex}"
+
+    payload = {
+        "tx_ref": tx_ref,
+        "amount": amount,
+        "currency": "NGN",
+        # Important: For deployment, replace localhost with your deployed Streamlit app URL
+        # You'll need to figure out how to handle the callback to verify payment on Streamlit Cloud
+        "redirect_url": "http://localhost:8501", # Redirect back to the app's base URL
+        "customer": {
+            "email": email,
+            "name": st.session_state.user.get('full_name', 'Customer') # Get customer name if available
+        },
+        "customizations": {
+            "title": "Perfectfit Fashion Store",
+            "description": "Payment for fashion items"
+        }
+    }
 
     try:
-        orders_result = supabase.table("orders").select(
-            "*, users!inner(full_name, email), order_items(*)"
-        ).order("created_at", desc=True).execute()
-        orders = orders_result.data if orders_result.data else []
-    except Exception as e:
-        st.error(f"Error fetching orders: {e}")
-        return
+        response = requests.post(payment_url, json=payload, headers=headers)
+        response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
+        response_json = response.json()
 
-    if not orders:
-        st.info("No orders found.")
-        return
-
-    for order in orders:
-        st.markdown(f"**Order #{order['order_id']}**")
-        st.write(f"**Customer:** {order['users']['full_name']} ({order['users']['email']})")
-        st.write(f"**Date:** {order['created_at']}")
-        st.write("**Items:**")
-
-        if order['order_items']:
-            for item in order['order_items']:
-                try:
-                    prod_result = supabase.table("products").select("product_name").eq("product_id", item['product_id']).execute()
-                    prod_name = prod_result.data[0]['product_name'] if prod_result.data else "Unknown Product"
-                except Exception as e:
-                    prod_name = f"Error loading product: {e}"
-
-                st.write(f"- {item['quantity']} x {prod_name} at ₦{item['price_at_purchase']:,.2f}")
+        if response_json['status'] == 'success':
+            payment_link = response_json['data']['link']
+            st.success("Payment initiated successfully! Click the link below to complete your payment.")
+            st.markdown(f"**[Proceed to Payment]({payment_link})**")
+            # Optionally, save tx_ref to session_state to check later
+            st.session_state.current_tx_ref = tx_ref
         else:
-            st.write("- No items found for this order.")
+            st.error(f"Failed to initiate payment: {response_json.get('message', 'Unknown error')}")
+            # print(response_json) # For debugging
+    except requests.exceptions.RequestException as e:
+        st.error(f"Network or API error initiating payment: {e}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred during payment initiation: {e}")
 
-        st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
-        st.divider()
+# --- Initialize session state variables ---
+default_state = {
+    "cart": [],
+    "logged_in": False,
+    "user": {},
+    "viewing_cart": False,
+    "show_login": False,
+    "show_register": False
+}
 
-user = st.session_state.get("user", {})
-email = user.get("email")
+for key, value in default_state.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
-if email == "admin@tommiesfashion.com":
-    admin_panel()
+# --- Example UI Logic ---
+
+if st.session_state.show_login:
+    login_form()  # Call your login form function here
+elif st.session_state.show_register:
+    registration_form()  # Call your registration form function here
+else:
+    # ✅ Show "View Cart" only to non-admin logged-in users
+    if (
+        st.session_state.get("logged_in") and
+        "user" in st.session_state and
+        st.session_state.user.get("email") != "tommiesfashion@gmail.com"
+    ):
+        if st.button("View Cart"):
+            st.session_state.viewing_cart = True
+
+# --- Main App Logic ---
+def main():
+    st.title("👗 Perfectfit Fashion Store")
+
+# Initialize session state flags
+    if "show_login" not in st.session_state:
+        st.session_state.show_login = True
+    if "show_register" not in st.session_state:
+        st.session_state.show_register = False
+
+    # Sidebar - show welcome message and logout
+    with st.sidebar:
+        if "user" in st.session_state:
+            user = st.session_state.get("user", {})
+            full_name = user.get("full_name", "Guest")
+            st.success(f"👋 Welcome, {full_name}!")
+            if st.button("Logout"):
+                del st.session_state.user
+                st.session_state.show_login = True
+                st.rerun()
+                st.sidebar.markdown("---") # Separator
+
+if __name__ == "__main__":
+    main()
 
 # --- SIDEBAR CONTENT ---
 def main():
