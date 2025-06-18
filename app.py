@@ -36,7 +36,7 @@ def get_engine():
         st.stop()
     except Exception as e:
         st.error(f"Database connection error: {e}")
-        st.stop()
+        st.stop()]
 
 # --- Supabase client setup ---
 # Cache the Supabase client to avoid recreating it on every rerun
@@ -309,7 +309,7 @@ if st.session_state.show_login:
 elif st.session_state.show_register:
     registration_form()  # Call your registration form function here
 else:
-    # Show "View Cart" only to non-admin logged-in users
+    # ✅ Show "View Cart" only to non-admin logged-in users
     if (
         st.session_state.get("logged_in") and
         "user" in st.session_state and
@@ -473,7 +473,7 @@ def product_list():
                         st.write(p.get('description', 'No description provided.'))
 
                         # Like toggle inside modal
-                        if st.button("Add to Wishlist", key=f"modal_like_{product_id}"):
+                        if st.button(heart_label + " Add to Wishlist", key=f"modal_like_{product_id}"):
                             if liked:
                                 st.session_state.liked_products.remove(product_id)
                                 st.toast(f"Removed {p.get('product_name')} from wishlist!", icon="💔")
@@ -683,20 +683,28 @@ def admin_panel():
             products = supabase.table("products").select("*").execute().data
             order_items = supabase.table("order_items").select("*").execute().data
 
-            df_orders = pd.DataFrame(orders)
-            df_users = pd.DataFrame(users)
-            df_products = pd.DataFrame(products)
-            df_order_items = pd.DataFrame(order_items)
+#            df_orders = pd.DataFrame(orders)
+#            df_users = pd.DataFrame(users)
+#            df_products = pd.DataFrame(products)
+#            df_order_items = pd.DataFrame(order_items)
 
+            total_customers = len(users)
+            total_orders = len(orders)
+            total_revenue = sum(order["total_amount"] for order in orders)
+            total_products = len(products)
+                
             total_customers = len(df_users)
             total_sales = len(df_orders)
             total_revenue = df_orders["total_amount"].sum()
-            total_products = len(df_products) # Using df_products for consistency
 
             st.metric("👥 Total Customers", total_customers)
             st.metric("📦 Total Sales", total_sales)
             st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
             st.metric("🧾 Products Listed", total_products)
+
+            st.metric("👥 Total Customers", total_customers)
+            st.metric("🛒 Total Sales", total_sales)
+            st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
 
             # Monthly sales trend
             df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
@@ -705,12 +713,12 @@ def admin_panel():
             st.line_chart(monthly_sales.set_index('created_at'))
 
             # Top 5 Products
-            if not df_order_items.empty:
-                top_products = df_order_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
+            order_items = supabase.table("order_items").select("*").execute().data
+            if order_items:
+                df_items = pd.DataFrame(order_items)
+                top_products = df_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
                 top_products = top_products.merge(df_products[["product_id", "product_name"]], on="product_id")
                 st.bar_chart(top_products.set_index("product_name")["quantity"])
-            else:
-                st.info("No order items data to display top products.")
         except Exception as e:
             st.error(f"Error generating insights: {e}")
 
@@ -741,7 +749,7 @@ def main():
         view_cart()
         return
 
-    # Always show the product list to non-admin users
+    # ✅ Always show the product list to non-admin users
     if st.session_state.get("logged_in") and st.session_state.user.get("email") == "tommiesfashion@gmail.com":
         admin_panel()
     else:
@@ -751,7 +759,7 @@ if __name__ == "__main__":
     main()
 
 # --- SIDEBAR CONTENT ---
-def sidebar_content():
+def main():
     # Sidebar Branding
     st.sidebar.title("About Perfectfit 👗🧵")
 
@@ -766,12 +774,16 @@ def sidebar_content():
         "- [💬 Chat with Sales Team](https://wa.me/2348062529172)"
     )
 
-    # --- APP DEVELOPER INFO ---
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 👨‍💻 App Developer")
-    st.sidebar.markdown(
-        """
-**Ezekiel BALOGUN** * _Data Scientist / Data Analyst_  
+if __name__ == "__main__":
+    main()
+
+# --- APP DEVELOPER INFO ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 👨‍💻 App Developer")
+st.sidebar.markdown(
+    """
+**Ezekiel BALOGUN**  
+* _Data Scientist / Data Analyst_  
 * _AI / Machine Learning Engineer_  
 * _Automation / Business Intelligence Expert_  
 
@@ -779,8 +791,4 @@ def sidebar_content():
 🔗 [LinkedIn Profile](https://www.linkedin.com/in/ezekiel-balogun-39a14438)  
 📞 +2348062529172
 """
-    )
-
-if __name__ == "__main__":
-    main()
-    sidebar_content()
+)
