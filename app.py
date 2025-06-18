@@ -168,6 +168,133 @@ def registration_form():
 #    result = supabase.table("products").select("*").execute()
 #    return result.data if result.data else []
 
+# --- UI Functions ---
+
+# --- Email Confirmation ---
+def send_confirmation_email(email, order_id):
+    try:
+        msg = EmailMessage()
+        msg.set_content(f"Thank you for your order #{order_id} from Perfectfit Fashion Store!")
+        msg["Subject"] = "Order Confirmation"
+        msg["From"] = "no-reply@tommiesfashion.com"
+        msg["To"] = email
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+            smtp.starttls()
+            smtp.login(st.secrets["email"]["username"], st.secrets["email"]["password"])
+            smtp.send_message(msg)
+    except Exception as e:
+        st.warning(f"Email failed to send: {e}")
+        
+# --- Flutterwave Integration ---
+def initiate_payment(amount, email):
+    # Retrieve Flutterwave public key from Streamlit secrets
+    try:
+        flutterwave_public_key = st.secrets["flutterwave"]["public_key"]
+    except KeyError:
+        st.error("Flutterwave public key not found in secrets.toml")
+        return
+
+    payment_url = "https://api.flutterwave.com/v3/payments"
+    headers = {
+        "Authorization": f"Bearer {flutterwave_public_key}",
+        "Content-Type": "application/json"
+    }
+
+    # Generate a unique transaction reference
+    tx_ref = f"PERFECTFIT_TX_{uuid.uuid4().hex}"
+
+    payload = {
+        "tx_ref": tx_ref,
+        "amount": amount,
+        "currency": "NGN",
+        # Important: For deployment, replace localhost with your deployed Streamlit app URL
+        # You'll need to figure out how to handle the callback to verify payment on Streamlit Cloud
+        "redirect_url": "http://localhost:8501", # Redirect back to the app's base URL
+        "customer": {
+            "email": email,
+            "name": st.session_state.user.get('full_name', 'Customer') # Get customer name if available
+        },
+        "customizations": {
+            "title": "Perfectfit Fashion Store",
+            "description": "Payment for fashion items"
+        }
+    }
+
+    try:
+        response = requests.post(payment_url, json=payload, headers=headers)
+        response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
+        response_json = response.json()
+
+        if response_json['status'] == 'success':
+            payment_link = response_json['data']['link']
+            st.success("Payment initiated successfully! Click the link below to complete your payment.")
+            st.markdown(f"**[Proceed to Payment]({payment_link})**")
+            # Optionally, save tx_ref to session_state to check later
+            st.session_state.current_tx_ref = tx_ref
+        else:
+            st.error(f"Failed to initiate payment: {response_json.get('message', 'Unknown error')}")
+            # print(response_json) # For debugging
+    except requests.exceptions.RequestException as e:
+        st.error(f"Network or API error initiating payment: {e}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred during payment initiation: {e}")
+
+# --- Initialize session state variables ---
+default_state = {
+    "cart": [],
+    "logged_in": False,
+    "user": {},
+    "viewing_cart": False,
+    "show_login": False,
+    "show_register": False
+}
+
+for key, value in default_state.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
+
+# --- Example UI Logic ---
+
+if st.session_state.show_login:
+    login_form()  # Call your login form function here
+elif st.session_state.show_register:
+    registration_form()  # Call your registration form function here
+else:
+    # ✅ Show "View Cart" only to non-admin logged-in users
+    if (
+        st.session_state.get("logged_in") and
+        "user" in st.session_state and
+        st.session_state.user.get("email") != "tommiesfashion@gmail.com"
+    ):
+        if st.button("View Cart"):
+            st.session_state.viewing_cart = True
+
+# --- Main App Logic ---
+def main():
+    st.title("👗 Perfectfit Fashion Store")
+
+# Initialize session state flags
+    if "show_login" not in st.session_state:
+        st.session_state.show_login = True
+    if "show_register" not in st.session_state:
+        st.session_state.show_register = False
+
+    # Sidebar - show welcome message and logout
+    with st.sidebar:
+        if "user" in st.session_state:
+            user = st.session_state.get("user", {})
+            full_name = user.get("full_name", "Guest")
+            st.success(f"👋 Welcome, {full_name}!")
+            if st.button("Logout"):
+                del st.session_state.user
+                st.session_state.show_login = True
+                st.rerun()
+                st.sidebar.markdown("---") # Separator
+
+if __name__ == "__main__":
+    main()
+
 def fetch_products():
     """
     Fetches product data from the Supabase 'products' table.
@@ -507,133 +634,6 @@ def create_order(user_id, cart):
     except Exception as e:
         st.error(f"Error creating order: {e}")
         return None
-
-# --- UI Functions ---
-
-# --- Email Confirmation ---
-def send_confirmation_email(email, order_id):
-    try:
-        msg = EmailMessage()
-        msg.set_content(f"Thank you for your order #{order_id} from Perfectfit Fashion Store!")
-        msg["Subject"] = "Order Confirmation"
-        msg["From"] = "no-reply@tommiesfashion.com"
-        msg["To"] = email
-
-        with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
-            smtp.starttls()
-            smtp.login(st.secrets["email"]["username"], st.secrets["email"]["password"])
-            smtp.send_message(msg)
-    except Exception as e:
-        st.warning(f"Email failed to send: {e}")
-        
-# --- Flutterwave Integration ---
-def initiate_payment(amount, email):
-    # Retrieve Flutterwave public key from Streamlit secrets
-    try:
-        flutterwave_public_key = st.secrets["flutterwave"]["public_key"]
-    except KeyError:
-        st.error("Flutterwave public key not found in secrets.toml")
-        return
-
-    payment_url = "https://api.flutterwave.com/v3/payments"
-    headers = {
-        "Authorization": f"Bearer {flutterwave_public_key}",
-        "Content-Type": "application/json"
-    }
-
-    # Generate a unique transaction reference
-    tx_ref = f"PERFECTFIT_TX_{uuid.uuid4().hex}"
-
-    payload = {
-        "tx_ref": tx_ref,
-        "amount": amount,
-        "currency": "NGN",
-        # Important: For deployment, replace localhost with your deployed Streamlit app URL
-        # You'll need to figure out how to handle the callback to verify payment on Streamlit Cloud
-        "redirect_url": "http://localhost:8501", # Redirect back to the app's base URL
-        "customer": {
-            "email": email,
-            "name": st.session_state.user.get('full_name', 'Customer') # Get customer name if available
-        },
-        "customizations": {
-            "title": "Perfectfit Fashion Store",
-            "description": "Payment for fashion items"
-        }
-    }
-
-    try:
-        response = requests.post(payment_url, json=payload, headers=headers)
-        response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
-        response_json = response.json()
-
-        if response_json['status'] == 'success':
-            payment_link = response_json['data']['link']
-            st.success("Payment initiated successfully! Click the link below to complete your payment.")
-            st.markdown(f"**[Proceed to Payment]({payment_link})**")
-            # Optionally, save tx_ref to session_state to check later
-            st.session_state.current_tx_ref = tx_ref
-        else:
-            st.error(f"Failed to initiate payment: {response_json.get('message', 'Unknown error')}")
-            # print(response_json) # For debugging
-    except requests.exceptions.RequestException as e:
-        st.error(f"Network or API error initiating payment: {e}")
-    except Exception as e:
-        st.error(f"An unexpected error occurred during payment initiation: {e}")
-
-# --- Initialize session state variables ---
-default_state = {
-    "cart": [],
-    "logged_in": False,
-    "user": {},
-    "viewing_cart": False,
-    "show_login": False,
-    "show_register": False
-}
-
-for key, value in default_state.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
-
-# --- Example UI Logic ---
-
-if st.session_state.show_login:
-    login_form()  # Call your login form function here
-elif st.session_state.show_register:
-    registration_form()  # Call your registration form function here
-else:
-    # ✅ Show "View Cart" only to non-admin logged-in users
-    if (
-        st.session_state.get("logged_in") and
-        "user" in st.session_state and
-        st.session_state.user.get("email") != "tommiesfashion@gmail.com"
-    ):
-        if st.button("View Cart"):
-            st.session_state.viewing_cart = True
-
-# --- Main App Logic ---
-def main():
-    st.title("👗 Perfectfit Fashion Store")
-
-# Initialize session state flags
-    if "show_login" not in st.session_state:
-        st.session_state.show_login = True
-    if "show_register" not in st.session_state:
-        st.session_state.show_register = False
-
-    # Sidebar - show welcome message and logout
-    with st.sidebar:
-        if "user" in st.session_state:
-            user = st.session_state.get("user", {})
-            full_name = user.get("full_name", "Guest")
-            st.success(f"👋 Welcome, {full_name}!")
-            if st.button("Logout"):
-                del st.session_state.user
-                st.session_state.show_login = True
-                st.rerun()
-                st.sidebar.markdown("---") # Separator
-
-if __name__ == "__main__":
-    main()
 
 # --- SIDEBAR CONTENT ---
 def main():
