@@ -571,7 +571,6 @@ def view_cart():
             if st.button("Proceed to Flutterwave Payment"):
                 try:
                     initiate_payment(total, st.session_state.user['email'], st.session_state.cart, st.session_state.user['user_id'])
-                    st.success("Payment initiated successfully!")
                 except Exception as e:
                     st.error(f"Payment initiation failed: {str(e)}")
         else:
