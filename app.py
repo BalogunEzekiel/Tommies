@@ -285,6 +285,29 @@ def main():
 
     # Sidebar - show welcome message and logout
     with st.sidebar:
+        user = st.session_state.get("user")
+    
+        if user:
+            full_name = user.get("full_name", "Guest")
+            email = user.get("email", "").lower()
+    
+            # Identify if this user is the admin
+            is_admin = email == "tommiesfashion@gmail.com"
+    
+            if is_admin:
+                st.success(f"👑 Admin: {full_name}")
+            else:
+                st.success(f"👋 Welcome, {full_name}!")
+    
+            if st.button("Logout"):
+                st.session_state.pop("user", None)
+                st.session_state.show_login = True
+                st.rerun()
+    
+            st.markdown("---")  # Separator
+
+    
+    with st.sidebar:
         if "user" in st.session_state or "admin" in st.session_state:
             account = st.session_state.get("user") or st.session_state.get("admin")
             full_name = account.get("full_name", "Guest")
