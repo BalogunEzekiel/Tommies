@@ -350,7 +350,7 @@ def fetch_products():
     except Exception as e:
         st.error(f"An unexpected error occurred while fetching products: {e}")
         return []
-
+        
 def streamlit_image_gallery(images):
     """
     Displays a simple image gallery in Streamlit.
@@ -662,54 +662,53 @@ def admin_panel():
         except Exception as e:
             st.error(f"Error updating orders: {e}")
 
-    # --- Insights Tab ---
+# --- Insights Tab ---
     with tabs[5]:
         st.subheader("📊 Business Insights")
         try:
-            users = supabase.table("users").select("*").execute().data
-            orders = supabase.table("orders").select("*").execute().data
-            products = supabase.table("products").select("*").execute().data
-            order_items = supabase.table("order_items").select("*").execute().data
+            # Fetch data using st.session_state.supabase
+            users = st.session_state.supabase.table("users").select("*").execute().data
+            orders = st.session_state.supabase.table("orders").select("*").execute().data
+            products = st.session_state.supabase.table("products").select("*").execute().data
+            order_items = st.session_state.supabase.table("order_items").select("*").execute().data
 
-#            df_orders = pd.DataFrame(orders)
-#            df_users = pd.DataFrame(users)
-#            df_products = pd.DataFrame(products)
-#            df_order_items = pd.DataFrame(order_items)
+            # Initialize DataFrames
+            df_users = pd.DataFrame(users) if users else pd.DataFrame()
+            df_orders = pd.DataFrame(orders) if orders else pd.DataFrame()
+            df_products = pd.DataFrame(products) if products else pd.DataFrame()
+            df_order_items = pd.DataFrame(order_items) if order_items else pd.DataFrame()
 
-            total_customers = len(users)
-            total_orders = len(orders)
-            total_revenue = sum(order["total_amount"] for order in orders)
-            total_products = len(products)
-                
-            total_customers = len(df_users)
-            total_sales = len(df_orders)
-            total_revenue = df_orders["total_amount"].sum()
+            # Calculate metrics
+            total_customers = len(df_users) if not df_users.empty else 0
+            total_sales = len(df_orders) if not df_orders.empty else 0
+            total_revenue = df_orders["total_amount"].sum() if not df_orders.empty and "total_amount" in df_orders else 0
+            total_products = len(df_products) if not df_products.empty else 0
 
-            st.metric("👥 Total Customers", total_customers)
-            st.metric("📦 Total Sales", total_sales)
-            st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
-            st.metric("🧾 Products Listed", total_products)
-
+            # Display metrics (removed duplicates)
             st.metric("👥 Total Customers", total_customers)
             st.metric("🛒 Total Sales", total_sales)
             st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
+            st.metric("🧾 Products Listed", total_products)
 
             # Monthly sales trend
-            df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
-            monthly_sales = df_orders.groupby(df_orders['created_at'].dt.to_period("M"))["total_amount"].sum().reset_index()
-            monthly_sales['created_at'] = monthly_sales['created_at'].astype(str)
-            st.line_chart(monthly_sales.set_index('created_at'))
+            if not df_orders.empty and "created_at" in df_orders:
+                df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
+                monthly_sales = df_orders.groupby(df_orders['created_at'].dt.to_period("M"))["total_amount"].sum().reset_index()
+                monthly_sales['created_at'] = monthly_sales['created_at'].astype(str)
+                st.line_chart(monthly_sales.set_index('created_at'))
+            else:
+                st.info("No order data available for monthly sales trend.")
 
             # Top 5 Products
-            order_items = supabase.table("order_items").select("*").execute().data
-            if order_items:
-                df_items = pd.DataFrame(order_items)
-                top_products = df_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
+            if not df_order_items.empty and not df_products.empty:
+                top_products = df_order_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
                 top_products = top_products.merge(df_products[["product_id", "product_name"]], on="product_id")
                 st.bar_chart(top_products.set_index("product_name")["quantity"])
+            else:
+                st.info("No order items or products available for top products chart.")
+
         except Exception as e:
             st.error(f"Error generating insights: {e}")
-
                       
 #----------------------- Main Logic --------------------------
 def main():
