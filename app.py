@@ -335,60 +335,58 @@ def fetch_products():
     Handles potential errors during the fetch operation.
     """
     try:
+        if 'supabase' not in st.session_state:
+            st.error("Supabase client not initialized. Please set `st.session_state.supabase`.")
+            return []
+
         response = st.session_state.supabase.table("products").select(
             "product_id, product_name, category, size, price, stock_quantity, description, image_url, image_gallery"
         ).execute()
 
-        # Check for non-2xx status codes (Supabase client typically raises exceptions for network errors)
-        # This check is more robust if response is not guaranteed to raise an exception on API errors
         if hasattr(response, "status_code") and not (200 <= response.status_code < 300):
             st.error(f"Error fetching products: Status code {response.status_code}")
             return []
 
-        return response.data if response.data is not None else []
+        return response.data if response.data else []
 
     except Exception as e:
-        st.error(f"An unexpected error occurred while fetching products: {e}")
+        st.error(f"Failed to fetch products: {str(e)}")
         return []
-        
+
 def streamlit_image_gallery(images):
     """
     Displays a simple image gallery in Streamlit.
-    For a more advanced gallery, consider using a custom component or a more complex layout.
     """
     if not images:
         st.write("No images available for this product.")
         return
 
-    # Display images in columns for a gallery-like effect
     num_images = len(images)
-    cols = st.columns(min(num_images, 4)) # Limit columns to max 4 for better display
+    cols = st.columns(min(num_images, 4))
 
     for i, image_url in enumerate(images):
-        if i < len(cols): # Ensure we don't try to access a non-existent column
+        if i < len(cols):
             with cols[i]:
                 st.image(image_url, use_container_width=True)
         else:
-            # If more than 4 images, display remaining in a new row or just show them vertically
             st.image(image_url, use_container_width=True)
 
 def product_list():
     st.subheader("🛍️ Available Products")
 
-    # Initialize session state variables
+    # Initialize session state
     if 'cart' not in st.session_state:
         st.session_state.cart = []
     if 'liked_products' not in st.session_state:
         st.session_state.liked_products = set()
     if 'trigger_rerun' not in st.session_state:
         st.session_state.trigger_rerun = False
-    # Ensure supabase client is available in session state if not global
+
     if 'supabase' not in st.session_state:
-        st.error("Supabase client not initialized in session state. Please set `st.session_state.supabase`.")
+        st.error("Supabase client not initialized. Please set `st.session_state.supabase`.")
         return
 
-    # Safe rerun handling
-    # Use st.rerun() for Streamlit 1.28.0 and above.
+    # Handle rerun
     if st.session_state.trigger_rerun:
         st.session_state.trigger_rerun = False
         st.rerun()
@@ -400,10 +398,8 @@ def product_list():
         return
 
     # Filters
-    categories = sorted(list({p.get('category') for p in products if p.get('category')}))
-    sizes = sorted(list({p.get('size') for p in products if p.get('size')}))
-
-    # Add a unique key to selectbox if used multiple times in the same app
+    categories = sorted([p['category'] for p in products if p.get('category')])
+    sizes = sorted([p['size'] for p in products if p.get('size')])
     category_filter = st.selectbox("Category", ["All"] + categories, key="category_filter_sb")
     size_filter = st.selectbox("Size", ["All"] + sizes, key="size_filter_sb")
     price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000), key="price_range_slider")
@@ -412,8 +408,8 @@ def product_list():
     filtered = [
         p for p in products
         if (category_filter == "All" or p.get('category') == category_filter) and
-           (size_filter == "All" or p.get('size') == size_filter) and-
-           (price_range[0] <= float(p.get('price', 0) or 0) <= price_range[1])
+           (size_filter == "All" or p.get('size') == size_filter) and
+           (price_range[0] <= float(p.get('price', 0)) <= price_range[1])
     ]
 
     if not filtered:
@@ -422,86 +418,87 @@ def product_list():
 
     cols_per_row = 3
 
-    # Helper function to toggle wishlist
+    # Wishlist toggle helper
     def toggle_wishlist(product_id, product_name, liked):
-        if liked:
-            st.session_state.liked_products.discard(product_id)  # Use discard to avoid KeyError
-            st.toast(f"Removed {product_name} from wishlist!", icon="💔")
-        else:
-            st.session_state.liked_products.add(product_id)
-            st.toast(f"Added {product_name} to wishlist!", icon="❤️")
-        st.rerun()  # Immediate rerun to update UI
+        try:
+            if liked:
+                st.session_state.liked_products.discard(product_id)
+                st.toast(f"Removed {product_name} from wishlist!", icon="💔")
+            else:
+                st.session_state.liked_products.add(product_id)
+                st.toast(f"Added {product_name} to wishlist!", icon="❤️")
+            st.session_state.trigger_rerun = True
+        except Exception as e:
+            st.error(f"Failed to update wishlist: {str(e)}")
 
     for i, p in enumerate(filtered):
-        # Create columns dynamically for each row
         if i % cols_per_row == 0:
             cols = st.columns(cols_per_row)
 
         with cols[i % cols_per_row]:
-            product_id = p.get('product_id') # Use .get() for safety
-            if not product_id: # Skip if product_id is missing
+            product_id = p.get('product_id')
+            if not product_id:
                 continue
 
             liked = product_id in st.session_state.liked_products
             heart_label = "❤️" if liked else "🤍"
 
-            # Use st.container to group elements for better structure
-            with st.container(border=True): # Adds a visual border around each product
-                # Modal trigger (Using image as the primary click target)
+            with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
 
                 if st.button("View Details", key=f"img_btn_{product_id}", use_container_width=True):
                     with st.expander(f"🛍️ {p.get('product_name', 'Product')} Details"):
-                        # Display image gallery
                         images = p.get('image_gallery', [])
                         if images:
-                            streamlit_image_gallery(images=images)
+                            streamlit_image_gallery(images)
                         else:
                             st.image(p.get('image_url', 'https://via.placeholder.com/600'), use_container_width=True)
 
                         st.markdown(f"### {p.get('product_name', 'N/A')}")
-                        st.markdown(f"**Price:** ₦{float(p.get('price', 0) or 0):,.2f}")
+                        st.markdown(f"**Price:** ₦{float(p.get('price', 0)):,.2f}")
                         st.markdown(f"**Category:** {p.get('category', 'N/A')}")
                         st.markdown(f"**Size:** {p.get('size', 'N/A')}")
-                        st.markdown(f"**Stock:** {int(p.get('stock_quantity', 0) or 0)}")
+                        st.markdown(f"**Stock:** {int(p.get('stock_quantity', 0))}")
                         st.markdown("#### Description:")
                         st.write(p.get('description', 'No description provided.'))
 
-                        # Like toggle inside modal
                         if st.button(heart_label + " Add to Wishlist", key=f"modal_like_{product_id}"):
                             toggle_wishlist(product_id, p.get('product_name'), liked)
+                            st.rerun()
 
-                        # Add to cart logic
-                        stock = int(p.get('stock_quantity', 0) or 0)
+                        stock = int(p.get('stock_quantity', 0))
                         if stock > 0:
                             qty = st.number_input(
                                 "Quantity", min_value=1, max_value=stock,
                                 key=f"qty_modal_{product_id}", value=1
                             )
                             if st.button("🛒 Add to Cart", key=f"modal_cart_{product_id}", use_container_width=True):
-                                if not st.session_state.get('logged_in', False):
-                                    st.warning("Please log in or sign up to add items to your cart.")
-                                else:
-                                    existing = next(
-                                        (item for item in st.session_state.cart if item['product_id'] == product_id), None)
-                                    if existing:
-                                        existing['qty'] += qty
-                                        st.success(f"Updated quantity of {p['product_name']} in cart to {existing['qty']}.")
+                                try:
+                                    if not st.session_state.get('logged_in', False):
+                                        st.warning("Please log in or sign up to add items to your cart.")
                                     else:
-                                        st.session_state.cart.append({**p, 'qty': qty})
-                                        st.success(f"Added {qty} x {p['product_name']} to cart.")
-                                    st.session_state.trigger_rerun = True  # Trigger rerun to update cart
-                                    st.rerun()  # Immediate rerun to refresh UI
+                                        existing = next(
+                                            (item for item in st.session_state.cart if item['product_id'] == product_id), None)
+                                        if existing:
+                                            existing['qty'] += qty
+                                            st.success(f"Updated {p['product_name']} to {existing['qty']} in cart.")
+                                        else:
+                                            st.session_state.cart.append({**p, 'qty': qty})
+                                            st.success(f"Added {qty} x {p['product_name']} to cart.")
+                                        st.session_state.trigger_rerun = True
+                                        st.rerun()
+                                except Exception as e:
+                                    st.error(f"Failed to add to cart: {str(e)}")
                         else:
                             st.info("Out of Stock")
 
                 st.markdown(f"**{p.get('product_name', 'N/A')}**")
-                st.markdown(f"₦{float(p.get('price', 0) or 0):,.2f}")
+                st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
 
-                # Like toggle outside modal
                 if st.button(heart_label, key=f"like_{product_id}"):
                     toggle_wishlist(product_id, p.get('product_name'), liked)
-                    
+                    st.rerun()
+
 def view_cart():
     st.subheader("🛒 Your Cart")
     if not st.session_state.cart:
@@ -514,17 +511,16 @@ def view_cart():
     total = 0
     remove_indices = []
 
-    # Show cart items
     for i, item in enumerate(st.session_state.cart):
         col1, col2, col3 = st.columns([0.6, 0.2, 0.2])
         with col1:
             st.write(f"**{item.get('product_name', 'N/A')}**")
-            st.write(f"{item['qty']} x ₦{item['price']:,.2f} each")
+            st.write(f"{item['qty']} x ₦{float(item.get('price', 0)):,.2f} each")
         with col2:
             new_qty = st.number_input(
                 f"Qty for {item['product_name']}",
                 min_value=1,
-                max_value=item.get('stock_quantity', item['qty']),
+                max_value=int(item.get('stock_quantity', item['qty'])),
                 value=item['qty'],
                 key=f"cart_qty_{item['product_id']}"
             )
@@ -535,7 +531,7 @@ def view_cart():
             if st.button("Remove", key=f"remove_{item['product_id']}"):
                 remove_indices.append(i)
 
-        total += item.get('qty', 1) * item.get('price', 0)
+        total += item.get('qty', 1) * float(item.get('price', 0))
 
     for i in sorted(remove_indices, reverse=True):
         st.session_state.cart.pop(i)
@@ -545,19 +541,22 @@ def view_cart():
     st.markdown(f"### 🧾 Total: ₦{total:,.2f}")
     st.markdown("---")
 
-    if st.session_state.logged_in:
+    if st.session_state.get('logged_in', False):
         if total > 0:
             if st.button("Proceed to Flutterwave Payment"):
-                initiate_payment(total, st.session_state.user['email'], st.session_state.cart, st.session_state.user['user_id']) # Pass cart and user_id
+                try:
+                    initiate_payment(total, st.session_state.user['email'], st.session_state.cart, st.session_state.user['user_id'])
+                except Exception as e:
+                    st.error(f"Payment initiation failed: {str(e)}")
         else:
             st.warning("Cannot proceed with an empty cart.")
     else:
         st.warning("Please log in or sign up to proceed with payment.")
-        
+
     if st.button("🔙 Back to Products"):
         st.session_state.viewing_cart = False
         st.rerun()
-
+```
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
 
