@@ -497,19 +497,19 @@ if email == "admin@tommiesfashion.com":
 # --- SIDEBAR CONTENT ---
 def main():
     # Sidebar Branding
-st.sidebar.title("About Perfectfit 👗🧵")
+    st.sidebar.title("About Perfectfit 👗🧵")
 
-st.sidebar.info(
-    "***Fast, Reliable & Stylish!***\n\n"
-    "Perfectfit is your one-stop fashion destination offering premium styles at unbeatable prices. "
-    "Experience fashion made simple — from browsing to checkout!"
-)
+    st.sidebar.info(
+        "***Fast, Reliable & Stylish!***\n\n"
+        "Perfectfit is your one-stop fashion destination offering premium styles at unbeatable prices. "
+        "Experience fashion made simple — from browsing to checkout!"
+    )
 
-st.sidebar.markdown("**📞 Contact Us:**")
-st.sidebar.markdown(
-    "- [💬 Chat with Customer Support](https://wa.me/2348136894472)\n"
-    "- [💬 Chat with Sales Team](https://wa.me/2348062529172)"
-)
+    st.sidebar.markdown("**📞 Contact Us:**")
+    st.sidebar.markdown(
+        "- [💬 Chat with Customer Support](https://wa.me/2348136894472)\n"
+        "- [💬 Chat with Sales Team](https://wa.me/2348062529172)"
+    )
 
 if __name__ == "__main__":
     main()
