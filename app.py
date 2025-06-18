@@ -448,7 +448,7 @@ def product_list():
             with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
 
-                if st.button("View Details", key=f"img_btn_{product_id}", use_container_width=True):
+#                if st.button("View Details", key=f"img_btn_{product_id}", use_container_width=True):
                     # Toggle expander state
                     st.session_state.expander_states[product_id] = True
 
