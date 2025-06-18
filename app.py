@@ -8,6 +8,11 @@ from supabase import create_client, Client
 import requests # For Flutterwave API calls
 import uuid # For unique transaction references
 import bcrypt
+import pandas as pd
+import numpy as np
+from datetime import datetime
+from streamlit_image_gallery import streamlit_image_gallery
+
 
 st.set_page_config(page_title="Perfectfit Fashion", layout="wide")
 
@@ -167,9 +172,38 @@ def registration_form():
             st.rerun()
         else:
             st.error("❌ Registration failed. Please try again.")
-#def fetch_products():
-#    result = supabase.table("products").select("*").execute()
-#    return result.data if result.data else []
+            
+def create_order(user_id, cart):
+    total = sum(item['price'] * item['qty'] for item in cart)
+    try:
+        order_result = supabase.table("orders").insert({
+            "user_id": user_id,
+            "total_amount": total,
+            "status": "pending"
+        }).execute()
+
+        if not order_result.data:
+            raise Exception("Failed to create order in database.")
+
+        order_id = order_result.data[0]['order_id']
+
+        for item in cart:
+            supabase.table("order_items").insert({
+                "order_id": order_id,
+                "product_id": item['product_id'],
+                "quantity": item['qty'],
+                "price_at_purchase": item['price']
+            }).execute()
+
+            supabase.table("products").update({
+                "stock_quantity": item['stock_quantity'] - item['qty']
+            }).eq("product_id", item['product_id']).execute()
+
+        send_confirmation_email(st.session_state.user['email'], order_id)
+        return order_id
+    except Exception as e:
+        st.error(f"Error creating order: {e}")
+        return None
 
 # --- UI Functions ---
 
@@ -179,7 +213,7 @@ def send_confirmation_email(email, order_id):
         msg = EmailMessage()
         msg.set_content(f"Thank you for your order #{order_id} from Perfectfit Fashion Store!")
         msg["Subject"] = "Order Confirmation"
-        msg["From"] = "no-reply@tommiesfashion.com"
+        msg["From"] = "ezekiel4true@gmail.com"
         msg["To"] = email
 
         with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
@@ -190,12 +224,18 @@ def send_confirmation_email(email, order_id):
         st.warning(f"Email failed to send: {e}")
         
 # --- Flutterwave Integration ---
-def initiate_payment(amount, email):
+def initiate_payment(amount, email, cart, user_id): # Add cart and user_id as arguments
     # Retrieve Flutterwave public key from Streamlit secrets
     try:
         flutterwave_public_key = st.secrets["flutterwave"]["public_key"]
     except KeyError:
         st.error("Flutterwave public key not found in secrets.toml")
+        return
+
+    # Create the order in your database first
+    order_id = create_order(user_id, cart)
+    if not order_id:
+        st.error("Failed to create order. Please try again.")
         return
 
     payment_url = "https://api.flutterwave.com/v3/payments"
@@ -205,43 +245,48 @@ def initiate_payment(amount, email):
     }
 
     # Generate a unique transaction reference
-    tx_ref = f"PERFECTFIT_TX_{uuid.uuid4().hex}"
+    tx_ref = f"TOMMIES_TX_{uuid.uuid4().hex}"
 
     payload = {
         "tx_ref": tx_ref,
         "amount": amount,
         "currency": "NGN",
-        # Important: For deployment, replace localhost with your deployed Streamlit app URL
-        # You'll need to figure out how to handle the callback to verify payment on Streamlit Cloud
-        "redirect_url": "http://localhost:8501", # Redirect back to the app's base URL
+        "redirect_url": f"http://localhost:8501?tx_ref={tx_ref}&order_id={order_id}", # Pass order_id and tx_ref
         "customer": {
             "email": email,
-            "name": st.session_state.user.get('full_name', 'Customer') # Get customer name if available
+            "name": st.session_state.user.get('full_name', 'Customer')
         },
         "customizations": {
             "title": "Perfectfit Fashion Store",
-            "description": "Payment for fashion items"
+            "description": f"Payment for Order #{order_id}"
         }
     }
 
     try:
         response = requests.post(payment_url, json=payload, headers=headers)
-        response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
+        response.raise_for_status()
         response_json = response.json()
 
         if response_json['status'] == 'success':
             payment_link = response_json['data']['link']
             st.success("Payment initiated successfully! Click the link below to complete your payment.")
             st.markdown(f"**[Proceed to Payment]({payment_link})**")
-            # Optionally, save tx_ref to session_state to check later
             st.session_state.current_tx_ref = tx_ref
+            st.session_state.current_order_id = order_id # Store the order ID for later verification
         else:
             st.error(f"Failed to initiate payment: {response_json.get('message', 'Unknown error')}")
-            # print(response_json) # For debugging
+            # If payment initiation fails, you might want to revert the order status or delete it
+            supabase.table("orders").delete().eq("order_id", order_id).execute()
+            st.error("Order creation rolled back due to payment initiation failure.")
+
     except requests.exceptions.RequestException as e:
         st.error(f"Network or API error initiating payment: {e}")
+        supabase.table("orders").delete().eq("order_id", order_id).execute()
+        st.error("Order creation rolled back due to network/API error.")
     except Exception as e:
         st.error(f"An unexpected error occurred during payment initiation: {e}")
+        supabase.table("orders").delete().eq("order_id", order_id).execute()
+        st.error("Order creation rolled back due to an unexpected error.")
 
 # --- Initialize session state variables ---
 default_state = {
@@ -264,7 +309,7 @@ if st.session_state.show_login:
 elif st.session_state.show_register:
     registration_form()  # Call your registration form function here
 else:
-    # ✅ Show "View Cart" only to non-admin logged-in users
+    # Show "View Cart" only to non-admin logged-in users
     if (
         st.session_state.get("logged_in") and
         "user" in st.session_state and
@@ -272,6 +317,17 @@ else:
     ):
         if st.button("View Cart"):
             st.session_state.viewing_cart = True
+            
+#------------------------ Main Page --------------------------
+st.title("👗 Perfectfit Fashion Store")
+
+import streamlit as st
+
+# Assume 'supabase' client is initialized globally or passed in
+# from supabase import create_client, Client
+# url = st.secrets["supabase_url"]
+# key = st.secrets["supabase_key"]
+# supabase: Client = create_client(url, key)
 
 def fetch_products():
     """
@@ -316,25 +372,48 @@ def streamlit_image_gallery(images):
             # If more than 4 images, display remaining in a new row or just show them vertically
             st.image(image_url, use_container_width=True)
 
+
 def product_list():
     st.subheader("🛍️ Available Products")
 
+    # Initialize session state variables
     if 'cart' not in st.session_state:
         st.session_state.cart = []
+    if 'liked_products' not in st.session_state:
+        st.session_state.liked_products = set()
+    if 'trigger_rerun' not in st.session_state:
+        st.session_state.trigger_rerun = False
+    # Ensure supabase client is available in session state if not global
+    if 'supabase' not in st.session_state:
+        st.error("Supabase client not initialized in session state. Please set `st.session_state.supabase`.")
+        return
 
+
+    # Safe rerun handling
+    # Use st.rerun() for Streamlit 1.28.0 and above.
+    # If using older versions, uncomment st.experimental_rerun()
+    if st.session_state.trigger_rerun:
+        st.session_state.trigger_rerun = False
+        st.rerun()
+        # st.experimental_rerun() # Use this for older Streamlit versions
+        st.stop() # Stops execution after rerun to prevent further rendering artifacts
+
+    # Fetch products
     products = fetch_products()
-
     if not products:
         st.info("No products available at the moment.")
         return
 
-    categories = sorted({p.get('category') for p in products if p.get('category')})
-    sizes = sorted({p.get('size') for p in products if p.get('size')})
+    # Filters
+    categories = sorted(list({p.get('category') for p in products if p.get('category')}))
+    sizes = sorted(list({p.get('size') for p in products if p.get('size')}))
 
-    category_filter = st.selectbox("Category", ["All"] + categories)
-    size_filter = st.selectbox("Size", ["All"] + sizes)
-    price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000))
+    # Add a unique key to selectbox if used multiple times in the same app
+    category_filter = st.selectbox("Category", ["All"] + categories, key="category_filter_sb")
+    size_filter = st.selectbox("Size", ["All"] + sizes, key="size_filter_sb")
+    price_range = st.slider("Price Range (₦)", 0, 100000, (0, 100000), key="price_range_slider")
 
+    # Apply filters
     filtered = [
         p for p in products
         if (category_filter == "All" or p.get('category') == category_filter) and
@@ -347,95 +426,157 @@ def product_list():
         return
 
     cols_per_row = 3
-    cols = st.columns(cols_per_row)
+    # Use st.columns directly in the loop or pre-define them
+    # For dynamic columns, it's often simpler to create them inside the loop if
+    # the number of items is manageable, but here, pre-defining is fine.
+    # We will create columns per row dynamically inside the loop for better flexibility
+    # with the grid.
 
     for i, p in enumerate(filtered):
+        # Create columns dynamically for each row
+        if i % cols_per_row == 0:
+            cols = st.columns(cols_per_row)
+
         with cols[i % cols_per_row]:
-            st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
-            st.markdown(f"**{p.get('product_name', 'N/A')}**")
-            price = float(p.get('price', 0) or 0)
-            st.markdown(f"₦{price:,.2f}")
-            stock = int(p.get('stock_quantity', 0) or 0)
-            st.markdown(f"Stock: {stock} | Size: {p.get('size', 'N/A')} | Category: {p.get('category', 'N/A')}")
+            product_id = p.get('product_id') # Use .get() for safety
+            if not product_id: # Skip if product_id is missing
+                continue
 
-            if stock > 0:
-                qty = st.number_input(
-                    "Qty", min_value=1, max_value=stock, key=f"qty_{p['product_id']}", value=1
-                )
-                if st.button("Add to Cart", key=f"cart_{p['product_id']}"):
-                    if not st.session_state.get('logged_in', False):
-                        st.warning("Please log in or sign up to add items to your cart.")
-                    else:
-                        existing = next((item for item in st.session_state.cart if item['product_id'] == p['product_id']), None)
-                        if existing:
-                            existing['qty'] += qty
-                            st.success(f"Updated quantity of {p['product_name']} in cart to {existing['qty']}.")
+            liked = product_id in st.session_state.liked_products
+            heart_label = "❤️" if liked else "🤍"
+
+            # Use st.container to group elements for better structure
+            with st.container(border=True): # Adds a visual border around each product
+                # Modal trigger (Using image as the primary click target)
+                # Display image directly, and make it clickable to open modal
+                st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
+
+                # Use st.button with no label, or custom CSS for a clickable image if desired
+                # For simplicity, we'll keep the empty button but place it below the image
+                if st.button("View Details", key=f"img_btn_{product_id}", use_container_width=True):
+                    with st.expander(f"🛍️ {p.get('product_name', 'Product')} Details"):
+#                    with st.modal(f"🛍️ {p.get('product_name', 'Product')} Details"):
+                        # Display image gallery
+                        images = p.get('image_gallery', [])
+                        if images:
+                            streamlit_image_gallery(images=images)
                         else:
-                            st.session_state.cart.append({**p, 'qty': qty})
-                            st.success(f"Added {qty} x {p['product_name']} to cart.")
-            else:
-                st.info("Out of Stock")
+                            st.image(p.get('image_url', 'https://via.placeholder.com/600'), use_container_width=True)
 
+
+                        st.markdown(f"### {p.get('product_name', 'N/A')}")
+                        st.markdown(f"**Price:** ₦{float(p.get('price', 0) or 0):,.2f}")
+                        st.markdown(f"**Category:** {p.get('category', 'N/A')}")
+                        st.markdown(f"**Size:** {p.get('size', 'N/A')}")
+                        st.markdown(f"**Stock:** {int(p.get('stock_quantity', 0) or 0)}")
+                        st.markdown("#### Description:")
+                        st.write(p.get('description', 'No description provided.'))
+
+                        # Like toggle inside modal
+                        if st.button("Add to Wishlist", key=f"modal_like_{product_id}"):
+                            if liked:
+                                st.session_state.liked_products.remove(product_id)
+                                st.toast(f"Removed {p.get('product_name')} from wishlist!", icon="💔")
+                            else:
+                                st.session_state.liked_products.add(product_id)
+                                st.toast(f"Added {p.get('product_name')} to wishlist!", icon="❤️")
+                            st.session_state.trigger_rerun = True
+                            st.stop() # Rerun to update the heart icon on the main page
+
+                        # Add to cart logic
+                        stock = int(p.get('stock_quantity', 0) or 0)
+                        if stock > 0:
+                            qty = st.number_input(
+                                "Quantity", min_value=1, max_value=stock,
+                                key=f"qty_modal_{product_id}", value=1
+                            )
+                            if st.button("🛒 Add to Cart", key=f"modal_cart_{product_id}", use_container_width=True):
+                                if not st.session_state.get('logged_in', False):
+                                    st.warning("Please log in or sign up to add items to your cart.")
+                                else:
+                                    existing = next(
+                                        (item for item in st.session_state.cart if item['product_id'] == product_id), None)
+                                    if existing:
+                                        existing['qty'] += qty
+                                        st.success(f"Updated quantity of {p['product_name']} in cart to {existing['qty']}.")
+                                    else:
+                                        st.session_state.cart.append({**p, 'qty': qty})
+                                        st.success(f"Added {qty} x {p['product_name']} to cart.")
+                                    # st.session_state.trigger_rerun = True # No need to rerun for cart updates typically
+                                    # st.stop() # Don't stop unless you want the modal to close and app reruns immediately
+                        else:
+                            st.info("Out of Stock")
+
+                st.markdown(f"**{p.get('product_name', 'N/A')}**")
+                st.markdown(f"₦{float(p.get('price', 0) or 0):,.2f}")
+
+                # Like toggle outside modal
+                # Consider making this a smaller button or icon to save space
+                if st.button(heart_label, key=f"like_{product_id}"):
+                    if liked:
+                        st.session_state.liked_products.remove(product_id)
+                        st.toast(f"Removed {p.get('product_name')} from wishlist!", icon="💔")
+                    else:
+                        st.session_state.liked_products.add(product_id)
+                        st.toast(f"Added {p.get('product_name')} to wishlist!", icon="❤️")
+                    st.session_state.trigger_rerun = True
+                    st.stop() # Rerun to update the heart icon
+                    
 def view_cart():
     st.subheader("🛒 Your Cart")
     if not st.session_state.cart:
         st.info("Your cart is empty.")
         if st.button("🔙 Back to Products"):
             st.session_state.viewing_cart = False
-            st.rerun() # Rerun to show product list
+            st.rerun()
         return
 
     total = 0
     remove_indices = []
-    
-    # Display cart items and allow removal
+
+    # Show cart items
     for i, item in enumerate(st.session_state.cart):
         col1, col2, col3 = st.columns([0.6, 0.2, 0.2])
         with col1:
             st.write(f"**{item.get('product_name', 'N/A')}**")
             st.write(f"{item['qty']} x ₦{item['price']:,.2f} each")
         with col2:
-            # Allow adjusting quantity directly in cart
-            new_qty = st.number_input("Change Qty", min_value=1, max_value=item.get('stock_quantity', item['qty']), value=item['qty'], key=f"cart_qty_{item['product_id']}")
+            new_qty = st.number_input(
+                f"Qty for {item['product_name']}",
+                min_value=1,
+                max_value=item.get('stock_quantity', item['qty']),
+                value=item['qty'],
+                key=f"cart_qty_{item['product_id']}"
+            )
             if new_qty != item['qty']:
                 item['qty'] = new_qty
-                st.rerun() # Rerun to update total and display immediately
+                st.rerun()
         with col3:
             if st.button("Remove", key=f"remove_{item['product_id']}"):
                 remove_indices.append(i)
 
-        total += item['qty'] * item['price']
+        total += item.get('qty', 1) * item.get('price', 0)
 
-    # Process removals
     for i in sorted(remove_indices, reverse=True):
         st.session_state.cart.pop(i)
-        st.rerun() # Rerun to reflect immediate removal
+        st.rerun()
 
-    st.markdown("---") # Separator
-    st.markdown(f"**Total: ₦{total:,.2f}**")
-    st.markdown("---") # Separator
+    st.markdown("---")
+    st.markdown(f"### 🧾 Total: ₦{total:,.2f}")
+    st.markdown("---")
 
-    # Checkout Options
     if st.session_state.logged_in:
-        if st.button("Proceed to Flutterwave Payment"):
-            if not st.session_state.cart:
-                st.warning("Your cart is empty!")
-                return
-            initiate_payment(total, st.session_state.user['email'])
-        
+        if total > 0:
+            if st.button("Proceed to Flutterwave Payment"):
+                initiate_payment(total, st.session_state.user['email'], st.session_state.cart, st.session_state.user['user_id']) # Pass cart and user_id
+        else:
+            st.warning("Cannot proceed with an empty cart.")
     else:
         st.warning("Please log in or sign up to proceed with payment.")
-
-    st.markdown("---") # Separator
+        
     if st.button("🔙 Back to Products"):
         st.session_state.viewing_cart = False
-        st.rerun() # Rerun to switch view
-
-if st.session_state.viewing_cart:
-    view_cart()
-    # "Back to Products" button is now inside view_cart for consistency
-else:
-    product_list()
+        st.rerun()
 
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
@@ -542,28 +683,20 @@ def admin_panel():
             products = supabase.table("products").select("*").execute().data
             order_items = supabase.table("order_items").select("*").execute().data
 
-#            df_orders = pd.DataFrame(orders)
-#            df_users = pd.DataFrame(users)
-#            df_products = pd.DataFrame(products)
-#            df_order_items = pd.DataFrame(order_items)
+            df_orders = pd.DataFrame(orders)
+            df_users = pd.DataFrame(users)
+            df_products = pd.DataFrame(products)
+            df_order_items = pd.DataFrame(order_items)
 
-            total_customers = len(users)
-            total_orders = len(orders)
-            total_revenue = sum(order["total_amount"] for order in orders)
-            total_products = len(products)
-                
             total_customers = len(df_users)
             total_sales = len(df_orders)
             total_revenue = df_orders["total_amount"].sum()
+            total_products = len(df_products) # Using df_products for consistency
 
             st.metric("👥 Total Customers", total_customers)
             st.metric("📦 Total Sales", total_sales)
             st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
             st.metric("🧾 Products Listed", total_products)
-
-            st.metric("👥 Total Customers", total_customers)
-            st.metric("🛒 Total Sales", total_sales)
-            st.metric("💰 Total Revenue", f"₦{total_revenue:,.2f}")
 
             # Monthly sales trend
             df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
@@ -572,47 +705,16 @@ def admin_panel():
             st.line_chart(monthly_sales.set_index('created_at'))
 
             # Top 5 Products
-            order_items = supabase.table("order_items").select("*").execute().data
-            if order_items:
-                df_items = pd.DataFrame(order_items)
-                top_products = df_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
+            if not df_order_items.empty:
+                top_products = df_order_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
                 top_products = top_products.merge(df_products[["product_id", "product_name"]], on="product_id")
                 st.bar_chart(top_products.set_index("product_name")["quantity"])
+            else:
+                st.info("No order items data to display top products.")
         except Exception as e:
             st.error(f"Error generating insights: {e}")
 
-def create_order(user_id, cart):
-    total = sum(item['price'] * item['qty'] for item in cart)
-    try:
-        order_result = supabase.table("orders").insert({
-            "user_id": user_id,
-            "total_amount": total,
-            "status": "pending"
-        }).execute()
-
-        if not order_result.data:
-            raise Exception("Failed to create order in database.")
-
-        order_id = order_result.data[0]['order_id']
-
-        for item in cart:
-            supabase.table("order_items").insert({
-                "order_id": order_id,
-                "product_id": item['product_id'],
-                "quantity": item['qty'],
-                "price_at_purchase": item['price']
-            }).execute()
-
-            supabase.table("products").update({
-                "stock_quantity": item['stock_quantity'] - item['qty']
-            }).eq("product_id", item['product_id']).execute()
-
-        send_confirmation_email(st.session_state.user['email'], order_id)
-        return order_id
-    except Exception as e:
-        st.error(f"Error creating order: {e}")
-        return None
-
+                      
 #----------------------- Main Logic --------------------------
 def main():
     if "show_register" not in st.session_state:
@@ -639,7 +741,7 @@ def main():
         view_cart()
         return
 
-    # ✅ Always show the product list to non-admin users
+    # Always show the product list to non-admin users
     if st.session_state.get("logged_in") and st.session_state.user.get("email") == "tommiesfashion@gmail.com":
         admin_panel()
     else:
@@ -648,9 +750,8 @@ def main():
 if __name__ == "__main__":
     main()
 
-
 # --- SIDEBAR CONTENT ---
-def main():
+def sidebar_content():
     # Sidebar Branding
     st.sidebar.title("About Perfectfit 👗🧵")
 
@@ -665,21 +766,21 @@ def main():
         "- [💬 Chat with Sales Team](https://wa.me/2348062529172)"
     )
 
-if __name__ == "__main__":
-    main()
-
-# --- APP DEVELOPER INFO ---
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 👨‍💻 App Developer")
-st.sidebar.markdown(
-    """
-**Ezekiel BALOGUN**  
-_Data Scientist / Data Analyst_  
-_AI / Machine Learning Engineer_  
-_Automation / Business Intelligence Expert_  
+    # --- APP DEVELOPER INFO ---
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 👨‍💻 App Developer")
+    st.sidebar.markdown(
+        """
+**Ezekiel BALOGUN** * _Data Scientist / Data Analyst_  
+* _AI / Machine Learning Engineer_  
+* _Automation / Business Intelligence Expert_  
 
 📧 [ezekiel4true@yahoo.com](mailto:ezekiel4true@yahoo.com)  
 🔗 [LinkedIn Profile](https://www.linkedin.com/in/ezekiel-balogun-39a14438)  
 📞 +2348062529172
 """
-)
+    )
+
+if __name__ == "__main__":
+    main()
+    sidebar_content()
