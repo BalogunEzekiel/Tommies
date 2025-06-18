@@ -726,7 +726,7 @@ def admin_panel():
                 st.markdown(f"<p style='color:blue; font-size:28px;'> {total_products}</p>", unsafe_allow_html=True)
 
             # Thick line
-            st.markdown("<hr style='border: 3px solid #000;'>", unsafe_allow_html=True)
+            st.markdown("<hr style='border: 2px solid #000;'>", unsafe_allow_html=True)
             # Sales Trend Over Time
             st.markdown("#### 📈 Sales Trend Over Time")
             st.write("Track your monthly sales performance with this interactive chart.")
@@ -738,9 +738,9 @@ def admin_panel():
                 st.line_chart(monthly_sales.set_index('created_at'))
             else:
                 st.info("No order data available for monthly sales trend.")
-                # Thick line
-                st.markdown("<hr style='border: 3px solid #000;'>", unsafe_allow_html=True)
-                
+            
+            # Thick line
+            st.markdown("<hr style='border: 2px solid #000;'>", unsafe_allow_html=True)
             # Top 5 Best-Selling Products
             st.markdown("#### 🏆 Top 5 Best-Selling Products")
             st.write("Discover the most popular products based on total units sold.")
@@ -754,8 +754,9 @@ def admin_panel():
             
         except Exception as e:
             st.error(f"Error generating insights: {e}")
-            # Thick line
-            st.markdown("<hr style='border: 3px solid #000;'>", unsafe_allow_html=True)
+            
+        # Thick line
+        st.markdown("<hr style='border: 2px solid #000;'>", unsafe_allow_html=True)
 
                       
 #----------------------- Main Logic --------------------------
