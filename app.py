@@ -684,6 +684,21 @@ def admin_panel():
             total_revenue = df_orders["total_amount"].sum() if not df_orders.empty and "total_amount" in df_orders else 0
             total_products = len(df_products) if not df_products.empty else 0
 
+            # Key Business Metrics
+            st.markdown("### 📊 Key Business Metrics")
+            st.write("Overview of customer engagement, sales, revenue, and product listings.")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("#### 👥 Total Customers")
+                st.write(f"{total_customers}")
+                st.markdown("#### 💰 Total Revenue")
+                st.write(f"₦{total_revenue:,.2f}")
+            with col2:
+                st.markdown("#### 🛒 Total Sales")
+                st.write(f"{total_sales}")
+                st.markdown("#### 🧾 Products Listed")
+                st.write(f"{total_products}")
+            
             # Display metrics (removed duplicates)
             st.metric("###👥 Total Customers", total_customers)
             st.metric("###🛒 Total Sales", total_sales)
