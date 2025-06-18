@@ -381,6 +381,8 @@ def product_list():
         st.session_state.liked_products = set()
     if 'trigger_rerun' not in st.session_state:
         st.session_state.trigger_rerun = False
+    if 'expander_states' not in st.session_state:
+        st.session_state.expander_states = {}  # Track expander open/closed per product_id
 
     if 'supabase' not in st.session_state:
         st.error("Supabase client not initialized. Please set `st.session_state.supabase`.")
@@ -427,7 +429,7 @@ def product_list():
             else:
                 st.session_state.liked_products.add(product_id)
                 st.toast(f"Added {product_name} to wishlist!", icon="❤️")
-            st.session_state.trigger_rerun = True
+            st.rerun()
         except Exception as e:
             st.error(f"Failed to update wishlist: {str(e)}")
 
@@ -447,57 +449,75 @@ def product_list():
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
 
                 if st.button("View Details", key=f"img_btn_{product_id}", use_container_width=True):
-                    with st.expander(f"🛍️ {p.get('product_name', 'Product')} Details"):
-                        images = p.get('image_gallery', [])
-                        if images:
-                            streamlit_image_gallery(images)
-                        else:
-                            st.image(p.get('image_url', 'https://via.placeholder.com/600'), use_container_width=True)
+                    # Toggle expander state
+                    st.session_state.expander_states[product_id] = True
 
-                        st.markdown(f"### {p.get('product_name', 'N/A')}")
-                        st.markdown(f"**Price:** ₦{float(p.get('price', 0)):,.2f}")
-                        st.markdown(f"**Category:** {p.get('category', 'N/A')}")
-                        st.markdown(f"**Size:** {p.get('size', 'N/A')}")
-                        st.markdown(f"**Stock:** {int(p.get('stock_quantity', 0))}")
-                        st.markdown("#### Description:")
-                        st.write(p.get('description', 'No description provided.'))
+                # Check expander state
+                is_expanded = st.session_state.expander_states.get(product_id, False)
+                with st.expander(f"🛍️ {p.get('product_name', 'Product')} Details", expanded=is_expanded):
+                    images = p.get('image_gallery', [])
+                    if images:
+                        streamlit_image_gallery(images)
+                    else:
+                        st.image(p.get('image_url', 'https://via.placeholder.com/600'), use_container_width=True)
 
-                        if st.button(heart_label + " Add to Wishlist", key=f"modal_like_{product_id}"):
-                            toggle_wishlist(product_id, p.get('product_name'), liked)
-                            st.rerun()
+                    st.markdown(f"### {p.get('product_name', 'N/A')}")
+                    st.markdown(f"**Price:** ₦{float(p.get('price', 0)):,.2f}")
+                    st.markdown(f"**Category:** {p.get('category', 'N/A')}")
+                    st.markdown(f"**Size:** {p.get('size', 'N/A')}")
+                    st.markdown(f"**Stock:** {int(p.get('stock_quantity', 0))}")
+                    st.markdown("#### Description:")
+                    st.write(p.get('description', 'No description provided.'))
 
-                        stock = int(p.get('stock_quantity', 0))
-                        if stock > 0:
-                            qty = st.number_input(
-                                "Quantity", min_value=1, max_value=stock,
-                                key=f"qty_modal_{product_id}", value=1
-                            )
-                            if st.button("🛒 Add to Cart", key=f"modal_cart_{product_id}", use_container_width=True):
-                                try:
-                                    if not st.session_state.get('logged_in', False):
-                                        st.warning("Please log in or sign up to add items to your cart.")
-                                    else:
-                                        existing = next(
-                                            (item for item in st.session_state.cart if item['product_id'] == product_id), None)
-                                        if existing:
-                                            existing['qty'] += qty
-                                            st.success(f"Updated {p['product_name']} to {existing['qty']} in cart.")
+                    if st.button(heart_label + " Add to Wishlist", key=f"modal_like_{product_id}"):
+                        toggle_wishlist(product_id, p.get('product_name'), liked)
+
+                    stock = int(p.get('stock_quantity', 0))
+                    if stock > 0:
+                        # Store quantity in session state to avoid reruns on change
+                        qty_key = f"qty_modal_{product_id}"
+                        if qty_key not in st.session_state:
+                            st.session_state[qty_key] = 1
+                        st.number_input(
+                            "Quantity",
+                            min_value=1,
+                            max_value=stock,
+                            key=qty_key,
+                            value=st.session_state[qty_key],
+                            on_change=lambda: None  # Disable auto-rerun on change
+                        )
+                        if st.button("🛒 Add to Cart", key=f"modal_cart_{product_id}", use_container_width=True):
+                            try:
+                                if not st.session_state.get('logged_in', False):
+                                    st.warning("Please log in or sign up to add items to your cart.")
+                                else:
+                                    qty = st.session_state[qty_key]
+                                    existing = next(
+                                        (item for item in st.session_state.cart if item['product_id'] == product_id),
+                                        None
+                                    )
+                                    if existing:
+                                        new_qty = min(existing['qty'] + qty, stock)
+                                        if new_qty == existing['qty']:
+                                            st.warning(f"Cannot add more {p['product_name']}; stock limit reached.")
                                         else:
-                                            st.session_state.cart.append({**p, 'qty': qty})
-                                            st.success(f"Added {qty} x {p['product_name']} to cart.")
-                                        st.session_state.trigger_rerun = True
-                                        st.rerun()
-                                except Exception as e:
-                                    st.error(f"Failed to add to cart: {str(e)}")
-                        else:
-                            st.info("Out of Stock")
+                                            existing['qty'] = new_qty
+                                            st.success(f"Updated {p['product_name']} to {existing['qty']} in cart.")
+                                    else:
+                                        st.session_state.cart.append({**p, 'qty': qty})
+                                        st.success(f"Added {qty} x {p['product_name']} to cart.")
+                                    st.session_state.trigger_rerun = True
+                                    st.rerun()
+                            except Exception as e:
+                                st.error(f"Failed to add to cart: {str(e)}")
+                    else:
+                        st.info("Out of Stock")
 
                 st.markdown(f"**{p.get('product_name', 'N/A')}**")
                 st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
 
                 if st.button(heart_label, key=f"like_{product_id}"):
                     toggle_wishlist(product_id, p.get('product_name'), liked)
-                    st.rerun()
 
 def view_cart():
     st.subheader("🛒 Your Cart")
@@ -512,29 +532,34 @@ def view_cart():
     remove_indices = []
 
     for i, item in enumerate(st.session_state.cart):
-        col1, col2, col3 = st.columns([0.6, 0.2, 0.2])
-        with col1:
-            st.write(f"**{item.get('product_name', 'N/A')}**")
-            st.write(f"{item['qty']} x ₦{float(item.get('price', 0)):,.2f} each")
-        with col2:
-            new_qty = st.number_input(
-                f"Qty for {item['product_name']}",
-                min_value=1,
-                max_value=int(item.get('stock_quantity', item['qty'])),
-                value=item['qty'],
-                key=f"cart_qty_{item['product_id']}"
-            )
-            if new_qty != item['qty']:
-                item['qty'] = new_qty
-                st.rerun()
-        with col3:
-            if st.button("Remove", key=f"remove_{item['product_id']}"):
-                remove_indices.append(i)
+        try:
+            col1, col2, col3 = st.columns([0.6, 0.2, 0.2])
+            with col1:
+                st.write(f"**{item.get('product_name', 'N/A')}**")
+                st.write(f"{item['qty']} x ₦{float(item.get('price', 0)):,.2f} each")
+            with col2:
+                new_qty = st.number_input(
+                    f"Qty for {item['product_name']}",
+                    min_value=1,
+                    max_value=int(item.get('stock_quantity', item['qty'])),
+                    value=item['qty'],
+                    key=f"cart_qty_{item['product_id']}"
+                )
+                if new_qty != item['qty']:
+                    item['qty'] = new_qty
+                    st.session_state.trigger_rerun = True
+                    st.rerun()
+            with col3:
+                if st.button("Remove", key=f"remove_{item['product_id']}"):
+                    remove_indices.append(i)
 
-        total += item.get('qty', 1) * float(item.get('price', 0))
+            total += item.get('qty', 1) * float(item.get('price', 0))
+        except Exception as e:
+            st.error(f"Error displaying cart item: {str(e)}")
 
     for i in sorted(remove_indices, reverse=True):
         st.session_state.cart.pop(i)
+        st.session_state.trigger_rerun = True
         st.rerun()
 
     st.markdown("---")
@@ -546,6 +571,7 @@ def view_cart():
             if st.button("Proceed to Flutterwave Payment"):
                 try:
                     initiate_payment(total, st.session_state.user['email'], st.session_state.cart, st.session_state.user['user_id'])
+                    st.success("Payment initiated successfully!")
                 except Exception as e:
                     st.error(f"Payment initiation failed: {str(e)}")
         else:
@@ -555,8 +581,9 @@ def view_cart():
 
     if st.button("🔙 Back to Products"):
         st.session_state.viewing_cart = False
+        st.session_state.trigger_rerun = True
         st.rerun()
-        
+                
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
 
