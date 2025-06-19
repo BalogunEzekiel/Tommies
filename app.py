@@ -948,12 +948,15 @@ st.sidebar.markdown(
 )
 
 # --- SUPPORTERS & PARTNERS ---
-st.markdown("---")
-    st.markdown("### 🤝 Supporters & Partners", unsafe_allow_html=True)
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🤝 Supporters & Partners")
 
-    logos = [
-        "assets/Partner_FMCIDE.png",
-        "assets/Partner_DSN.png",
-        "assets/Partner_Google.png",
-        "assets/Partner_Microsoft.png"
-    ]
+logos = [
+    "assets/Partner_FMCIDE.png",
+    "assets/Partner_DSN.png",
+    "assets/Partner_Google.png",
+    "assets/Partner_Microsoft.png"
+]
+
+for logo in logos:
+    st.sidebar.image(logo, use_column_width=True)
