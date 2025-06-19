@@ -216,8 +216,8 @@ def app_footer():
         logos = [
             "assets/Partner_3MTT.png",
             "assets/Partner_DSN.png",
-            "assets/Partner_Google.png",
-            "assets/Partner_Microsoft.png"
+            "assets/Partner_Google2.png",
+            "assets/Partner_Microsoft2.png"
         ]
     
         # Display logos in rows of 4
