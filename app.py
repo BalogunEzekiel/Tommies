@@ -323,14 +323,6 @@ else:
 #------------------------ Main Page --------------------------
 st.title("👗 Perfectfit Fashion Store")
 
-import streamlit as st
-
-# Assume 'supabase' client is initialized globally or passed in
-# from supabase import create_client, Client
-# url = st.secrets["supabase_url"]
-# key = st.secrets["supabase_key"]
-# supabase: Client = create_client(url, key)
-
 def fetch_products():
     """
     Fetches product data from the Supabase 'products' table.
@@ -444,15 +436,11 @@ def product_list():
             if not product_id:
                 continue
 
-            liked = product_id in st.session_state.liked_products
-            heart_label = "❤️" if liked else "🤍"
+            #liked = product_id in st.session_state.liked_products
+            #heart_label = "❤️" if liked else "🤍"
 
             with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
-
-#                if st.button("View Details", key=f"img_btn_{product_id}", use_container_width=True):
-#                    # Toggle expander state
-#                    st.session_state.expander_states[product_id] = True
 
                 # Check expander state
                 st.markdown(f"**{p.get('product_name', 'N/A')}**")
@@ -517,9 +505,6 @@ def product_list():
                                 st.error(f"Failed to add to cart: {str(e)}")
                     else:
                         st.info("Out of Stock")
-
-                #st.markdown(f"**{p.get('product_name', 'N/A')}**")
-                #st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
 
                 if st.button(heart_label, key=f"like_{product_id}"):
                     toggle_wishlist(product_id, p.get('product_name'), liked)
