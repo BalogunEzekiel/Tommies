@@ -207,7 +207,27 @@ def create_order(user_id, cart):
         st.error(f"Error creating order: {e}")
         return None
 
-# --- UI Functions ---
+# --- APP FOOTER CONTENT ---
+def app_footer():
+    st.markdown("---")
+    st.markdown("### 🤝 Supporters & Partners", unsafe_allow_html=True)
+
+    logos = [
+        "assets/Partner_FMCIDE.png",
+        "assets/Partner_DSN.png",
+        "assets/Partner_Google.png",
+        "assets/Partner_Microsoft.png"
+    ]
+
+    # Display logos in columns
+    cols = st.columns(len(logos))
+    for i, logo_path in enumerate(logos):
+        with cols[i]:
+            st.image(logo_path, width=80) # Adjust width as needed
+
+if __name__ == "__main__":
+    main()
+    #sidebar_content() # Ensure sidebar content is also called
 
 # --- Email Confirmation ---
 def send_confirmation_email(email, order_id):
@@ -909,13 +929,16 @@ def main():
     else:
         product_list()
 
+    # Call the footer function at the very end of main()
+    app_footer()
+
 if __name__ == "__main__":
     main()
 
 # --- SIDEBAR CONTENT ---
 def main():
     # Sidebar Branding
-    st.sidebar.title("About Perfectfit 👗🧵")
+    st.sidebar.title("About Perfectfit 👗")
 
     st.sidebar.info(
         "***.....fast, reliable & elegant!***\n\n"
@@ -924,8 +947,8 @@ def main():
 
     st.sidebar.markdown("**📞 Contact Us:**")
     st.sidebar.markdown(
-        "- [💬 Chat with Customer Support](https://wa.me/2348136894472)\n"
-        "- [💬 Chat with Sales Team](https://wa.me/2348062529172)"
+        "- [💬 Chat with Sales Team](https://wa.me/2348136894472)\n"
+        "- [💬 Chat with Customer Support](https://wa.me/2348062529172)"
     )
 
 if __name__ == "__main__":
@@ -946,38 +969,3 @@ st.sidebar.markdown(
 📞 +2348062529172
 """
 )
-
-# --- SUPPORTERS & PARTNERS ---
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🤝 Supporters & Partners")
-
-html = """
-<table>
-<tr>
-    <td style="padding: 5px;">
-        <a href="https://www.datasciencenigeria.org" target="_blank">
-            <img src="assets/Partner_DSN.png" width="90">
-        </a>
-    </td>
-    <td style="padding: 5px;">
-        <a href="https://www.google.com" target="_blank">
-            <img src="assets/Partner_Google.png" width="90">
-        </a>
-    </td>
-</tr>
-<tr>
-    <td style="padding: 5px;">
-        <a href="https://www.microsoft.com" target="_blank">
-            <img src="assets/Partner_Microsoft.png" width="90">
-        </a>
-    </td>
-    <td style="padding: 5px;">
-        <a href="https://fmcide.org" target="_blank">
-            <img src="assets/Partner_FMCIDE.png" width="90">
-        </a>
-    </td>
-</tr>
-</table>
-"""
-
-st.sidebar.markdown(html, unsafe_allow_html=True)
