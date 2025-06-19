@@ -181,7 +181,7 @@ def create_order(user_id, cart):
         order_result = supabase.table("orders").insert({
             "user_id": user_id,
             "total_amount": total,
-            "status": "pending"
+            "status": "Pending"
         }).execute()
 
         if not order_result.data:
