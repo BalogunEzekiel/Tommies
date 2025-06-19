@@ -643,7 +643,8 @@ def admin_panel():
             if not orders:
                 st.info("No orders found.")
             else:
-                active_orders = [order for order in orders if order.get("status") != "Delivered"]
+                active_orders = [order for order in orders if order.get("status", "").lower() != "delivered"]
+                #active_orders = [order for order in orders if order.get("status") != "Delivered"]
 
                 for order in active_orders:
                     with st.expander(f"🧾 Order #{order['order_id']} | ₦{order['total_amount']:,.2f} | {order.get('status', 'N/A')}"):
@@ -699,7 +700,7 @@ def admin_panel():
         try:
             delivered_orders = supabase.table("orders").select(
                 "*, users!inner(full_name, email), order_items(*)"
-            ).eq("status", "Delivered").order("created_at", desc=True).execute().data
+            ).eq("status", "delivered").order("created_at", desc=True).execute().data
 
             if not delivered_orders:
                 st.info("No delivered orders yet.")
