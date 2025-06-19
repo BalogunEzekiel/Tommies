@@ -951,12 +951,31 @@ st.sidebar.markdown(
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🤝 Supporters & Partners")
 
-logos = [
-    "assets/Partner_FMCIDE.png",
-    "assets/Partner_DSN.png",
-    "assets/Partner_Google.png",
-    "assets/Partner_Microsoft.png"
+# Define partner logos and their corresponding URLs
+partners = [
+    {"logo": "assets/Partner_FMCIDE.png", "url": "https://fmcide.org"},
+    {"logo": "assets/Partner_DSN.png", "url": "https://www.datasciencenigeria.org"},
+    {"logo": "assets/Partner_Google.png", "url": "https://www.google.com"},
+    {"logo": "assets/Partner_Microsoft.png", "url": "https://www.microsoft.com"},
 ]
 
-for logo in logos:
-    st.sidebar.image(logo, use_column_width=True)
+# Display logos in two columns using HTML inside markdown
+html = "<table><tr>"
+
+# loop through partners two at a time
+for i, partner in enumerate(partners):
+    html += f"""
+        <td style="padding: 5px;">
+            <a href="{partner['url']}" target="_blank">
+                <img src="{partner['logo']}" width="90">
+            </a>
+        </td>
+    """
+    # Add row break after every 2 logos
+    if (i + 1) % 2 == 0:
+        html += "</tr><tr>"
+
+html += "</tr></table>"
+
+# Render the HTML in the sidebar
+st.sidebar.markdown(html, unsafe_allow_html=True)
