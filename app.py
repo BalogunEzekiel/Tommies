@@ -730,23 +730,70 @@ def admin_panel():
     # --- Analytics Tab ---
     with tabs[4]:
         try:
+            import plotly.express as px
+    
+            # Fetch data
             users = st.session_state.supabase.table("users").select("*").execute().data
             orders = st.session_state.supabase.table("orders").select("*").execute().data
             products = st.session_state.supabase.table("products").select("*").execute().data
             order_items = st.session_state.supabase.table("order_items").select("*").execute().data
-
+    
+            # Convert to DataFrames
             df_users = pd.DataFrame(users) if users else pd.DataFrame()
             df_orders = pd.DataFrame(orders) if orders else pd.DataFrame()
             df_products = pd.DataFrame(products) if products else pd.DataFrame()
             df_order_items = pd.DataFrame(order_items) if order_items else pd.DataFrame()
-
+    
+            # Parse datetime
+            if not df_orders.empty:
+                df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
+    
+            # --- Filter Controls ---
+            st.markdown("### 🔍 Filters")
+            with st.expander("Filter Options"):
+                col1, col2, col3 = st.columns(3)
+    
+                with col1:
+                    selected_month = st.selectbox("Select Month", ["All"] + sorted(df_orders['created_at'].dt.strftime('%B').unique()) if not df_orders.empty else ["All"])
+                with col2:
+                    selected_year = st.selectbox("Select Year", ["All"] + sorted(df_orders['created_at'].dt.year.astype(str).unique()) if not df_orders.empty else ["All"])
+                with col3:
+                    selected_product_type = st.selectbox("Select Product Type", ["All"] + sorted(df_products['category'].dropna().unique()) if 'category' in df_products else ["All"])
+    
+                # Date range
+                if not df_orders.empty:
+                    min_date = df_orders['created_at'].min()
+                    max_date = df_orders['created_at'].max()
+                    start_date, end_date = st.date_input("Select Date Range", [min_date, max_date])
+                else:
+                    start_date, end_date = None, None
+    
+            # Apply filters to orders and items
+            filtered_orders = df_orders.copy()
+            if selected_month != "All":
+                filtered_orders = filtered_orders[filtered_orders['created_at'].dt.strftime('%B') == selected_month]
+            if selected_year != "All":
+                filtered_orders = filtered_orders[filtered_orders['created_at'].dt.year.astype(str) == selected_year]
+            if start_date and end_date:
+                filtered_orders = filtered_orders[(filtered_orders['created_at'] >= pd.to_datetime(start_date)) & (filtered_orders['created_at'] <= pd.to_datetime(end_date))]
+    
+            # Filter order_items by filtered order_ids
+            filtered_order_items = df_order_items[df_order_items['order_id'].isin(filtered_orders['order_id'])] if not df_orders.empty else pd.DataFrame()
+    
+            # Filter products by category
+            if selected_product_type != "All" and 'category' in df_products:
+                filtered_products = df_products[df_products['category'] == selected_product_type]
+                filtered_order_items = filtered_order_items[filtered_order_items['product_id'].isin(filtered_products['product_id'])]
+            else:
+                filtered_products = df_products
+    
+            # --- Key Metrics ---
             total_customers = len(df_users)
-            total_sales = len(df_orders)
-            total_revenue = df_orders["total_amount"].sum() if not df_orders.empty and "total_amount" in df_orders else 0
-            total_products = len(df_products)
-
+            total_sales = len(filtered_orders)
+            total_revenue = filtered_orders["total_amount"].sum() if "total_amount" in filtered_orders else 0
+            total_products = len(filtered_products)
+    
             st.markdown("#### 📊 Key Business Metrics")
-            st.write("Overview of customer engagement, sales, revenue, and product listings.")
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("##### 👥 Total Customers")
@@ -758,35 +805,59 @@ def admin_panel():
                 st.markdown(f"<p style='color:blue; font-size:28px;'> {total_sales}</p>", unsafe_allow_html=True)
                 st.markdown("##### 🧾 Products Listed")
                 st.markdown(f"<p style='color:blue; font-size:28px;'> {total_products}</p>", unsafe_allow_html=True)
-
+    
             st.markdown("<hr style='border: 1px solid #000;'>", unsafe_allow_html=True)
-
-            st.markdown("##### 📈 Sales Trend Over Time")
-            st.write("Track your monthly sales performance with this interactive chart.")
-
-            if not df_orders.empty and "created_at" in df_orders:
-                df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
-                monthly_sales = df_orders.groupby(df_orders['created_at'].dt.to_period("M"))["total_amount"].sum().reset_index()
+    
+            # --- Sales Trend ---
+            st.markdown("##### 📈 Monthly Sales Trend")
+            if not filtered_orders.empty:
+                monthly_sales = filtered_orders.groupby(filtered_orders['created_at'].dt.to_period("M"))["total_amount"].sum().reset_index()
                 monthly_sales['created_at'] = monthly_sales['created_at'].astype(str)
                 st.line_chart(monthly_sales.set_index('created_at'))
             else:
-                st.info("No order data available for monthly sales trend.")
-
+                st.info("No filtered order data available for trend.")
+    
             st.markdown("<hr style='border: 1px solid #000;'>", unsafe_allow_html=True)
-
+    
+            # --- Best-Selling Products ---
             st.markdown("##### 🏆 Top 5 Best-Selling Products")
-            st.write("Discover the most popular products based on total units sold.")
-
-            if not df_order_items.empty and not df_products.empty:
-                top_products = df_order_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
-                top_products = top_products.merge(df_products[["product_id", "product_name"]], on="product_id")
+            if not filtered_order_items.empty and not filtered_products.empty:
+                top_products = filtered_order_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
+                top_products = top_products.merge(filtered_products[["product_id", "product_name"]], on="product_id")
                 st.bar_chart(top_products.set_index("product_name")["quantity"])
             else:
-                st.info("No order items or products available for top products chart.")
-
+                st.info("No matching product sales data.")
+    
+            # --- Order Status Pie ---
+            st.markdown("##### 📦 Order Status Distribution")
+            if not filtered_orders.empty:
+                status_counts = filtered_orders['status'].value_counts()
+                st.plotly_chart(px.pie(names=status_counts.index, values=status_counts.values, title="Orders by Status"), use_container_width=True)
+    
+            # --- Revenue by Product Pie ---
+            st.markdown("##### 💸 Revenue Share by Product")
+            if not filtered_order_items.empty:
+                filtered_order_items["revenue"] = filtered_order_items["quantity"] * filtered_order_items["price_at_purchase"]
+                revenue_by_product = filtered_order_items.groupby("product_id")["revenue"].sum().reset_index()
+                revenue_by_product = revenue_by_product.merge(filtered_products[["product_id", "product_name"]], on="product_id")
+                revenue_by_product = revenue_by_product.sort_values(by="revenue", ascending=False).head(10)
+                st.plotly_chart(px.pie(revenue_by_product, names="product_name", values="revenue", title="Revenue by Product"), use_container_width=True)
+    
+            # --- Customer Frequency ---
+            st.markdown("##### 👤 Customer Order Frequency")
+            if not filtered_orders.empty:
+                order_freq = filtered_orders["user_id"].value_counts()
+                st.plotly_chart(px.histogram(order_freq, nbins=20, title="Orders per Customer"), use_container_width=True)
+    
+            # --- Gender Pie Chart ---
+            if "gender" in df_users.columns:
+                st.markdown("##### 🧍 Gender Distribution")
+                gender_dist = df_users["gender"].value_counts()
+                st.plotly_chart(px.pie(names=gender_dist.index, values=gender_dist.values, title="Customer Gender Distribution"), use_container_width=True)
+    
         except Exception as e:
             st.error(f"Error generating insights: {e}")
-
+    
         st.markdown("<hr style='border: 1px solid #000;'>", unsafe_allow_html=True)
                       
 #----------------------- Main Logic --------------------------
