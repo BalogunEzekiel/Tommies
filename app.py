@@ -510,7 +510,7 @@ def product_list():
                                         msg.empty()
                                     st.session_state.trigger_rerun = True
                                     st.rerun()
-                                                                except Exception as e:
+                                except Exception as e:
                                 st.error(f"Failed to add to cart: {str(e)}")
                     else:
                         st.info("Out of Stock")
