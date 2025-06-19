@@ -663,9 +663,14 @@ def admin_panel():
                             st.warning("No items found for this order.")
 
                         st.markdown("---")
-                        current_status = order.get("status", "Pending")
+                        current_status = order.get("status", "Pending").capitalize()
                         status_options = ["Pending", "Confirmed", "Shipping", "Delivered"]
-                        next_statuses = status_options[status_options.index(current_status):]
+                        
+                        if current_status in status_options:
+                            next_statuses = status_options[status_options.index(current_status):]
+                        else:
+                            st.warning(f"Unknown status '{current_status}' for Order #{order['order_id']}")
+                            next_statuses = status_options  # fallback: show all options
 
                         new_status = st.selectbox(
                             f"🚚 Update Status for Order #{order['order_id']}",
