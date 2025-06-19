@@ -446,6 +446,25 @@ def product_list():
                 st.markdown(f"**{p.get('product_name', 'N/A')}**")
                 st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
 
+                share_url = f"https://yourdomain.com/product/{product_id}"  # Replace with actual product URL
+                product_name = p.get('product_name', 'Product')
+                
+                st.markdown("**🔗 Share this product:**")
+                st.markdown(
+                    f"""
+                    <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank">
+                        📲 WhatsApp
+                    </a> |
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={share_url}" target="_blank">
+                        📘 Facebook
+                    </a> |
+                    <a href="https://twitter.com/intent/tweet?text=Check out this product: {product_name}&url={share_url}" target="_blank">
+                        🐦 Twitter
+                    </a>
+                    """,
+                    unsafe_allow_html=True
+                )
+
                 if st.button(heart_label, key=f"like_{product_id}"):
                     toggle_wishlist(product_id, p.get('product_name'), liked)
 
