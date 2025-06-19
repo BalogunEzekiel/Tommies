@@ -596,12 +596,12 @@ def view_cart():
 def admin_panel():
     st.subheader("🛠️ Admin Dashboard")
 
-    tabs = st.tabs(["Overview", "Manage Users", "Manage Products", "View Orders", "Orders Confirmation", "Insights"])
+    tabs = st.tabs(["Manage Users", "Manage Products", "View Orders", "History", "Analytics"])
 
     # --- Overview Tab ---
-    with tabs[0]:
-        st.subheader("🧰 Summary")
-        st.info("Overview details will be displayed here.")
+    #with tabs[0]:
+    #    st.subheader("🧰 Summary")
+    #    st.info("Overview details will be displayed here.")
 
     # --- Manage Users Tab ---
     with tabs[1]:
@@ -640,56 +640,100 @@ def admin_panel():
     # --- View Orders Tab ---
     with tabs[3]:
         st.subheader("📦 Recent Orders")
+        
         try:
-            orders = supabase.table("orders").select("*, users!inner(full_name, email), order_items(*)").order("created_at", desc=True).execute().data
+            # Fetch all orders with user and item info
+            orders = supabase.table("orders").select(
+                "*, users!inner(full_name, email), order_items(*)"
+            ).order("created_at", desc=True).execute().data
+    
             if not orders:
                 st.info("No orders found.")
-            for order in orders:
-                st.markdown(f"**Order #{order['order_id']}**")
-                st.write(f"**Customer:** {order['users']['full_name']} ({order['users']['email']})")
-                st.write(f"**Date:** {order['created_at']}")
-                st.write("**Items:**")
-
-                if order['order_items']:
-                    for item in order['order_items']:
-                        prod_name = "Unknown"
-                        try:
-                            prod = supabase.table("products").select("product_name").eq("product_id", item["product_id"]).execute().data
-                            if prod:
-                                prod_name = prod[0]["product_name"]
-                        except:
-                            pass
-                        st.write(f"- {item['quantity']} x {prod_name} @ ₦{item['price_at_purchase']:,.2f}")
-                else:
-                    st.write("- No items found.")
-                st.markdown(f"**Total: ₦{order['total_amount']:,.2f} | Status: {order.get('status', 'N/A')}**")
-                st.divider()
+            else:
+                # Filter out Delivered orders from display
+                active_orders = [order for order in orders if order.get("status") != "Delivered"]
+    
+                for order in active_orders:
+                    with st.expander(f"🧾 Order #{order['order_id']} | ₦{order['total_amount']:,.2f} | {order.get('status', 'N/A')}"):
+                        # Customer info
+                        st.markdown(f"**👤 Customer:** {order['users']['full_name']} ({order['users']['email']})")
+                        st.markdown(f"**🕒 Date:** {order['created_at']}")
+                        
+                        # Items
+                        st.markdown("**🧺 Items Ordered:**")
+                        if order['order_items']:
+                            for item in order['order_items']:
+                                try:
+                                    prod = supabase.table("products").select("product_name").eq("product_id", item["product_id"]).execute().data
+                                    prod_name = prod[0]["product_name"] if prod else "Unknown"
+                                except:
+                                    prod_name = "Unknown"
+                                st.markdown(f"- {item['quantity']} x **{prod_name}** @ ₦{item['price_at_purchase']:,.2f}")
+                        else:
+                            st.warning("No items found for this order.")
+                        
+                        # Status control
+                        st.markdown("---")
+                        current_status = order.get("status", "Pending")
+                        status_options = ["Pending", "Confirmed", "Shipping", "Delivered"]
+                        next_statuses = status_options[status_options.index(current_status):]
+    
+                        new_status = st.selectbox(
+                            f"🚚 Update Status for Order #{order['order_id']}",
+                            options=next_statuses,
+                            index=0,
+                            key=f"status_select_{order['order_id']}"
+                        )
+    
+                        if new_status != current_status:
+                            if st.button(f"✅ Confirm Status Update to '{new_status}'", key=f"update_btn_{order['order_id']}"):
+                                try:
+                                    supabase.table("orders").update({"status": new_status}).eq("order_id", order["order_id"]).execute()
+                                    st.success(f"Order #{order['order_id']} status updated to '{new_status}'")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Failed to update order status: {e}")
+    
         except Exception as e:
             st.error(f"Error fetching orders: {e}")
 
-    # --- Orders Confirmation Tab ---
+    # --- History Tab (Delivered Orders) ---
     with tabs[4]:
-        st.subheader("🚚 Update Order Status")
+        st.subheader("📜 Delivered Orders History")
+    
         try:
-            orders = supabase.table("orders").select("*").eq("status", "Pending").execute().data
-            if orders:
-                for order in orders:
-                    st.write(f"Order #{order['order_id']} - Total: ₦{order['total_amount']:,.2f}")
-                    new_status = st.selectbox(
-                        f"Update status for Order #{order['order_id']}",
-                        options=["Pending", "Confirmed", "Shipping", "Delivered"],
-                        index=["Pending", "Confirmed", "Shipping", "Delivered"].index(order.get("status", "Pending")),
-                        key=f"status_{order['order_id']}"
-                    )
-                    if st.button(f"Save Status for Order #{order['order_id']}"):
-                        supabase.table("orders").update({"status": new_status}).eq("order_id", order["order_id"]).execute()
-                        st.success(f"✅ Order #{order['order_id']} status updated to {new_status}")
+            # Fetch only Delivered orders
+            delivered_orders = supabase.table("orders").select(
+                "*, users!inner(full_name, email), order_items(*)"
+            ).eq("status", "Delivered").order("created_at", desc=True).execute().data
+    
+            if not delivered_orders:
+                st.info("No delivered orders yet.")
             else:
-                st.info("No pending orders.")
+                for order in delivered_orders:
+                    with st.expander(f"📦 Order #{order['order_id']} | ₦{order['total_amount']:,.2f}"):
+                        st.markdown(f"**👤 Customer:** {order['users']['full_name']} ({order['users']['email']})")
+                        st.markdown(f"**🕒 Date:** {order['created_at']}")
+                        st.markdown("**🧺 Items:**")
+                        
+                        if order['order_items']:
+                            for item in order['order_items']:
+                                try:
+                                    prod = supabase.table("products").select("product_name").eq("product_id", item["product_id"]).execute().data
+                                    prod_name = prod[0]["product_name"] if prod else "Unknown"
+                                except:
+                                    prod_name = "Unknown"
+                                st.markdown(f"- {item['quantity']} x **{prod_name}** @ ₦{item['price_at_purchase']:,.2f}")
+                        else:
+                            st.warning("No items found for this order.")
+    
+                        st.markdown(f"**✅ Status:** Delivered")
+                        st.markdown("---")
+    
         except Exception as e:
-            st.error(f"Error updating orders: {e}")
+            st.error(f"Error fetching delivered orders: {e}")
 
-# --- Insights Tab ---
+    # --- Analytics Tab ---
     with tabs[5]:
         try:
             # Fetch data using st.session_state.supabase
