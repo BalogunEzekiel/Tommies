@@ -951,31 +951,33 @@ st.sidebar.markdown(
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🤝 Supporters & Partners")
 
-# Define partner logos and their corresponding URLs
-partners = [
-    {"logo": "assets/Partner_FMCIDE.png", "url": "https://fmcide.org"},
-    {"logo": "assets/Partner_DSN.png", "url": "https://www.datasciencenigeria.org"},
-    {"logo": "assets/Partner_Google.png", "url": "https://www.google.com"},
-    {"logo": "assets/Partner_Microsoft.png", "url": "https://www.microsoft.com"},
-]
+html = """
+<table>
+<tr>
+    <td style="padding: 5px;">
+        <a href="https://www.datasciencenigeria.org" target="_blank">
+            <img src="assets/Partner_DSN.png" width="90">
+        </a>
+    </td>
+    <td style="padding: 5px;">
+        <a href="https://www.google.com" target="_blank">
+            <img src="assets/Partner_Google.png" width="90">
+        </a>
+    </td>
+</tr>
+<tr>
+    <td style="padding: 5px;">
+        <a href="https://www.microsoft.com" target="_blank">
+            <img src="assets/Partner_Microsoft.png" width="90">
+        </a>
+    </td>
+    <td style="padding: 5px;">
+        <a href="https://fmcide.org" target="_blank">
+            <img src="assets/Partner_FMCIDE.png" width="90">
+        </a>
+    </td>
+</tr>
+</table>
+"""
 
-# Display logos in two columns using HTML inside markdown
-html = "<table><tr>"
-
-# loop through partners two at a time
-for i, partner in enumerate(partners):
-    html += f"""
-        <td style="padding: 5px;">
-            <a href="{partner['url']}" target="_blank">
-                <img src="{partner['logo']}" width="90">
-            </a>
-        </td>
-    """
-    # Add row break after every 2 logos
-    if (i + 1) % 2 == 0:
-        html += "</tr><tr>"
-
-html += "</tr></table>"
-
-# Render the HTML in the sidebar
 st.sidebar.markdown(html, unsafe_allow_html=True)
