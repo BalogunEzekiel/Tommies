@@ -382,8 +382,7 @@ def get_product_by_id(product_id):
 
 def product_list():
     # Handle query param to show a single product detail view
-    query_params = st.experimental_get_query_params()
-    #query_params = st.query_params.st.experimental_get_query_params() 
+    query_params = st.query_params
     if "product_id" in query_params:
         product_id = query_params["product_id"][0]
         product = get_product_by_id(product_id)
@@ -394,7 +393,7 @@ def product_list():
             st.write(f"**Price:** ₦{product.get('price', 'N/A')}")
             st.write(product.get("description", "No description available."))
             if st.button("🔙 Back to Products"):
-                st.experimental_set_query_params()
+                st.query_params.clear()
                 st.rerun()
         else:
             st.error("❌ Product not found.")
