@@ -209,21 +209,26 @@ def create_order(user_id, cart):
 
 # --- APP FOOTER CONTENT ---
 def app_footer():
-    st.markdown("---")
-    st.markdown("### 🤝 Supporters & Partners", unsafe_allow_html=True)
-
-    logos = [
-        "assets/Partner_FMCIDE.png",
-        "assets/Partner_DSN.png",
-        "assets/Partner_Google.png",
-        "assets/Partner_Microsoft.png"
-    ]
-
-    # Display logos in columns
-    cols = st.columns(len(logos))
-    for i, logo_path in enumerate(logos):
-        with cols[i]:
-            st.image(logo_path, width=80) # Adjust width as needed
+    if not st.session_state.get('logged_in'):
+        st.markdown("---")
+        st.markdown("### 🤝 Supporters & Partners", unsafe_allow_html=True)
+    
+        logos = [
+            "assets/Partner_FMCIDE.png",
+            "assets/Partner_DSN.png",
+            "assets/Partner_Google.png",
+            "assets/Partner_Microsoft.png"
+        ]
+    
+        # Display logos in rows of 4
+        for i in range(0, len(logos), 4):
+            cols = st.columns(4)
+            for j, logo in enumerate(logos[i:i+4]):
+                with cols[j]:
+                    try:
+                        st.image(logo, width=120)  # Adjust width as needed
+                    except Exception as e:
+                        st.warning(f"Could not load logo: {e}")
 
 #if __name__ == "__main__":
 #    main()
