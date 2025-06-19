@@ -448,13 +448,17 @@ def product_list():
 
                 # Generate shareable product URL
                 for product in products:
-                    product_id = product["id"]
-                    product_name = product["product_name"]
+                    # Ensure the product has the expected key
+                    if "product_id" not in product:
+                        st.warning("⚠️ Skipping product without product_id.")
+                        continue
                 
-                    if st.button("🔗 Share", key=f"share_{product_id}"):  # ✅ Unique key for each product
+                    product_id = product["product_id"]
+                    product_name = product.get("product_name", "Product")
+                    share_url = f"https://perfectfit.streamlit.app/product/{product_id}"
+                
+                    if st.button("🔗 Share", key=f"share_{product_id}"):
                         st.markdown("**Choose a platform to share:**")
-                        share_url = f"https://perfectfit.streamlit.app/product/{product_id}"
-                
                         st.markdown(
                             f"""
                             <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
