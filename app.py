@@ -468,11 +468,8 @@ def product_list():
                     st.markdown(f"**Category:** {p.get('category', 'N/A')}")
                     st.markdown(f"**Size:** {p.get('size', 'N/A')}")
                     st.markdown(f"**Stock:** {int(p.get('stock_quantity', 0))}")
-                    st.markdown("###### Description:")
+                    st.markdown("##### Description:")
                     st.write(p.get('description', 'No description provided.'))
-
-                    #if st.button(heart_label + " Add to Wishlist", key=f"modal_like_{product_id}"):
-                    #    toggle_wishlist(product_id, p.get('product_name'), liked)
 
                     stock = int(p.get('stock_quantity', 0))
                     if stock > 0:
@@ -513,18 +510,13 @@ def product_list():
                                         msg.empty()
                                     st.session_state.trigger_rerun = True
                                     st.rerun()
-                                    #else:
-                                    #    st.session_state.cart.append({**p, 'qty': qty})
-                                    #    st.success(f"Added {qty} x {p['product_name']} to cart.")
-                                    #st.session_state.trigger_rerun = True
-                                    #st.rerun()
-                            except Exception as e:
+                                                                except Exception as e:
                                 st.error(f"Failed to add to cart: {str(e)}")
                     else:
                         st.info("Out of Stock")
 
-                #st.markdown(f"**{p.get('product_name', 'N/A')}**")
-                #st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
+                st.markdown(f"**{p.get('product_name', 'N/A')}**")
+                st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
 
                 if st.button(heart_label, key=f"like_{product_id}"):
                     toggle_wishlist(product_id, p.get('product_name'), liked)
