@@ -474,7 +474,7 @@ def product_list():
                 st.markdown(f"**{product_name}**")
                 st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
 
-                with st.expander("🔗 Share this product"):
+                with st.expander("🔗Share"):
                     st.markdown(
                         f"""
                         <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px;">
@@ -946,3 +946,14 @@ st.sidebar.markdown(
 📞 +2348062529172
 """
 )
+
+# --- SUPPORTERS & PARTNERS ---
+st.markdown("---")
+    st.markdown("### 🤝 Supporters & Partners", unsafe_allow_html=True)
+
+    logos = [
+        "assets/Partner_FMCIDE.png",
+        "assets/Partner_DSN.png",
+        "assets/Partner_Google.png",
+        "assets/Partner_Microsoft.png"
+    ]
