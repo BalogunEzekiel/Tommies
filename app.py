@@ -448,6 +448,9 @@ def product_list():
                 st.markdown(f"**{p.get('product_name', 'N/A')}**")
                 st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
 
+                if st.button(heart_label, key=f"like_{product_id}"):
+                    toggle_wishlist(product_id, p.get('product_name'), liked)
+
                 is_expanded = st.session_state.expander_states.get(product_id, False)
                 with st.expander(f"🛍️ {p.get('product_name', 'Product')}", expanded=is_expanded):
                     images = p.get('image_gallery', [])
@@ -508,8 +511,8 @@ def product_list():
                     else:
                         st.info("Out of Stock")
 
-                if st.button(heart_label, key=f"like_{product_id}"):
-                    toggle_wishlist(product_id, p.get('product_name'), liked)
+                #if st.button(heart_label, key=f"like_{product_id}"):
+                #    toggle_wishlist(product_id, p.get('product_name'), liked)
 
 def view_cart():
     st.subheader("🛒 Your Cart")
