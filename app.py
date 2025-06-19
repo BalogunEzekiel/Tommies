@@ -459,7 +459,7 @@ def product_list():
                 st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
 
                 is_expanded = st.session_state.expander_states.get(product_id, False)
-                with st.expander(f"🛍️ {p.get('product_name', 'Product')}, expanded=is_expanded):
+                with st.expander(f"🛍️ {p.get('product_name', 'Product')}", expanded=is_expanded):
                     images = p.get('image_gallery', [])
                     if images:
                         streamlit_image_gallery(images)
