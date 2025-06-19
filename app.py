@@ -423,8 +423,6 @@ def product_list():
             else:
                 st.session_state.liked_products.add(product_id)
                 st.toast(f"Added {product_name} to wishlist!", icon="❤️")
-            liked = product_id in st.session_state.liked_products
-            heart_label = "❤️" if liked else "🤍"
             st.rerun()
         except Exception as e:
             st.error(f"Failed to update wishlist: {str(e)}")
@@ -438,8 +436,8 @@ def product_list():
             if not product_id:
                 continue
 
-            #liked = product_id in st.session_state.liked_products
-            #heart_label = "❤️" if liked else "🤍"
+            liked = product_id in st.session_state.liked_products
+            heart_label = "❤️" if liked else "🤍"
 
             with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
