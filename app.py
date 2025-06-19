@@ -600,7 +600,7 @@ def admin_panel():
 
     # --- Manage Users Tab ---
     with tabs[0]:
-        st.markdown("####👥 Customers Info Management")
+        st.subheader("👥 Customers Info Management")
         try:
             users = supabase.table("users").select("*").execute().data
             if users:
@@ -617,7 +617,7 @@ def admin_panel():
 
     # --- Manage Products Tab ---
     with tabs[1]:
-        st.markdown("####🛍️ Manage Products")
+        st.subheader("🛍️ Manage Products")
         try:
             products = supabase.table("products").select("*").execute().data
             if products:
@@ -696,7 +696,7 @@ def admin_panel():
 
     # --- History Tab (Delivered Orders) ---
     with tabs[3]:
-        st.markdown("####📜 Delivered Orders History")
+        st.subheader("📜 Delivered Orders History")
         try:
             delivered_orders = supabase.table("orders").select(
                 "*, users!inner(full_name, email), order_items(*)"
