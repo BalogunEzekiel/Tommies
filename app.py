@@ -225,9 +225,9 @@ def app_footer():
         with cols[i]:
             st.image(logo_path, width=80) # Adjust width as needed
 
-if __name__ == "__main__":
-    main()
-    #sidebar_content() # Ensure sidebar content is also called
+#if __name__ == "__main__":
+#    main()
+#   sidebar_content() # Ensure sidebar content is also called
 
 # --- Email Confirmation ---
 def send_confirmation_email(email, order_id):
