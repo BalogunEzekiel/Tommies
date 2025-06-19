@@ -447,33 +447,34 @@ def product_list():
                 st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
 
                 # Generate shareable product URL
-                share_url = f"https://perfectfit.streamlit.app/product/{product_id}"
-                product_name = p.get('product_name', 'Product')
+                for product in products:
+                    product_id = product["id"]
+                    product_name = product["product_name"]
                 
-                # Toggle to show share options
-                if st.button("🔗Share"):
-                    st.markdown("**Choose a platform to share:**")
-                    
-                    st.markdown(
-                        f"""
-                        <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
-                            📲
-                        </a>
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
-                            📘
-                        </a>
-                        <a href="https://twitter.com/intent/tweet?text=Check out this product: {product_name}&url={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
-                            🐦
-                        </a>
-                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
-                            💼
-                        </a>
-                        <a href="https://t.me/share/url?url={share_url}&text=Check out this product: {product_name}" target="_blank" rel="noopener noreferrer">
-                            ✈️
-                        </a>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                    if st.button("🔗 Share", key=f"share_{product_id}"):  # ✅ Unique key for each product
+                        st.markdown("**Choose a platform to share:**")
+                        share_url = f"https://perfectfit.streamlit.app/product/{product_id}"
+                
+                        st.markdown(
+                            f"""
+                            <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
+                                📲
+                            </a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
+                                📘
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?text=Check out this product: {product_name}&url={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
+                                🐦
+                            </a>
+                            <a href="https://www.linkedin.com/sharing/share-offsite/?url={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
+                                💼
+                            </a>
+                            <a href="https://t.me/share/url?url={share_url}&text=Check out this product: {product_name}" target="_blank" rel="noopener noreferrer">
+                                ✈️
+                            </a>
+                            """,
+                            unsafe_allow_html=True
+                        )
 
 
                 if st.button(heart_label, key=f"like_{product_id}"):
