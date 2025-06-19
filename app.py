@@ -598,13 +598,8 @@ def admin_panel():
 
     tabs = st.tabs(["Manage Users", "Manage Products", "View Orders", "History", "Analytics"])
 
-    # --- Overview Tab ---
-    #with tabs[0]:
-    #    st.subheader("🧰 Summary")
-    #    st.info("Overview details will be displayed here.")
-
     # --- Manage Users Tab ---
-    with tabs[1]:
+    with tabs[0]:
         st.subheader("👥 Customers Info Management")
         try:
             users = supabase.table("users").select("*").execute().data
@@ -621,7 +616,7 @@ def admin_panel():
             st.error(f"Failed to fetch users: {e}")
 
     # --- Manage Products Tab ---
-    with tabs[2]:
+    with tabs[1]:
         st.subheader("🛍️ Manage Products")
         try:
             products = supabase.table("products").select("*").execute().data
@@ -638,29 +633,24 @@ def admin_panel():
             st.error(f"Failed to fetch products: {e}")
 
     # --- View Orders Tab ---
-    with tabs[3]:
+    with tabs[2]:
         st.subheader("📦 Recent Orders")
-        
         try:
-            # Fetch all orders with user and item info
             orders = supabase.table("orders").select(
                 "*, users!inner(full_name, email), order_items(*)"
             ).order("created_at", desc=True).execute().data
-    
+
             if not orders:
                 st.info("No orders found.")
             else:
-                # Filter out Delivered orders from display
                 active_orders = [order for order in orders if order.get("status") != "Delivered"]
-    
+
                 for order in active_orders:
                     with st.expander(f"🧾 Order #{order['order_id']} | ₦{order['total_amount']:,.2f} | {order.get('status', 'N/A')}"):
-                        # Customer info
                         st.markdown(f"**👤 Customer:** {order['users']['full_name']} ({order['users']['email']})")
                         st.markdown(f"**🕒 Date:** {order['created_at']}")
-                        
-                        # Items
                         st.markdown("**🧺 Items Ordered:**")
+
                         if order['order_items']:
                             for item in order['order_items']:
                                 try:
@@ -671,136 +661,20 @@ def admin_panel():
                                 st.markdown(f"- {item['quantity']} x **{prod_name}** @ ₦{item['price_at_purchase']:,.2f}")
                         else:
                             st.warning("No items found for this order.")
-                        
-                        # Status control
+
                         st.markdown("---")
                         current_status = order.get("status", "Pending")
                         status_options = ["Pending", "Confirmed", "Shipping", "Delivered"]
                         next_statuses = status_options[status_options.index(current_status):]
-    
+
                         new_status = st.selectbox(
                             f"🚚 Update Status for Order #{order['order_id']}",
                             options=next_statuses,
                             index=0,
                             key=f"status_select_{order['order_id']}"
                         )
-    
+
                         if new_status != current_status:
-                            if st.button(f"✅ Confirm Status Update to '{new_status}'", key=f"update_btn_{order['order_id']}"):
-                                try:
-                                    supabase.table("orders").update({"status": new_status}).eq("order_id", order["order_id"]).execute()
-                                    st.success(f"Order #{order['order_id']} status updated to '{new_status}'")
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"Failed to update order status: {e}")
-    
-        except Exception as e:
-            st.error(f"Error fetching orders: {e}")
-
-    # --- History Tab (Delivered Orders) ---
-    with tabs[4]:
-        st.subheader("📜 Delivered Orders History")
-    
-        try:
-            # Fetch only Delivered orders
-            delivered_orders = supabase.table("orders").select(
-                "*, users!inner(full_name, email), order_items(*)"
-            ).eq("status", "Delivered").order("created_at", desc=True).execute().data
-    
-            if not delivered_orders:
-                st.info("No delivered orders yet.")
-            else:
-                for order in delivered_orders:
-                    with st.expander(f"📦 Order #{order['order_id']} | ₦{order['total_amount']:,.2f}"):
-                        st.markdown(f"**👤 Customer:** {order['users']['full_name']} ({order['users']['email']})")
-                        st.markdown(f"**🕒 Date:** {order['created_at']}")
-                        st.markdown("**🧺 Items:**")
-                        
-                        if order['order_items']:
-                            for item in order['order_items']:
-                                try:
-                                    prod = supabase.table("products").select("product_name").eq("product_id", item["product_id"]).execute().data
-                                    prod_name = prod[0]["product_name"] if prod else "Unknown"
-                                except:
-                                    prod_name = "Unknown"
-                                st.markdown(f"- {item['quantity']} x **{prod_name}** @ ₦{item['price_at_purchase']:,.2f}")
-                        else:
-                            st.warning("No items found for this order.")
-    
-                        st.markdown(f"**✅ Status:** Delivered")
-                        st.markdown("---")
-    
-        except Exception as e:
-            st.error(f"Error fetching delivered orders: {e}")
-
-    # --- Analytics Tab ---
-    with tabs[5]:
-        try:
-            # Fetch data using st.session_state.supabase
-            users = st.session_state.supabase.table("users").select("*").execute().data
-            orders = st.session_state.supabase.table("orders").select("*").execute().data
-            products = st.session_state.supabase.table("products").select("*").execute().data
-            order_items = st.session_state.supabase.table("order_items").select("*").execute().data
-
-            # Initialize DataFrames
-            df_users = pd.DataFrame(users) if users else pd.DataFrame()
-            df_orders = pd.DataFrame(orders) if orders else pd.DataFrame()
-            df_products = pd.DataFrame(products) if products else pd.DataFrame()
-            df_order_items = pd.DataFrame(order_items) if order_items else pd.DataFrame()
-
-            # Calculate metrics
-            total_customers = len(df_users) if not df_users.empty else 0
-            total_sales = len(df_orders) if not df_orders.empty else 0
-            total_revenue = df_orders["total_amount"].sum() if not df_orders.empty and "total_amount" in df_orders else 0
-            total_products = len(df_products) if not df_products.empty else 0
-
-            # Key Business Metrics
-            st.markdown("#### 📊 Key Business Metrics")
-            st.write("Overview of customer engagement, sales, revenue, and product listings.")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown("##### 👥 Total Customers")
-                st.markdown(f"<p style='color:blue; font-size:28px;'> {total_customers}</p>", unsafe_allow_html=True)
-                st.markdown("##### 💰 Total Revenue")
-                st.markdown(f"<p style='color:blue; font-size:28px;'> ₦{total_revenue:,.2f}</p>", unsafe_allow_html=True)
-            with col2:
-                st.markdown("##### 🛒 Total Sales")
-                st.markdown(f"<p style='color:blue; font-size:28px;'> {total_sales}</p>", unsafe_allow_html=True)
-                st.markdown("##### 🧾 Products Listed")
-                st.markdown(f"<p style='color:blue; font-size:28px;'> {total_products}</p>", unsafe_allow_html=True)
-
-            # Thick line
-            st.markdown("<hr style='border: 1px solid #000;'>", unsafe_allow_html=True)
-            # Sales Trend Over Time
-            st.markdown("##### 📈 Sales Trend Over Time")
-            st.write("Track your monthly sales performance with this interactive chart.")
-            
-            if not df_orders.empty and "created_at" in df_orders:
-                df_orders['created_at'] = pd.to_datetime(df_orders['created_at'])
-                monthly_sales = df_orders.groupby(df_orders['created_at'].dt.to_period("M"))["total_amount"].sum().reset_index()
-                monthly_sales['created_at'] = monthly_sales['created_at'].astype(str)
-                st.line_chart(monthly_sales.set_index('created_at'))
-            else:
-                st.info("No order data available for monthly sales trend.")
-            
-            # Thick line
-            st.markdown("<hr style='border: 1px solid #000;'>", unsafe_allow_html=True)
-            # Top 5 Best-Selling Products
-            st.markdown("##### 🏆 Top 5 Best-Selling Products")
-            st.write("Discover the most popular products based on total units sold.")
-            
-            if not df_order_items.empty and not df_products.empty:
-                top_products = df_order_items.groupby("product_id")["quantity"].sum().nlargest(5).reset_index()
-                top_products = top_products.merge(df_products[["product_id", "product_name"]], on="product_id")
-                st.bar_chart(top_products.set_index("product_name")["quantity"])
-            else:
-                st.info("No order items or products available for top products chart.")
-            
-        except Exception as e:
-            st.error(f"Error generating insights: {e}")
-            
-        # Thick line
-        st.markdown("<hr style='border: 1px solid #000;'>", unsafe_allow_html=True)
 
                       
 #----------------------- Main Logic --------------------------
