@@ -365,7 +365,41 @@ def streamlit_image_gallery(images):
         else:
             st.image(image_url, use_container_width=True)
 
+def get_product_by_id(product_id):
+    try:
+        product = (
+            st.session_state.supabase
+            .table("products")
+            .select("*")
+            .eq("product_id", product_id)
+            .execute()
+            .data
+        )
+        return product[0] if product else None
+    except Exception as e:
+        st.error(f"Error fetching product: {e}")
+        return None
+
 def product_list():
+    # Handle query param to show a single product detail view
+    query_params = st.experimental_get_query_params()
+    if "product_id" in query_params:
+        product_id = query_params["product_id"][0]
+        product = get_product_by_id(product_id)
+
+        if product:
+            st.subheader(f"🛍️ {product['product_name']}")
+            st.image(product.get("image_url", ""), width=400)
+            st.write(f"**Price:** ₦{product.get('price', 'N/A')}")
+            st.write(product.get("description", "No description available."))
+            if st.button("🔙 Back to Products"):
+                st.experimental_set_query_params()
+                st.rerun()
+        else:
+            st.error("❌ Product not found.")
+        return  # Stop further processing
+
+    # --- List All Products ---
     st.subheader("🛍️ Available Products")
 
     # Initialize session state
@@ -376,21 +410,19 @@ def product_list():
     if 'trigger_rerun' not in st.session_state:
         st.session_state.trigger_rerun = False
     if 'expander_states' not in st.session_state:
-        st.session_state.expander_states = {}  # Track expander open/closed per product_id
+        st.session_state.expander_states = {}
 
     if 'supabase' not in st.session_state:
-        st.error("Supabase client not initialized. Please set `st.session_state.supabase`.")
+        st.error("Supabase client not initialized.")
         return
 
-    # Handle rerun
     if st.session_state.trigger_rerun:
         st.session_state.trigger_rerun = False
         st.rerun()
 
-    # Fetch products
     products = fetch_products()
     if not products:
-        st.info("No products available at the moment.")
+        st.info("No products available.")
         return
 
     # Filters
@@ -414,18 +446,14 @@ def product_list():
 
     cols_per_row = 3
 
-    # Wishlist toggle helper
     def toggle_wishlist(product_id, product_name, liked):
-        try:
-            if liked:
-                st.session_state.liked_products.discard(product_id)
-                st.toast(f"Removed {product_name} from wishlist!", icon="💔")
-            else:
-                st.session_state.liked_products.add(product_id)
-                st.toast(f"Added {product_name} to wishlist!", icon="❤️")
-            st.rerun()
-        except Exception as e:
-            st.error(f"Failed to update wishlist: {str(e)}")
+        if liked:
+            st.session_state.liked_products.discard(product_id)
+            st.toast(f"Removed {product_name} from wishlist!", icon="💔")
+        else:
+            st.session_state.liked_products.add(product_id)
+            st.toast(f"Added {product_name} to wishlist!", icon="❤️")
+        st.rerun()
 
     for i, p in enumerate(filtered):
         if i % cols_per_row == 0:
@@ -438,61 +466,48 @@ def product_list():
 
             liked = product_id in st.session_state.liked_products
             heart_label = "❤️" if liked else "🤍"
+            product_name = p.get('product_name', 'Product')
+            share_url = f"https://perfectfit.streamlit.app/?product_id={product_id}"
 
             with st.container(border=True):
                 st.image(p.get('image_url', 'https://via.placeholder.com/150'), use_container_width=True)
-
-                # Check expander state
-                st.markdown(f"**{p.get('product_name', 'N/A')}**")
+                st.markdown(f"**{product_name}**")
                 st.markdown(f"₦{float(p.get('price', 0)):,.2f}")
 
-                # Generate shareable product URL
-                for product in products:
-                    # Ensure the product has the expected key
-                    if "product_id" not in product:
-                        st.warning("⚠️ Skipping product without product_id.")
-                        continue
-                
-                    product_id = product["product_id"]
-                    product_name = product.get("product_name", "Product")
-                    share_url = f"https://perfectfit.streamlit.app/product/{product_id}"
-                
-                    if st.button("🔗 Share", key=f"share_{product_id}"):
-                        st.markdown("**Choose a platform to share:**")
-                        st.markdown(
-                            f"""
-                            <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
-                                📲
-                            </a>
-                            <a href="https://www.facebook.com/sharer/sharer.php?u={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
-                                📘
-                            </a>
-                            <a href="https://twitter.com/intent/tweet?text=Check out this product: {product_name}&url={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
-                                🐦
-                            </a>
-                            <a href="https://www.linkedin.com/sharing/share-offsite/?url={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 15px;">
-                                💼
-                            </a>
-                            <a href="https://t.me/share/url?url={share_url}&text=Check out this product: {product_name}" target="_blank" rel="noopener noreferrer">
-                                ✈️
-                            </a>
-                            """,
-                            unsafe_allow_html=True
-                        )
-
+                with st.expander("🔗 Share this product"):
+                    st.markdown(
+                        f"""
+                        <a href="https://api.whatsapp.com/send?text=Check out this product: {product_name} - {share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px;">
+                            📲 WhatsApp
+                        </a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px;">
+                            📘 Facebook
+                        </a>
+                        <a href="https://twitter.com/intent/tweet?text=Check out this product: {product_name}&url={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px;">
+                            🐦 Twitter
+                        </a>
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={share_url}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px;">
+                            💼 LinkedIn
+                        </a>
+                        <a href="https://t.me/share/url?url={share_url}&text=Check out this product: {product_name}" target="_blank" rel="noopener noreferrer">
+                            ✈️ Telegram
+                        </a>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
                 if st.button(heart_label, key=f"like_{product_id}"):
-                    toggle_wishlist(product_id, p.get('product_name'), liked)
+                    toggle_wishlist(product_id, product_name, liked)
 
                 is_expanded = st.session_state.expander_states.get(product_id, False)
-                with st.expander(f"🛍️ {p.get('product_name', 'Product')}", expanded=is_expanded):
+                with st.expander(f"🛍️ {product_name}", expanded=is_expanded):
                     images = p.get('image_gallery', [])
                     if images:
                         streamlit_image_gallery(images)
                     else:
                         st.image(p.get('image_url', 'https://via.placeholder.com/600'), use_container_width=True)
 
-                    st.markdown(f"### {p.get('product_name', 'N/A')}")
+                    st.markdown(f"### {product_name}")
                     st.markdown(f"**Price:** ₦{float(p.get('price', 0)):,.2f}")
                     st.markdown(f"**Category:** {p.get('category', 'N/A')}")
                     st.markdown(f"**Size:** {p.get('size', 'N/A')}")
@@ -502,50 +517,34 @@ def product_list():
 
                     stock = int(p.get('stock_quantity', 0))
                     if stock > 0:
-                        # Store quantity in session state to avoid reruns on change
                         qty_key = f"qty_modal_{product_id}"
                         if qty_key not in st.session_state:
                             st.session_state[qty_key] = 1
-                        st.number_input(
-                            "Quantity",
-                            min_value=1,
-                            max_value=stock,
-                            key=qty_key,
-                            value=st.session_state[qty_key],
-                            on_change=lambda: None  # Disable auto-rerun on change
-                        )
+                        st.number_input("Quantity", min_value=1, max_value=stock, key=qty_key)
+
                         if st.button("🛒 Add to Cart", key=f"modal_cart_{product_id}", use_container_width=True):
-                            try:
-                                if not st.session_state.get('logged_in', False):
-                                    st.warning("Please log in or sign up to add items to your cart.")
-                                else:
-                                    qty = st.session_state[qty_key]
-                                    existing = next(
-                                        (item for item in st.session_state.cart if item['product_id'] == product_id),
-                                        None
-                                    )
-                                    if existing:
-                                        new_qty = min(existing['qty'] + qty, stock)
-                                        if new_qty == existing['qty']:
-                                            st.warning(f"Cannot add more {p['product_name']}; stock limit reached.")
-                                        else:
-                                            existing['qty'] = new_qty
-                                            st.success(f"Updated {p['product_name']} to {existing['qty']} in cart.")
+                            if not st.session_state.get('logged_in', False):
+                                st.warning("Please log in to add items to your cart.")
+                            else:
+                                qty = st.session_state[qty_key]
+                                existing = next(
+                                    (item for item in st.session_state.cart if item['product_id'] == product_id),
+                                    None
+                                )
+                                if existing:
+                                    new_qty = min(existing['qty'] + qty, stock)
+                                    if new_qty == existing['qty']:
+                                        st.warning(f"Cannot add more {p['product_name']}; stock limit reached.")
                                     else:
-                                        st.session_state.cart.append({**p, 'qty': qty})
-                                        msg = st.empty()
-                                        msg.success(f"Added {qty} x {p['product_name']} to cart.")
-                                        time.sleep(2)
-                                        msg.empty()
-                                    st.session_state.trigger_rerun = True
-                                    st.rerun()
-                            except Exception as e:
-                                st.error(f"Failed to add to cart: {str(e)}")
+                                        existing['qty'] = new_qty
+                                        st.success(f"Updated {p['product_name']} to {existing['qty']} in cart.")
+                                else:
+                                    st.session_state.cart.append({**p, 'qty': qty})
+                                    st.success(f"Added {qty} x {p['product_name']} to cart.")
+                                st.session_state.trigger_rerun = True
+                                st.rerun()
                     else:
                         st.info("Out of Stock")
-
-                #if st.button(heart_label, key=f"like_{product_id}"):
-                #    toggle_wishlist(product_id, p.get('product_name'), liked)
 
 def view_cart():
     st.subheader("🛒 Your Cart")
