@@ -13,7 +13,7 @@ import numpy as np
 from datetime import datetime
 import time
 from streamlit_image_gallery import streamlit_image_gallery
-
+import plotly.express as px
 
 st.set_page_config(page_title="Perfectfit Fashion", layout="wide")
 
