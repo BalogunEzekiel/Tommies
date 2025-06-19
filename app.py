@@ -214,7 +214,7 @@ def app_footer():
         st.markdown("### 🤝 Supporters & Partners", unsafe_allow_html=True)
     
         logos = [
-            "assets/Partner_FMCIDE.png",
+            "assets/Partner_3MTT.png",
             "assets/Partner_DSN.png",
             "assets/Partner_Google.png",
             "assets/Partner_Microsoft.png"
