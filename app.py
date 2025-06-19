@@ -664,13 +664,14 @@ def admin_panel():
 
                         st.markdown("---")
                         current_status = order.get("status", "Pending").capitalize()
-                        status_options = ["pending", "confirmed", "shipping", "delivered"]
+                        status_options = ["Pending", "Confirmed", "Shipping", "Delivered", "Cancelled"]
+                        current_status = order.get("status", "Pending").title()
                         
                         if current_status in status_options:
                             next_statuses = status_options[status_options.index(current_status):]
                         else:
                             st.warning(f"Unknown status '{current_status}' for Order #{order['order_id']}")
-                            next_statuses = status_options  # fallback: show all options
+                            next_statuses = status_options  # Fallback: show all
 
                         new_status = st.selectbox(
                             f"🚚 Update Status for Order #{order['order_id']}",
@@ -679,16 +680,30 @@ def admin_panel():
                             key=f"status_select_{order['order_id']}"
                         )
 
-                        if new_status != current_status:
-                            if st.button(f"✅ Confirm Status Update to '{new_status}'", key=f"update_btn_{order['order_id']}"):
-                                try:
-                                    supabase.table("orders").update({"status": new_status.lower()}).eq("order_id", order["order_id"]).execute()
-                                    st.success(f"Order #{order['order_id']} status updated to '{new_status}'")
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"Failed to update order status: {e}")
-        except Exception as e:
-            st.error(f"Error fetching orders: {e}")
+                        try:
+                            # Assuming `order` and `next_statuses` are already defined in a loop
+                            new_status = st.selectbox(
+                                f"🚚 Update Status for Order #{order['order_id']}",
+                                options=next_statuses,
+                                index=0,
+                                key=f"status_select_{order['order_id']}"
+                            )
+                        
+                            current_status = order["status"]
+                        
+                            if new_status != current_status:
+                                if st.button(f"✅ Confirm Status Update to '{new_status}'", key=f"update_btn_{order['order_id']}"):
+                                    try:
+                                        supabase.table("orders").update(
+                                            {"status": new_status.lower()}
+                                        ).eq("order_id", order["order_id"]).execute()
+                                        st.success(f"Order #{order['order_id']} status updated to '{new_status}'")
+                                        st.rerun()
+                                    except Exception as e:
+                                        st.error(f"Failed to update order status: {e}")
+                        
+                        except Exception as e:
+                            st.error(f"Error fetching orders: {e}")
 
     # --- History Tab (Delivered Orders) ---
     with tabs[3]:
