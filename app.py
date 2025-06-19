@@ -382,7 +382,8 @@ def get_product_by_id(product_id):
 
 def product_list():
     # Handle query param to show a single product detail view
-    query_params = st.query_params.st.experimental_get_query_params() 
+    query_params = st.experimental_get_query_params()
+    #query_params = st.query_params.st.experimental_get_query_params() 
     if "product_id" in query_params:
         product_id = query_params["product_id"][0]
         product = get_product_by_id(product_id)
