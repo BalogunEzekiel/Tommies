@@ -219,6 +219,7 @@ def app_footer():
             "assets/Partner_NITDA.jpg",
             "assets/Partner_DSN.png",
             "assets/Partner_DeepTech_Ready.png",
+            "assets/Partner_Incubator.png",
             "assets/Partner_Google3.png",
             "assets/Partner_Microsoft2.png"
         ]
