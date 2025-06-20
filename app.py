@@ -229,7 +229,7 @@ def app_footer():
             for j, logo in enumerate(logos[i:i+4]):
                 with cols[j]:
                     try:
-                        st.image(logo, width=200)  # Adjust width as needed
+                        st.image(logo, width=180)  # Adjust width as needed
                     except Exception as e:
                         st.warning(f"Could not load logo: {e}")
 
