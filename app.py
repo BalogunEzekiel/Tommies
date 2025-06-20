@@ -211,9 +211,10 @@ def create_order(user_id, cart):
 def app_footer():
     if not st.session_state.get('logged_in'):
         st.markdown("---")
-        st.markdown("### 🤝 Supporters & Partners", unsafe_allow_html=True)
+        st.markdown("### 🤝 Supporters", unsafe_allow_html=True)
     
         logos = [
+            "assets/BosunTijani.jpg",
             "assets/Partner_3MTT.png",
             "assets/Partner_NITDA.jpg",
             "assets/Partner_DSN.png",
@@ -228,7 +229,7 @@ def app_footer():
             for j, logo in enumerate(logos[i:i+4]):
                 with cols[j]:
                     try:
-                        st.image(logo, width=120)  # Adjust width as needed
+                        st.image(logo, width=180)  # Adjust width as needed
                     except Exception as e:
                         st.warning(f"Could not load logo: {e}")
 
